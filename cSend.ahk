@@ -36,7 +36,8 @@ class Clip {
             Sleep(10)
         } until !this.GetOpenClipboardWindow() || A_Index = 1000
 
-        SetTimer(() => Send('{sc2A Down}{sc152}{sc2A Up}'), -ClipWait(1))
+        SetTimer(() => Send('{sc2A Down}{sc152}{sc2A Up}'), -500)
+
         Sleep(300)
 
         isClipReverted ? SetTimer((*) => A_Clipboard := prevClip, -untilRevert) : 0

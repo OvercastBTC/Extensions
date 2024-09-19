@@ -1,0 +1,20 @@
+// File: .vscodeignore
+.vscode/**
+.vscode-test/**
+out/test/**
+src/**
+.gitignore
+vsc-extension-quickstart.md
+**/tsconfig.json
+**/.eslintrc.json
+**/*.map
+**/*.ts
+**.history**
+.history**
+.history
+**${file}_[\d]+**
+**RecLibs**
+RecLibs**
+RecLibs
+# coolmultigui-data-manager-updated.ahk
+# coolmultigui-instance-updated.ahk

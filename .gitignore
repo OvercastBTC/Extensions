@@ -1,0 +1,14 @@
+// File: .gitignore
+out
+node_modules
+.vscode-test/
+*.vsix
+**.history**
+.history**
+.history
+**${file}_[\d]+**
+**RecLibs**
+RecLibs**
+RecLibs
+# coolmultigui-data-manager-updated.ahk
+# coolmultigui-instance-updated.ahk

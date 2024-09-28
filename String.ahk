@@ -757,6 +757,9 @@ File.Prototype.Base := File2
 ; File.Prototype.Append := (content) => FileWrite(content, this, "UTF-8")
 
 Class File2 {
+
+	static Run() => Run(this)
+
 	; static ReadFile() => FileRead(this, 'UTF-8')
 	static SwitchFiles(path2) {
 

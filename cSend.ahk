@@ -1,5 +1,5 @@
 #Requires AutoHotkey v2+
-#Include <Directives\__AE.v2>
+; #Include <Directives\__AE.v2>
 #Include <Includes\ObjectTypeExtensions>
 
 class Clip {

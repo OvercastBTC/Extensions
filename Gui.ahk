@@ -1,77 +1,79 @@
-
-Gui.Prototype.base := Gui2
+#Requires AutoHotkey v2+
+#Include <Includes\ObjectTypeExtensions>
+ 
+Gui.Prototype.Base := Gui2
 
 class Gui2 {
-    static WS_EX_NOACTIVATE := '0x08000000L'
-    static WS_EX_TRANSPARENT := '0x00000020L'
-    static WS_EX_COMPOSITED := '0x02000000L'
-    static WS_EX_CLIENTEDGE := '0x00000200L'
-    static WS_EX_APPWINDOW := '0x00040000L'
-    static NOACTIVATE := Gui2.WS_EX_NOACTIVATE
-    static TRANSPARENT := Gui2.WS_EX_TRANSPARENT
-    static COMPOSITED := Gui2.WS_EX_COMPOSITED
-    static CLIENTEDGE := Gui2.WS_EX_CLIENTEDGE
-    static APPWINDOW := Gui2.WS_EX_APPWINDOW
+    static WS_EX_NOACTIVATE 	:= '0x08000000L'
+    static WS_EX_TRANSPARENT 	:= '0x00000020L'
+    static WS_EX_COMPOSITED 	:= '0x02000000L'
+    static WS_EX_CLIENTEDGE 	:= '0x00000200L'
+    static WS_EX_APPWINDOW 		:= '0x00040000L'
+    static NOACTIVATE 			:= this.WS_EX_NOACTIVATE
+    static TRANSPARENT 			:= this.WS_EX_TRANSPARENT
+    static COMPOSITED 			:= this.WS_EX_COMPOSITED
+    static CLIENTEDGE 			:= this.WS_EX_CLIENTEDGE
+    static APPWINDOW 			:= this.WS_EX_APPWINDOW
 
-	static SetDefaultFont(guiObj := this, fontObj := "") {
+	static SetDefaultFont(guiObj := this, fontObj := '') {
         if (guiObj is Gui) {
 
             if (IsObject(fontObj)) {
                 ; Use the provided font object
-                size := fontObj.HasProp("Size") ? "s" . fontObj.Size : "s9"
-                weight := fontObj.HasProp("Weight") ? " w" . fontObj.Weight : ""
-                italic := fontObj.HasProp("Italic") && fontObj.Italic ? " Italic" : ""
-                underline := fontObj.HasProp("Underline") && fontObj.Underline ? " Underline" : ""
-                strikeout := fontObj.HasProp("Strikeout") && fontObj.Strikeout ? " Strike" : ""
-                name := fontObj.HasProp("Name") ? fontObj.Name : "Segoe UI"
+                size := fontObj.HasProp('Size') ? 's' . fontObj.Size : 's9'
+                weight := fontObj.HasProp('Weight') ? ' w' . fontObj.Weight : ''
+                italic := fontObj.HasProp('Italic') && fontObj.Italic ? ' Italic' : ''
+                underline := fontObj.HasProp('Underline') && fontObj.Underline ? ' Underline' : ''
+                strikeout := fontObj.HasProp('Strikeout') && fontObj.Strikeout ? ' Strike' : ''
+                name := fontObj.HasProp('Name') ? fontObj.Name : 'Segoe UI'
 
                 options := size . weight . italic . underline . strikeout
                 guiObj.SetFont(options, name)
-            } else if !guiObj.HasProp("Font") {
+            } else if !guiObj.HasProp('Font') {
                 ; Use default settings if no font object is provided
-                guiObj.SetFont("s9", "Segoe UI")
+                guiObj.SetFont('s9', 'Segoe UI')
             }
         }
 		return this
     }
 
-    static DarkMode(guiObj := this, BackgroundColor := '') {
-        if (guiObj is Gui) {
-            if (BackgroundColor = '') {
-                guiObj.BackColor := "0xA2AAAD"
-            } else {
-                guiObj.BackColor := BackgroundColor
-            }
-        }
-        ; return guiObj
-        return this
-    }
+	static DarkMode(guiObj := this, BackgroundColor := '') {
+		if (guiObj is Gui) {
+			if (BackgroundColor = '') {
+				guiObj.BackColor := '0xA2AAAD'
+			} else {
+				guiObj.BackColor := BackgroundColor
+			}
+		}
+		return this
+	}
 
-    static MakeFontNicer(guiObj := this, fontSize := 20) {
-        if (guiObj is Gui) {
-            guiObj.SetFont("s" fontSize " c0000ff", "Consolas")
-        }
-        ; return guiObj
-        return this
-    }
+	static MakeFontNicer(guiObj := this, fontSize := 20) {
+		if (guiObj is Gui) {
+			guiObj.SetFont('s' fontSize ' c0000ff', 'Consolas')
+		}
+		return this
+	}
 
-	static NeverFocusWindow(guiObj := this) {
+	; static NeverFocusWindow(guiObj := this) {
+	static NeverFocusWindow() {
 		; guiObj := guiObj ? guiObj : this
-		WinSetExStyle('+' . Gui2.NOACTIVATE, guiObj)
-		; WinSetExStyle('+' . Gui2.TRANSPARENT, guiObj)
-		; WinSetExStyle('+' . Gui2.COMPOSITED, guiObj)
-		; WinSetExStyle('+' . Gui2.CLIENTEDGE, guiObj)
-		; WinSetExStyle('+' . Gui2.APPWINDOW, guiObj)
+		; WinSetExStyle('+' this.NOACTIVATE, guiObj)
+		WinSetExStyle('+' this.NOACTIVATE, this)
+		; WinSetExStyle('+' . this.TRANSPARENT, guiObj)
+		; WinSetExStyle('+' . this.COMPOSITED, guiObj)
+		; WinSetExStyle('+' . this.CLIENTEDGE, guiObj)
+		; WinSetExStyle('+' . this.APPWINDOW, guiObj)
 		; return guiObj
 		return this
 	}
 
     static MakeClickThrough(guiObj := this) {
 		if (guiObj is Gui){
-			WinSetTransparent(255, guiObj)
-			guiObj.Opt("+E0x20")
+			; WinSetTransparent(255, guiObj)
+			WinSetTransparent(255, this)
+			guiObj.Opt('+E0x20')
 		}
-        ; return guiObj
         return this
     }
 
@@ -91,33 +93,33 @@ class Gui2 {
         return GuiButtonProperties.GetOptimalButtonLayout(totalButtons, containerWidth, containerHeight)
     }
 
-	; static AddButtonGroup(guiObj, buttonOptions, labelObj, groupOptions := "", columns := 1, glabel := '') {
+	; static AddButtonGroup(guiObj, buttonOptions, labelObj, groupOptions := '', columns := 1, glabel := '') {
     ;     if (guiObj is Gui) {
     ;         Gui2.SetDefaultFont(guiObj)
             
     ;         buttons := Map()
             
-    ;         if (Type(labelObj) = "String") {
-    ;             labelObj := StrSplit(labelObj, "|")
+    ;         if (Type(labelObj) = 'String') {
+    ;             labelObj := StrSplit(labelObj, '|')
     ;         }
             
-    ;         if (Type(labelObj) = "Array" or Type(labelObj) = "Map" or Type(labelObj) = "Object") {
+    ;         if (Type(labelObj) = 'Array' or Type(labelObj) = 'Map' or Type(labelObj) = 'Object') {
     ;             totalButtons := labelObj.Length
     ;             rows := Ceil(totalButtons / columns)
                 
     ;             ; Parse groupOptions
-    ;             groupPos := "", groupSize := ""
-    ;             if (groupOptions != "") {
-    ;                 RegExMatch(groupOptions, "i)x\s*(\d+)", &xMatch)
-    ;                 RegExMatch(groupOptions, "i)y\s*(\d+)", &yMatch)
-    ;                 RegExMatch(groupOptions, "i)w\s*(\d+)", &wMatch)
-    ;                 RegExMatch(groupOptions, "i)h\s*(\d+)", &hMatch)
+    ;             groupPos := '', groupSize := ''
+    ;             if (groupOptions != '') {
+    ;                 RegExMatch(groupOptions, 'i)x\s*(\d+)', &xMatch)
+    ;                 RegExMatch(groupOptions, 'i)y\s*(\d+)', &yMatch)
+    ;                 RegExMatch(groupOptions, 'i)w\s*(\d+)', &wMatch)
+    ;                 RegExMatch(groupOptions, 'i)h\s*(\d+)', &hMatch)
                     
-    ;                 groupPos := (xMatch ? "x" . xMatch[1] : "") . " " . (yMatch ? "y" . yMatch[1] : "")
-    ;                 groupSize := (wMatch ? "w" . wMatch[1] : "") . " " . (hMatch ? "h" . hMatch[1] : "")
+    ;                 groupPos := (xMatch ? 'x' . xMatch[1] : '') . ' ' . (yMatch ? 'y' . yMatch[1] : '')
+    ;                 groupSize := (wMatch ? 'w' . wMatch[1] : '') . ' ' . (hMatch ? 'h' . hMatch[1] : '')
     ;             }
                 
-    ;             groupBox := guiObj.AddGroupBox(groupPos . " " . groupSize, glabel)
+    ;             groupBox := guiObj.AddGroupBox(groupPos . ' ' . groupSize, glabel)
                 
     ;             for index, label in labelObj {
     ;                 ; Calculate position based on index
@@ -125,10 +127,10 @@ class Gui2 {
     ;                 row := Floor((A_Index - 1) / columns)
                     
     ;                 ; Parse individual button options
-    ;                 btnOptions := StrReplace(buttonOptions, "xm", "x+10")
-    ;                 btnOptions := StrReplace(btnOptions, "ym", "y+10")
-    ;                 btnOptions := RegExReplace(btnOptions, "i)x\s*(\+?\d+)", "x" . (col * 110 + 10))
-    ;                 btnOptions := RegExReplace(btnOptions, "i)y\s*(\+?\d+)", "y" . (row * 35 + 25))
+    ;                 btnOptions := StrReplace(buttonOptions, 'xm', 'x+10')
+    ;                 btnOptions := StrReplace(btnOptions, 'ym', 'y+10')
+    ;                 btnOptions := RegExReplace(btnOptions, 'i)x\s*(\+?\d+)', 'x' . (col * 110 + 10))
+    ;                 btnOptions := RegExReplace(btnOptions, 'i)y\s*(\+?\d+)', 'y' . (row * 35 + 25))
                     
     ;                 ; Add the button
     ;                 btn := guiObj.AddButton(btnOptions, label)
@@ -141,30 +143,30 @@ class Gui2 {
     ;     return Map()  ; Return an empty Map if guiObj is not a Gui
     ; }
 
-	static AddButtonGroup(guiObj, buttonOptions, labelObj, groupOptions := "", columns := 1) {
+	static AddButtonGroup(guiObj, buttonOptions, labelObj, groupOptions := '', columns := 1) {
         buttons := Map()
         
-        if (Type(labelObj) = "String") {
-            labelObj := StrSplit(labelObj, "|")
+        if (Type(labelObj) = 'String') {
+            labelObj := StrSplit(labelObj, '|')
         }
         
-        if (Type(labelObj) = "Array" or Type(labelObj) = "Map" or Type(labelObj) = "Object") {
+        if (Type(labelObj) = 'Array' or Type(labelObj) = 'Map' or Type(labelObj) = 'Object') {
             totalButtons := labelObj.Length
             rows := Ceil(totalButtons / columns)
             
             ; Parse groupOptions
-            groupPos := "", groupSize := ""
-            if (groupOptions != "") {
-                RegExMatch(groupOptions, "i)x\s*(\d+)", &xMatch)
-                RegExMatch(groupOptions, "i)y\s*(\d+)", &yMatch)
-                RegExMatch(groupOptions, "i)w\s*(\d+)", &wMatch)
-                RegExMatch(groupOptions, "i)h\s*(\d+)", &hMatch)
+            groupPos := '', groupSize := ''
+            if (groupOptions != '') {
+                RegExMatch(groupOptions, 'i)x\s*(\d+)', &xMatch)
+                RegExMatch(groupOptions, 'i)y\s*(\d+)', &yMatch)
+                RegExMatch(groupOptions, 'i)w\s*(\d+)', &wMatch)
+                RegExMatch(groupOptions, 'i)h\s*(\d+)', &hMatch)
                 
-                groupPos := (xMatch ? "x" . xMatch[1] : "") . " " . (yMatch ? "y" . yMatch[1] : "")
-                groupSize := (wMatch ? "w" . wMatch[1] : "") . " " . (hMatch ? "h" . hMatch[1] : "")
+                groupPos := (xMatch ? 'x' . xMatch[1] : '') . ' ' . (yMatch ? 'y' . yMatch[1] : '')
+                groupSize := (wMatch ? 'w' . wMatch[1] : '') . ' ' . (hMatch ? 'h' . hMatch[1] : '')
             }
             
-            groupBox := guiObj.AddGroupBox(groupPos . " " . groupSize, "Button Group")
+            groupBox := guiObj.AddGroupBox(groupPos . ' ' . groupSize, 'Button Group')
             groupBox.GetPos(&groupX, &groupY, &groupW, &groupH)
             
             btnWidth := Gui2.SetButtonWidth(labelObj)
@@ -182,9 +184,9 @@ class Gui2 {
                 xPos := groupX + xMargin + (col * (btnWidth + xSpacing))
                 yPos := groupY + yMargin + (row * (btnHeight + ySpacing))
                 
-                btnOptions := StrReplace(buttonOptions, "xm", "x" . xPos)
-                btnOptions := StrReplace(btnOptions, "ym", "y" . yPos)
-                btnOptions := "x" . xPos . " y" . yPos . " w" . btnWidth . " h" . btnHeight . " " . btnOptions
+                btnOptions := StrReplace(buttonOptions, 'xm', 'x' . xPos)
+                btnOptions := StrReplace(btnOptions, 'ym', 'y' . yPos)
+                btnOptions := 'x' . xPos . ' y' . yPos . ' w' . btnWidth . ' h' . btnHeight . ' ' . btnOptions
                 
                 btn := guiObj.AddButton(btnOptions, label)
                 buttons[label] := btn
@@ -209,16 +211,16 @@ class GuiButtonProperties {
     static SetButtonWidth(input, bMargin := 1) {
         largestLength := 0
 
-        if Type(input) = "String" {
+        if Type(input) = 'String' {
             return largestLength := StrLen(input)
-        } else if Type(input) = "Array" {
+        } else if Type(input) = 'Array' {
             for value in input {
                 currentLength := StrLen(value)
                 if (currentLength > largestLength) {
                     largestLength := currentLength
                 }
             }
-        } else if Type(input) = "Map" || Type(input) = "Object" {
+        } else if Type(input) = 'Map' || Type(input) = 'Object' {
             for key, value in input {
                 currentLength := StrLen(value)
                 if (currentLength > largestLength) {
@@ -234,23 +236,23 @@ class GuiButtonProperties {
 	static SetButtonLength(input) {
 		largestLength := 0
 
-		if Type(input) = "String" {
+		if Type(input) = 'String' {
 			return StrLen(input)
-		} else if Type(input) = "Array" {
+		} else if Type(input) = 'Array' {
 			for value in input {
 				currentLength := StrLen(value)
 				if (currentLength > largestLength) {
 					largestLength := currentLength
 				}
 			}
-		} else if Type(input) = "Map" || Type(input) = "Object" {
+		} else if Type(input) = 'Map' || Type(input) = 'Object' {
 			for key, value in input {
 				currentLength := StrLen(value)
 				if (currentLength > largestLength) {
 					largestLength := currentLength
 				}
 			}
-		} else if Type(input) = "String" && (SubStr(input, -4) = ".json" || SubStr(input, -3) = ".ini") {
+		} else if Type(input) = 'String' && (SubStr(input, -4) = '.json' || SubStr(input, -3) = '.ini') {
 			; Read from JSON or INI file and process
 			; (Implementation depends on file format and structure)
 		}
@@ -273,13 +275,13 @@ class GuiButtonProperties {
     }
 
     static GetButtonDimensions(text, options := {}) {
-        width := options.HasProp("width") ? options.width : GuiButtonProperties.CalculateButtonWidth(StrLen(text))
-        height := options.HasProp("height") ? options.height : GuiButtonProperties.SetButtonHeight()
+        width := options.HasProp('width') ? options.width : GuiButtonProperties.CalculateButtonWidth(StrLen(text))
+        height := options.HasProp('height') ? options.height : GuiButtonProperties.SetButtonHeight()
         return {width: width, height: height}
     }
 
     static GetOptimalButtonLayout(totalButtons, containerWidth, containerHeight) {
-        buttonDimensions := this.GetButtonDimensions("Sample")
+        buttonDimensions := this.GetButtonDimensions('Sample')
         maxColumns := Max(1, Floor(containerWidth / buttonDimensions.width))
         maxRows := Max(1, Floor(containerHeight / buttonDimensions.height))
 
@@ -298,23 +300,23 @@ class GuiButtonProperties {
 
 class FontProperties extends Gui {
     static Defaults := Map(
-        "Name", "Segoe UI",
-        "Size", 9,
-        "Weight", 400,
-        "Italic", false,
-        "Underline", false,
-        "Strikeout", false,
-        "Quality", 5,  ; 5 corresponds to CLEARTYPE_QUALITY
-        "Charset", 1   ; 1 corresponds to DEFAULT_CHARSET
+        'Name', 'Segoe UI',
+        'Size', 9,
+        'Weight', 400,
+        'Italic', false,
+        'Underline', false,
+        'Strikeout', false,
+        'Quality', 5,  ; 5 corresponds to CLEARTYPE_QUALITY
+        'Charset', 1   ; 1 corresponds to DEFAULT_CHARSET
     )
 
     static GetDefault(key) {
-        return this.Defaults.Has(key) ? this.Defaults[key] : ""
+        return this.Defaults.Has(key) ? this.Defaults[key] : ''
     }
 
-    __New(guiObj := "") {
+    __New(guiObj := '') {
         this.LoadDefaults()
-        if (guiObj != "") {
+        if (guiObj != '') {
             this.UpdateFont(guiObj)
         }
         this.AvgCharW := this.CalculateAverageCharWidth()
@@ -331,69 +333,69 @@ class FontProperties extends Gui {
             return
         }
 
-        hFont := SendMessage(0x31, 0, 0,, "ahk_id " guiObj.Hwnd)
+        hFont := SendMessage(0x31, 0, 0,, 'ahk_id ' guiObj.Hwnd)
         if (hFont = 0) {
             return
         }
         
         LOGFONT := Buffer(92, 0)
-        if (!DllCall("GetObject", "Ptr", hFont, "Int", LOGFONT.Size, "Ptr", LOGFONT.Ptr)) {
+        if (!DllCall('GetObject', 'Ptr', hFont, 'Int', LOGFONT.Size, 'Ptr', LOGFONT.Ptr)) {
             return
         }
     
-        this.Name := StrGet(LOGFONT.Ptr + 28, 32, "UTF-16")
-        this.Size := -NumGet(LOGFONT, 0, "Int") * 72 / A_ScreenDPI
-        this.Weight := NumGet(LOGFONT, 16, "Int")
-        this.Italic := NumGet(LOGFONT, 20, "Char") != 0
-        this.Underline := NumGet(LOGFONT, 21, "Char") != 0
-        this.Strikeout := NumGet(LOGFONT, 22, "Char") != 0
-        this.Quality := NumGet(LOGFONT, 26, "Char")
-        this.Charset := NumGet(LOGFONT, 23, "Char")
+        this.Name := StrGet(LOGFONT.Ptr + 28, 32, 'UTF-16')
+        this.Size := -NumGet(LOGFONT, 0, 'Int') * 72 / A_ScreenDPI
+        this.Weight := NumGet(LOGFONT, 16, 'Int')
+        this.Italic := NumGet(LOGFONT, 20, 'Char') != 0
+        this.Underline := NumGet(LOGFONT, 21, 'Char') != 0
+        this.Strikeout := NumGet(LOGFONT, 22, 'Char') != 0
+        this.Quality := NumGet(LOGFONT, 26, 'Char')
+        this.Charset := NumGet(LOGFONT, 23, 'Char')
 
         this.AvgCharW := this.CalculateAverageCharWidth()
     }
 
     CalculateAverageCharWidth() {
-        hdc := DllCall("GetDC", "Ptr", 0, "Ptr")
+        hdc := DllCall('GetDC', 'Ptr', 0, 'Ptr')
         if (hdc == 0) {
             return 8  ; Default fallback value
         }
 
-        hFont := DllCall("CreateFont"
-            , "Int", this.Size
-            , "Int", 0
-            , "Int", 0
-            , "Int", 0
-            , "Int", this.Weight
-            , "Uint", this.Italic
-            , "Uint", this.Underline
-            , "Uint", this.Strikeout
-            , "Uint", this.Charset
-            , "Uint", 0
-            , "Uint", 0
-            , "Uint", 0
-            , "Uint", 0
-            , "Str", this.Name)
+        hFont := DllCall('CreateFont'
+            , 'Int', this.Size
+            , 'Int', 0
+            , 'Int', 0
+            , 'Int', 0
+            , 'Int', this.Weight
+            , 'Uint', this.Italic
+            , 'Uint', this.Underline
+            , 'Uint', this.Strikeout
+            , 'Uint', this.Charset
+            , 'Uint', 0
+            , 'Uint', 0
+            , 'Uint', 0
+            , 'Uint', 0
+            , 'Str', this.Name)
 
         if (hFont == 0) {
-            DllCall("ReleaseDC", "Ptr", 0, "Ptr", hdc)
+            DllCall('ReleaseDC', 'Ptr', 0, 'Ptr', hdc)
             return 8  ; Default fallback value
         }
 
-        hOldFont := DllCall("SelectObject", "Ptr", hdc, "Ptr", hFont)
+        hOldFont := DllCall('SelectObject', 'Ptr', hdc, 'Ptr', hFont)
         textMetrics := Buffer(56)
-        if (!DllCall("GetTextMetrics", "Ptr", hdc, "Ptr", textMetrics)) {
-            DllCall("SelectObject", "Ptr", hdc, "Ptr", hOldFont)
-            DllCall("DeleteObject", "Ptr", hFont)
-            DllCall("ReleaseDC", "Ptr", 0, "Ptr", hdc)
+        if (!DllCall('GetTextMetrics', 'Ptr', hdc, 'Ptr', textMetrics)) {
+            DllCall('SelectObject', 'Ptr', hdc, 'Ptr', hOldFont)
+            DllCall('DeleteObject', 'Ptr', hFont)
+            DllCall('ReleaseDC', 'Ptr', 0, 'Ptr', hdc)
             return 8  ; Default fallback value
         }
 
-        averageCharWidth := NumGet(textMetrics, 20, "Int")
+        averageCharWidth := NumGet(textMetrics, 20, 'Int')
 
-        DllCall("SelectObject", "Ptr", hdc, "Ptr", hOldFont)
-        DllCall("DeleteObject", "Ptr", hFont)
-        DllCall("ReleaseDC", "Ptr", 0, "Ptr", hdc)
+        DllCall('SelectObject', 'Ptr', hdc, 'Ptr', hOldFont)
+        DllCall('DeleteObject', 'Ptr', hFont)
+        DllCall('ReleaseDC', 'Ptr', 0, 'Ptr', hdc)
 
         return averageCharWidth ? averageCharWidth : 8  ; Use fallback if averageCharWidth is 0
     }
@@ -425,21 +427,21 @@ class CleanInputBox extends Gui {
     }
 
     __New() {
-        super.__New("AlwaysOnTop -Caption +Border")
+        super.__New('AlwaysOnTop -Caption +Border')
         this.DarkMode()
         this.MakeFontNicer(15)
         this.MarginX := 0
 
         this.InputField := this.AddEdit(
-            "x0 Center -E0x200 Background" this.BackColor " w" this.Width
+            'x0 Center -E0x200 Background' this.BackColor ' w' this.Width
         )
 
-        this.Input := ""
+        this.Input := ''
         this.isWaiting := true
         this.RegisterHotkeys()
     }
 
-	Show() => (super.Show("y" this.TopMargin " w" this.Width), this)
+	Show() => (super.Show('y' this.TopMargin ' w' this.Width), this)
 
 	/**
 	 * Occupy the thread until you type in your input and press
@@ -465,46 +467,214 @@ class CleanInputBox extends Gui {
 	}
 
 	RegisterHotkeys() {
-		HotIfWinactive("ahk_id " this.Hwnd)
-		Hotkey("Enter", (*) => this.SetInput(), "On")
+		HotIfWinactive('ahk_id ' this.Hwnd)
+		Hotkey('Enter', (*) => this.SetInput(), 'On')
 		Hotkey('CapsLock', (*) => this.SetCancel())
-		this.OnEvent("Escape", (*) => this.SetCancel())
+		this.OnEvent('Escape', (*) => this.SetCancel())
 	}
 
 	Finish() {
-		HotIfWinactive("ahk_id " this.Hwnd)
-		Hotkey("Enter", "Off")
+		HotIfWinactive('ahk_id ' this.Hwnd)
+		Hotkey('Enter', 'Off')
 		this.Minimize()
 		this.Destroy()
 	}
 }
 
-class Infos extends Gui {
+; class Infos extends Gui {
 
-    ; static fontSize := 8
-    ; static distance := 4
-    ; static unit := A_ScreenDPI / 144
-    ; static guiWidth := Infos.fontSize * Infos.unit * Infos.distance
-    ; static maximumInfos := Floor(A_ScreenHeight / Infos.guiWidth)
-    ; static spots := Infos._GeneratePlacesArray()
-    ; static maxNumberedHotkeys := 12
-    ; static maxWidthInChars := 110
+;     static fontSize := 8
+;     static distance := 4
+;     static unit := A_ScreenDPI / 144
+;     static guiWidth := Infos.fontSize * Infos.unit * Infos.distance
+;     static maximumInfos := Floor(A_ScreenHeight / Infos.guiWidth)
+;     static spots := Infos._GeneratePlacesArray()
+;     static maxNumberedHotkeys := 12
+;     static maxWidthInChars := 110
 
-    ; __New(text, autoCloseTimeout := 0) {
-    ;     super.__New("AlwaysOnTop -Caption +ToolWindow")
-    ;     this.autoCloseTimeout := autoCloseTimeout
-    ;     this.text := text
-    ;     this.spaceIndex := 0  ; Initialize spaceIndex
-    ;     if !this._GetAvailableSpace() {
-    ;         this._StopDueToNoSpace()
-    ;         return
-    ;     }
-    ;     this._CreateGui()
-    ;     this._SetupHotkeysAndEvents()
-    ;     this._SetupAutoclose()
-    ;     this._Show()
-    ; }
+;     ; Add a writable text property
+;     __text := ''
+;     text {
+;         get => this.__text
+;         set => this.__text := value
+;     }
 
+;     __New(text, autoCloseTimeout := 0) {
+;         super.__New('AlwaysOnTop -Caption +ToolWindow')
+;         this.autoCloseTimeout := autoCloseTimeout
+;         this.text := text
+;         this.spaceIndex := 0
+;         if !this._GetAvailableSpace() {
+;             this._StopDueToNoSpace()
+;             return
+;         }
+;         this._CreateGui()
+;         this._SetupHotkeysAndEvents()
+;         this._SetupAutoclose()
+;         this._Show()
+;     }
+
+;     _CreateGui() {
+;         this.DarkMode()
+;         this.MakeFontNicer(Infos.fontSize)  ; This will use the instance method
+;         this.NeverFocusWindow()
+;         this.gcText := this.AddText(, this._FormatText())
+;         return this
+;     }
+
+;     ; Explicitly define inherited methods
+;     DarkMode(BackgroundColor := '') {
+;         return Gui2.DarkMode(this, BackgroundColor)
+;     }
+
+; 	; Instance method
+; 	MakeFontNicer(fontSize := 20) {
+; 		; this.SetFont('s' fontSize ' c0000ff', 'Consolas')
+; 		super.SetFont('s' fontSize ' c0000ff', 'Consolas')
+; 		; this.fontProperties.UpdateFont(this)
+; 		return this
+; 	}
+
+;     NeverFocusWindow() {
+;         return Gui2.NeverFocusWindow(this)
+;     }
+
+;     static DestroyAll(*) {
+;         for index, infoObj in Infos.spots {
+;             if (infoObj is Infos) {
+;                 infoObj.Destroy()
+;             }
+;         }
+;     }
+
+;     static _GeneratePlacesArray() {
+;         availablePlaces := []
+;         loop Infos.maximumInfos {
+;             availablePlaces.Push(false)
+;         }
+;         return availablePlaces
+;     }
+
+;     ReplaceText(newText) {
+;         try WinExist(this)
+;         catch
+;             return Infos(newText, this.autoCloseTimeout)
+
+;         if StrLen(newText) = StrLen(this.gcText.Text) {
+;             this.gcText.Text := newText
+;             this._SetupAutoclose()
+;             return this
+;         }
+
+;         Infos.spots[this.spaceIndex] := false
+;         return Infos(newText, this.autoCloseTimeout)
+;     }
+
+;     Destroy(*) {
+;         if (!WinExist(this.Hwnd)) {
+;             return false
+;         }
+;         this.RemoveHotkeys()
+;         super.Destroy()
+;         if (this.spaceIndex > 0) {  ; Only clear the spot if spaceIndex is valid
+;             Infos.spots[this.spaceIndex] := false
+;         }
+;         return true
+;     }
+
+;     RemoveHotkeys() {
+;         hotkeys := ['Escape', '^Escape'], hk := ''
+;         if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
+;             hotkeys.Push('F' this.spaceIndex)
+;         }
+;         HotIfWinExist('ahk_id ' this.Hwnd)
+;         for hk in hotkeys {
+;             try {
+;                 Hotkey(hk, 'Off')
+;             }
+;         }
+;         HotIf()
+;     }
+
+;     _FormatText() {
+;         ftext := String(this.text)
+;         lines := ftext.Split('`n')
+;         if lines.Length > 1 {
+;             ftext := this._FormatByLine(lines)
+;         }
+;         else {
+;             ftext := this._LimitWidth(ftext)
+;         }
+;         return String(this.text).Replace('&', '&&')
+;     }
+
+;     _FormatByLine(lines) {
+;         newLines := []
+;         for index, line in lines {
+;             newLines.Push(this._LimitWidth(line))
+;         }
+;         ftext := ''
+;         for index, line in newLines {
+;             if index = newLines.Length {
+;                 ftext .= line
+;                 break
+;             }
+;             ftext .= line '`n'
+;         }
+;         return ftext
+;     }
+
+;     _LimitWidth(ltext) {
+;         if StrLen(ltext) < Infos.maxWidthInChars {
+;             return ltext
+;         }
+;         insertions := 0
+;         while (insertions + 1) * Infos.maxWidthInChars + insertions < StrLen(ltext) {
+;             insertions++
+;             ltext := ltext.Insert('`n', insertions * Infos.maxWidthInChars + insertions)
+;         }
+;         return ltext
+;     }
+
+;     _GetAvailableSpace() {
+;         for index, isOccupied in Infos.spots {
+;             if !isOccupied {
+;                 this.spaceIndex := index
+;                 Infos.spots[index] := this
+;                 return true
+;             }
+;         }
+;         return false
+;     }
+
+;     _CalculateYCoord() => Round(this.spaceIndex * Infos.guiWidth - Infos.guiWidth)
+
+;     _StopDueToNoSpace() => this.Destroy()
+
+;     _SetupHotkeysAndEvents() {
+;         HotIfWinExist('ahk_id ' this.Hwnd)
+;         Hotkey('Escape', this.Destroy.Bind(this), 'On')
+;         Hotkey('^Escape', Infos.DestroyAll, 'On')
+;         if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
+;             Hotkey('F' this.spaceIndex, this.Destroy.Bind(this), 'On')
+;         }
+;         HotIf()
+;         this.gcText.OnEvent('Click', this.Destroy.Bind(this))
+;         this.OnEvent('Close', this.Destroy.Bind(this))
+;     }
+
+;     _SetupAutoclose() {
+;         if this.autoCloseTimeout {
+;             SetTimer(this.Destroy.Bind(this), -this.autoCloseTimeout)
+;         }
+;     }
+
+;     _Show() => (this.Show('AutoSize NA x0 y' this._CalculateYCoord()))
+; }
+
+; Make sure to keep this line at the end of your script
+
+class Infos {
     static fontSize := 8
     static distance := 4
     static unit := A_ScreenDPI / 144
@@ -514,15 +684,14 @@ class Infos extends Gui {
     static maxNumberedHotkeys := 12
     static maxWidthInChars := 110
 
-    ; Add a writable text property
-    __text := ""
+    __text := ''
     text {
         get => this.__text
         set => this.__text := value
     }
 
     __New(text, autoCloseTimeout := 0) {
-        super.__New("AlwaysOnTop -Caption +ToolWindow")
+        this.gui := Gui('AlwaysOnTop -Caption +ToolWindow')
         this.autoCloseTimeout := autoCloseTimeout
         this.text := text
         this.spaceIndex := 0
@@ -538,26 +707,25 @@ class Infos extends Gui {
 
     _CreateGui() {
         this.DarkMode()
-        this.MakeFontNicer(Infos.fontSize)  ; This will use the instance method
+        this.MakeFontNicer(Infos.fontSize)
         this.NeverFocusWindow()
-        this.gcText := this.AddText(, this._FormatText())
+        this.gcText := this.gui.AddText(, this._FormatText())
         return this
     }
 
-    ; Explicitly define inherited methods
     DarkMode(BackgroundColor := '') {
-        return Gui2.DarkMode(this, BackgroundColor)
+        this.gui.BackColor := BackgroundColor = '' ? '0xA2AAAD' : BackgroundColor
+        return this
     }
 
-	; Instance method
-	MakeFontNicer(fontSize := 20) {
-		this.SetFont("s" fontSize " c0000ff", "Consolas")
-		; this.fontProperties.UpdateFont(this)
-		return this
-	}
+    MakeFontNicer(fontSize := 20) {
+        this.gui.SetFont('s' fontSize ' c0000ff', 'Consolas')
+        return this
+    }
 
     NeverFocusWindow() {
-        return Gui2.NeverFocusWindow(this)
+        WinSetExStyle('+0x08000000', this.gui)  ; WS_EX_NOACTIVATE
+        return this
     }
 
     static DestroyAll(*) {
@@ -577,9 +745,9 @@ class Infos extends Gui {
     }
 
     ReplaceText(newText) {
-        try WinExist(this)
-        catch
+        if !this.gui.Hwnd {
             return Infos(newText, this.autoCloseTimeout)
+        }
 
         if StrLen(newText) = StrLen(this.gcText.Text) {
             this.gcText.Text := newText
@@ -592,57 +760,39 @@ class Infos extends Gui {
     }
 
     Destroy(*) {
-        if (!WinExist(this.Hwnd)) {
+        if (!this.gui.Hwnd) {
             return false
         }
         this.RemoveHotkeys()
-        super.Destroy()
-        if (this.spaceIndex > 0) {  ; Only clear the spot if spaceIndex is valid
+        this.gui.Destroy()
+        if (this.spaceIndex > 0) {
             Infos.spots[this.spaceIndex] := false
         }
         return true
     }
 
     RemoveHotkeys() {
-        hotkeys := ["Escape", "^Escape"], hk := ''
+        hotkeys := ['Escape', '^Escape']
         if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
-            hotkeys.Push("F" this.spaceIndex)
+            hotkeys.Push('F' this.spaceIndex)
         }
-        HotIfWinExist("ahk_id " this.Hwnd)
+        HotIfWinExist('ahk_id ' this.gui.Hwnd)
         for hk in hotkeys {
-            try {
-                Hotkey(hk, "Off")
-            }
+            try Hotkey(hk, 'Off')
         }
         HotIf()
     }
 
-    ; _CreateGui() {
-    ;     Gui2.DarkMode.Call(this)
-    ;     Gui2.MakeFontNicer.Call(this, Infos.fontSize)
-    ;     Gui2.NeverFocusWindow.Call(this)
-    ;     this.gcText := this.AddText(, this._FormatText())
-    ;     return this
-    ; }
-
-    ; _CreateGui() {
-    ;     this.DarkMode()
-    ;     this.MakeFontNicer(Infos.fontSize)
-    ;     this.NeverFocusWindow()
-    ;     this.gcText := this.AddText(, this._FormatText())
-    ;     return this
-    ; }
-
     _FormatText() {
         ftext := String(this.text)
-        lines := ftext.Split("`n")
+        lines := ftext.Split('`n')
         if lines.Length > 1 {
             ftext := this._FormatByLine(lines)
         }
         else {
             ftext := this._LimitWidth(ftext)
         }
-        return String(this.text).Replace("&", "&&")
+        return String(this.text).Replace('&', '&&')
     }
 
     _FormatByLine(lines) {
@@ -650,13 +800,13 @@ class Infos extends Gui {
         for index, line in lines {
             newLines.Push(this._LimitWidth(line))
         }
-        ftext := ""
+        ftext := ''
         for index, line in newLines {
             if index = newLines.Length {
                 ftext .= line
                 break
             }
-            ftext .= line "`n"
+            ftext .= line '`n'
         }
         return ftext
     }
@@ -668,7 +818,7 @@ class Infos extends Gui {
         insertions := 0
         while (insertions + 1) * Infos.maxWidthInChars + insertions < StrLen(ltext) {
             insertions++
-            ltext := ltext.Insert("`n", insertions * Infos.maxWidthInChars + insertions)
+            ltext := ltext.Insert('`n', insertions * Infos.maxWidthInChars + insertions)
         }
         return ltext
     }
@@ -689,28 +839,27 @@ class Infos extends Gui {
     _StopDueToNoSpace() => this.Destroy()
 
     _SetupHotkeysAndEvents() {
-        HotIfWinExist("ahk_id " this.Hwnd)
-        Hotkey("Escape", this.Destroy.Bind(this), "On")
-        Hotkey("^Escape", Infos.DestroyAll, "On")
+        HotIfWinExist('ahk_id ' this.gui.Hwnd)
+        Hotkey('Escape', (*) => this.Destroy(), 'On')
+        Hotkey('^Escape', (*) => Infos.DestroyAll(), 'On')
         if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
-            Hotkey("F" this.spaceIndex, this.Destroy.Bind(this), "On")
+            Hotkey('F' this.spaceIndex, (*) => this.Destroy(), 'On')
         }
         HotIf()
-        this.gcText.OnEvent("Click", this.Destroy.Bind(this))
-        this.OnEvent("Close", this.Destroy.Bind(this))
+        this.gcText.OnEvent('Click', (*) => this.Destroy())
+        this.gui.OnEvent('Close', (*) => this.Destroy())
     }
 
     _SetupAutoclose() {
         if this.autoCloseTimeout {
-            SetTimer(this.Destroy.Bind(this), -this.autoCloseTimeout)
+            SetTimer(() => this.Destroy(), -this.autoCloseTimeout)
         }
     }
 
-    _Show() => (this.Show("AutoSize NA x0 y" this._CalculateYCoord()))
+    _Show() => this.gui.Show('AutoSize NA x0 y' this._CalculateYCoord())
 }
 
-; Make sure to keep this line at the end of your script
-Gui.Prototype.base := Gui2
+
 
 ; Info(text, timeout?) => Infos(text, timeout ?? 2000)
 Info(text, timeout?) => Infos(text, timeout ?? 0)
@@ -730,53 +879,53 @@ class ErrorLogGui {
     }
     
     AddTrayMenuItem() {
-        A_TrayMenu.Add("Toggle ErrorLog Click-Through", (*) => this.MakeClickThrough())
+        A_TrayMenu.Add('Toggle ErrorLog Click-Through', (*) => this.MakeClickThrough())
     }
 
     MakeClickThrough() {
         static isClickThrough := false
         if (isClickThrough) {
-            WinSetTransparent("Off", "ahk_id " . this.logGui.Hwnd)
-            this.logGui.Opt("-E0x20")  ; Remove WS_EX_TRANSPARENT style
+            WinSetTransparent('Off', 'ahk_id ' . this.logGui.Hwnd)
+            this.logGui.Opt('-E0x20')  ; Remove WS_EX_TRANSPARENT style
             isClickThrough := false
         } else {
-            WinSetTransparent(255, "ahk_id " . this.logGui.Hwnd)
-            this.logGui.Opt("+E0x20")  ; Add WS_EX_TRANSPARENT style
+            WinSetTransparent(255, 'ahk_id ' . this.logGui.Hwnd)
+            this.logGui.Opt('+E0x20')  ; Add WS_EX_TRANSPARENT style
             isClickThrough := true
         }
     }
 
     GenerateUniqueId() {
         Loop {
-            randomId := "ErrorLogGui_" . Random(1, 9999)
-            if (!WinExist("ahk_class AutoHotkeyGUI ahk_pid " . DllCall("GetCurrentProcessId") . " " . randomId)) {
+            randomId := 'ErrorLogGui_' . Random(1, 9999)
+            if (!WinExist('ahk_class AutoHotkeyGUI ahk_pid ' . DllCall('GetCurrentProcessId') . ' ' . randomId)) {
                 return randomId
             }
         }
     }
     
     ; CreateGui() {
-    ;     this.logGui := Gui("+Resize", "Error Log - " . this.instanceId)
+    ;     this.logGui := Gui('+Resize', 'Error Log - ' . this.instanceId)
     ;     this.logGui.NeverFocusWindow()  ; This prevents the window from getting focus
-    ;     this.logGui.Opt("+LastFound")
+    ;     this.logGui.Opt('+LastFound')
     ;     WinSetTitle(this.instanceId)
-    ;     this.logListView := this.logGui.Add("ListView", "r20 w600 vLogContent", ["Timestamp", "Message"])
-    ;     this.logGui.Add("Button", "w100", "Copy to Clipboard").OnEvent("Click", (*) => this.CopyToClipboard())
-    ;     this.logGui.OnEvent("Close", (*) => this.logGui.Hide())
-    ;     this.logGui.OnEvent("Size", (*) => this.ResizeControls())
+    ;     this.logListView := this.logGui.Add('ListView', 'r20 w600 vLogContent', ['Timestamp', 'Message'])
+    ;     this.logGui.Add('Button', 'w100', 'Copy to Clipboard').OnEvent('Click', (*) => this.CopyToClipboard())
+    ;     this.logGui.OnEvent('Close', (*) => this.logGui.Hide())
+    ;     this.logGui.OnEvent('Size', (*) => this.ResizeControls())
     ;     this.logGui.Show()
     ; }
 	
 	CreateGui() {
-        this.logGui := Gui("+Resize", "Error Log - " . this.instanceId)
+        this.logGui := Gui('+Resize', 'Error Log - ' . this.instanceId)
         ; this.logGui.NeverFocusWindow()  ; Using the new method
 		; Gui2.NeverFocusWindow(this.logGui)
-        this.logGui.Opt("+LastFound")
+        this.logGui.Opt('+LastFound')
         WinSetTitle(this.instanceId)
-        this.logListView := this.logGui.Add("ListView", "r20 w600 vLogContent", ["Timestamp", "Message"])
-        this.logGui.Add("Button", "w100", "Copy to Clipboard").OnEvent("Click", (*) => this.CopyToClipboard())
-        this.logGui.OnEvent("Close", (*) => this.logGui.Hide())
-        this.logGui.OnEvent("Size", (*) => this.ResizeControls())
+        this.logListView := this.logGui.Add('ListView', 'r20 w600 vLogContent', ['Timestamp', 'Message'])
+        this.logGui.Add('Button', 'w100', 'Copy to Clipboard').OnEvent('Click', (*) => this.CopyToClipboard())
+        this.logGui.OnEvent('Close', (*) => this.logGui.Hide())
+        this.logGui.OnEvent('Size', (*) => this.ResizeControls())
         this.logGui.Show()
     }
     
@@ -786,7 +935,7 @@ class ErrorLogGui {
             this.logGui.GetClientPos(,,&w, &h)
             clientPos.w := w
             clientPos.h := h
-            ; this.logListView.Move("w" . (clientPos.w - 20) . " h" . (clientPos.h - 40))
+            ; this.logListView.Move('w' . (clientPos.w - 20) . ' h' . (clientPos.h - 40))
             this.logListView.Move(,,(clientPos.w - 20) , (clientPos.h - 40))
         }
     }
@@ -806,7 +955,7 @@ class ErrorLogGui {
                 }
             }
         } catch as err {
-            ErrorLogger.Log("Error loading log data: " . err.Message)
+            ErrorLogger.Log('Error loading log data: ' . err.Message)
             this.logData := Map()
         }
         
@@ -814,7 +963,7 @@ class ErrorLogGui {
     }
     
     CreateDefaultLogFile() {
-        defaultData := [{timestamp: FormatTime(, "yyyy-MM-dd HH:mm:ss"), message: "Log file created"}]
+        defaultData := [{timestamp: FormatTime(, 'yyyy-MM-dd HH:mm:ss'), message: 'Log file created'}]
         FileAppend(jsongo.Stringify(defaultData, 4), this.logFile)
     }
     
@@ -827,24 +976,24 @@ class ErrorLogGui {
     ; }
 
 	UpdateListView() {
-		OutputDebug("LogData count: " . this.logData.Count)
-		OutputDebug("Updating ListView")
-		this.logListView.Opt("-Redraw")  	; Suspend redrawing
+		OutputDebug('LogData count: ' . this.logData.Count)
+		OutputDebug('Updating ListView')
+		this.logListView.Opt('-Redraw')  	; Suspend redrawing
 		this.logListView.Delete()
 		for timestamp, message in this.logData {
 			this.logListView.Add(, timestamp, message)
 		}
 		this.logListView.ModifyCol()  		; Auto-size columns
-		this.logListView.Opt("+Redraw")  	; Resume redrawing
+		this.logListView.Opt('+Redraw')  	; Resume redrawing
 	}
     
     ; Log(message, showGui := true) {
-    ;     timestamp := FormatTime(, "yyyy-MM-dd HH:mm:ss")
+    ;     timestamp := FormatTime(, 'yyyy-MM-dd HH:mm:ss')
     ;     this.logData.Set(timestamp, message)
         
     ;     this.UpdateListView()
     ;     this.SaveLogData()
-    ;     OutputDebug(timestamp . ": " . message)
+    ;     OutputDebug(timestamp . ': ' . message)
         
     ;     if (showGui) {
     ;         this.logGui.Show()
@@ -852,7 +1001,7 @@ class ErrorLogGui {
     ; }
     
 	Log(input, showGui := true) {
-		timestamp := FormatTime(, "yyyy-MM-dd HH:mm:ss")
+		timestamp := FormatTime(, 'yyyy-MM-dd HH:mm:ss')
 		
 		if (IsObject(input)) {
 			this.logData.Set(timestamp, input)
@@ -883,13 +1032,13 @@ class ErrorLogGui {
     this.CreateBaseGUI()
     
     ; Create headers based on the first entry
-    headers := ["Timestamp"]
+    headers := ['Timestamp']
     for key in firstEntry.OwnProps() {
         headers.Push(key)
     }
     
     ; Create the ListView
-    this.logListView := this.logGui.Add("ListView", "r20 w600", headers)
+    this.logListView := this.logGui.Add('ListView', 'r20 w600', headers)
     
     ; Populate the ListView
     for timestamp, data in this.logData {
@@ -905,10 +1054,11 @@ class ErrorLogGui {
 }
 
 CreateBaseGUI() {
-    this.logGui := Gui("+Resize", "Error Log - " . this.instanceId)
-    Gui2.NeverFocusWindow(this.logGui)
-    this.logGui.OnEvent("Close", (*) => this.logGui.Hide())
-    this.logGui.OnEvent("Size", (*) => this.ResizeControls())
+    this.logGui := Gui('+Resize', 'Error Log - ' . this.instanceId)
+    ; Gui2.NeverFocusWindow(this.logGui)
+    this.logGui.NeverFocusWindow()
+    this.logGui.OnEvent('Close', (*) => this.logGui.Hide())
+    this.logGui.OnEvent('Size', (*) => this.ResizeControls())
 }
 
 	DelayedUpdate() {
@@ -925,7 +1075,7 @@ CreateBaseGUI() {
 	; 		}
 	; 		FileAppend(jsongo.Stringify(dataToSave, 4), this.logFile)
 	; 	} catch as err {
-	; 		OutputDebug("Error saving log data: " . err.Message)
+	; 		OutputDebug('Error saving log data: ' . err.Message)
 	; 	}
 	; }
 
@@ -937,18 +1087,18 @@ CreateBaseGUI() {
 			}
 			FileAppend(jsongo.Stringify(dataToSave, 4), this.logFile)
 		} catch as err {
-			try OutputDebug("Error saving log data: " . err.Message)
-			try Infos("Error saving log data: " . err.Message)
+			try OutputDebug('Error saving log data: ' . err.Message)
+			try Infos('Error saving log data: ' . err.Message)
 		}
 	}
     
     CopyToClipboard() {
-        clipboardContent := ""
+        clipboardContent := ''
         for timestamp, message in this.logData {
-            clipboardContent .= timestamp . ": " . message . "`n"
+            clipboardContent .= timestamp . ': ' . message . '`n'
         }
         A_Clipboard := clipboardContent
-        MsgBox("Log data copied to clipboard!")
+        MsgBox('Log data copied to clipboard!')
     }
 }
 
@@ -956,14 +1106,14 @@ CreateBaseGUI() {
 class ErrorLogger {
     static instances := Map()
     
-    static GetInstance(name := "default") {
+    static GetInstance(name := 'default') {
         if (!this.instances.Has(name)) {
             this.instances.Set(name, ErrorLogGui())
         }
         return this.instances.Get(name)
     }
     
-    static Log(input, instanceName := "default", showGui := true) {
+    static Log(input, instanceName := 'default', showGui := true) {
         this.GetInstance(instanceName).Log(input, showGui)
     }
 }
@@ -981,30 +1131,30 @@ class FileSystemSearch extends Gui {
 	 * Call GetInput() after creating the class instance if you want to have
 	 * an input box to type in your search into.
 	 */
-	__New(searchWhere?, caseSense := "Off") {
-		super.__New("+Resize", "These files match your search:")
+	__New(searchWhere?, caseSense := 'Off') {
+		super.__New('+Resize', 'These files match your search:')
 
 		Gui2.MakeFontNicer(14)
 		Gui2.DarkMode(this)
 
-		this.List := this.AddText(, "
+		this.List := this.AddText(, '
 		(
 			Right click on a result to copy its full path.
 			Double click to open it in explorer.
-		)")
+		)')
 
 		this.WidthOffset  := 35
 		this.HeightOffset := 80
 
 		this.List := this.AddListView(
-			"Count50 Background" this.BackColor,
+			'Count50 Background' this.BackColor,
 			/**
 			 * Count50 — we're not losing much by allocating more memory
 			 * than needed,
 			 * and on the other hand we improve the performance by a lot
 			 * by doing so
 			 */
-			["File", "Folder", "Directory"]
+			['File', 'Folder', 'Directory']
 		)
 
 		this.caseSense := caseSense
@@ -1030,10 +1180,10 @@ class FileSystemSearch extends Gui {
 	}
 
 	ValidatePath() {
-		SetTitleMatchMode("RegEx")
-		try this.path := WinGetTitle("^[A-Z]: ahk_exe explorer\.exe")
+		SetTitleMatchMode('RegEx')
+		try this.path := WinGetTitle('^[A-Z]: ahk_exe explorer\.exe')
 		catch Any {
-			Info("Open an explorer window first!")
+			Info('Open an explorer window first!')
 			Exit()
 		}
 	}
@@ -1048,20 +1198,20 @@ class FileSystemSearch extends Gui {
 		 * Improves performance rather than keeping on adding rows
 		 * and redrawing for each one of them
 		 */
-		this.List.Opt("-Redraw")
+		this.List.Opt('-Redraw')
 
-		;To remove the worry of "did I really start the search?"
-		gInfo := Infos("The search is in progress")
+		;To remove the worry of 'did I really start the search?'
+		gInfo := Infos('The search is in progress')
 
-		if this.path ~= "^[A-Z]:\\$" {
+		if this.path ~= '^[A-Z]:\\$' {
 			this.path := this.path[1, -2]
 		}
 
-		loop files this.path "\*.*", "FDR" {
+		loop files this.path '\*.*', 'FDR' {
 			if !A_LoopFileName.Find(input, this.caseSense) {
 				continue
 			}
-			if A_LoopFileAttrib.Find("D")
+			if A_LoopFileAttrib.Find('D')
 				this.List.Add(, , A_LoopFileName, A_LoopFileDir)
 			else if A_LoopFileExt
 				this.List.Add(, A_LoopFileName, , A_LoopFileDir)
@@ -1069,10 +1219,10 @@ class FileSystemSearch extends Gui {
 
 		gInfo.Destroy()
 
-		this.List.Opt("+Redraw")
+		this.List.Opt('+Redraw')
 		this.List.ModifyCol() ;It makes the columns fit the data — @rbstrachan
 
-		this.Show("AutoSize")
+		this.Show('AutoSize')
 	}
 
 	DestroyResultListGui() {
@@ -1081,16 +1231,16 @@ class FileSystemSearch extends Gui {
 	}
 
 	SetOnEvents() {
-		this.List.OnEvent("DoubleClick",
+		this.List.OnEvent('DoubleClick',
 			(guiCtrlObj, selectedRow) => this.ShowResultInFolder(selectedRow)
 		)
-		this.List.OnEvent("ContextMenu",
+		this.List.OnEvent('ContextMenu',
 			(guiCtrlObj, rowNumber, var:=0) => this.CopyPathToClip(rowNumber)
 		)
-		this.OnEvent("Size",
+		this.OnEvent('Size',
 			(guiObj, minMax, width, height) => this.FixResizing(width, height)
 		)
-		this.OnEvent("Escape", (guiObj) => this.DestroyResultListGui())
+		this.OnEvent('Escape', (guiObj) => this.DestroyResultListGui())
 	}
 
 	FixResizing(width, height) {
@@ -1106,7 +1256,7 @@ class FileSystemSearch extends Gui {
 	}
 
 	ShowResultInFolder(selectedRow) {
-		try Run("explorer.exe /select," this.GetPathFromList(selectedRow))
+		try Run('explorer.exe /select,' this.GetPathFromList(selectedRow))
 		/**
 		 * By passing select, we achieve the cool highlighting thing when the file / folder
 		 * gets opened. (You can pass command line parameters into the run function)
@@ -1115,7 +1265,7 @@ class FileSystemSearch extends Gui {
 
 	CopyPathToClip(rowNumber) {
 		A_Clipboard := this.GetPathFromList(rowNumber)
-		Info("Path copied to clipboard!")
+		Info('Path copied to clipboard!')
 	}
 
 	GetPathFromList(rowNumber) {
@@ -1132,21 +1282,21 @@ class FileSystemSearch extends Gui {
 		dir  := this.List.GetText(rowNumber, 2)
 		path := this.List.GetText(rowNumber, 3)
 
-		return path "\" file dir ; No explanation required, it's just logic — @rbstrachan
+		return path '\' file dir ; No explanation required, it's just logic — @rbstrachan
 	}
 }
 class FileSearch {
-    static fso := ComObject("Scripting.FileSystemObject")
+    static fso := ComObject('Scripting.FileSystemObject')
 
     __New(searchPath := A_WorkingDir) {
         this.searchPath := searchPath
     }
 
-    Search(pattern := "", options := {}) {
+    Search(pattern := '', options := {}) {
         results := []
         this._SearchRecursive(this.searchPath, pattern, options, &results)
-        sortBy := options.HasOwnProp("sortBy") ? options.sortBy : "name"
-        sortDesc := options.HasOwnProp("sortDesc") ? options.sortDesc : false
+        sortBy := options.HasOwnProp('sortBy') ? options.sortBy : 'name'
+        sortDesc := options.HasOwnProp('sortDesc') ? options.sortDesc : false
         return this._SortResults(results, sortBy, sortDesc)
     }
 
@@ -1162,18 +1312,18 @@ class FileSearch {
     _MatchesCriteria(file, pattern, options) {
         if pattern && !InStr(file.Name, pattern)
             return false
-        if options.HasOwnProp("minSize") && file.Size < options.minSize
+        if options.HasOwnProp('minSize') && file.Size < options.minSize
             return false
-        if options.HasOwnProp("maxSize") && file.Size > options.maxSize
+        if options.HasOwnProp('maxSize') && file.Size > options.maxSize
             return false
-        if options.HasOwnProp("afterDate") && file.DateLastModified < options.afterDate
+        if options.HasOwnProp('afterDate') && file.DateLastModified < options.afterDate
             return false
-        if options.HasOwnProp("beforeDate") && file.DateLastModified > options.beforeDate
+        if options.HasOwnProp('beforeDate') && file.DateLastModified > options.beforeDate
             return false
         return true
     }
 
-	_SortResults(results, sortBy := "name", sortDesc := false) {
+	_SortResults(results, sortBy := 'name', sortDesc := false) {
 		results.Sort((*) => this._CompareItems(&a, &b, sortBy, sortDesc))
 		return results
 	}

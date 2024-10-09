@@ -299,6 +299,8 @@ class cJSON {
 		return A_PtrSize = 4 ? this._LoadLib32Bit() : this._LoadLib64Bit()
 	}
 
+	static Stringify(obj, pretty := 0) => this.Dump(obj, pretty := 0)
+
 	static Dump(obj, pretty := 0)
 	{
 		if !IsObject(obj)
@@ -311,6 +313,8 @@ class cJSON {
 		this.lib.dumps(ObjPtr(obj), bufbuf, &size, !!pretty, 0)
 		return StrGet(buf, "UTF-16")
 	}
+
+	static Parse(json) => this.Load(json)
 
 	static Load(json) {
 		_json := " " json ; Prefix with a space to provide room for BSTR prefixes

@@ -567,8 +567,9 @@ class String2 {
 	 */
 	static Concat(words*) {
 		delim := this, s := ""
-		for v in words
+		for v in words{
 			s .= v . delim
+		}
 		return SubStr(s,1,-StrLen(this))
 	}
 
@@ -581,41 +582,41 @@ class String2 {
 	static DamerauLevenshteinDistance(s, t) {
 		m := StrLen(s)
 		n := StrLen(t)
-		if (m = 0)
+		if (m = 0){
 			return n
-		if (n = 0)
+		}
+		if (n = 0){
 			return m
-
+		}
 		d := Array()
 		d.Push([])
 		d[1].Push(0)
 		Loop m+1
 			d[1].Push(A_Index)
-		Loop n
-		{
+		Loop n {
 			d.Push([A_Index])
-			Loop m+1
+			Loop m+1{
 				d[A_Index+1].Push(0)
+			}
 		}
 
 		ix := 0
 		iy := -1
-		Loop Parse, s
-		{
+		Loop Parse, s {
 			sc := A_LoopField
 			i := A_Index
 			jx := 0
 			jy := -1
-			Loop Parse, t
-			{
+			Loop Parse, t {
 				j := A_Index
 				a := d[ix+1][jx+1] + 1
 				b := d[i+1][jx+1] + 1
 				c := (A_LoopField != sc) + d[ix+1][jx+1]
 				d[i+1][j+1] := Min(a, b, c)
 
-				if (i > 1 and j > 1 and sc = tx and sx = A_LoopField)
+				if (i > 1 and j > 1 and sc = tx and sx = A_LoopField){
 					d[i+1][j+1] := Min(d[i+1][j+1], d[iy+1][ix+1] + c)
+				}
 
 				jx++
 				jy++
@@ -624,6 +625,29 @@ class String2 {
 			ix++
 			iy++
 			sx := A_LoopField
+		}
+		return d[m+1][n+1]
+	}
+
+	static LevenshteinDistance(s, t) {
+		m := StrLen(s)
+		n := StrLen(t)
+		d := Array()
+	
+		Loop m+1{
+			d.Push([A_Index-1])
+		}
+		Loop n{
+			d[1].Push(A_Index)
+		}
+	
+		Loop m {
+			i := A_Index + 1
+			Loop n {
+				j := A_Index + 1
+				cost := (SubStr(s, i-1, 1) != SubStr(t, j-1, 1))
+				d[i][j] := Min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + cost)
+			}
 		}
 		return d[m+1][n+1]
 	}
@@ -654,6 +678,142 @@ class String2 {
 	; 		return text
 	; 	}
 	; }
+
+	static LongestCommonSubsequence(s, t) {
+		m := StrLen(s)
+		n := StrLen(t)
+		L := Array()
+	
+		Loop m+1 {
+			L.Push([])
+			Loop n+1{
+				L[A_Index].Push(0)
+			}
+		}
+	
+		Loop m {
+			i := A_Index
+			Loop n {
+				j := A_Index
+				if (SubStr(s, i, 1) = SubStr(t, j, 1)){
+					L[i+1][j+1] := L[i][j] + 1
+				}
+				else{
+					L[i+1][j+1] := Max(L[i+1][j], L[i][j+1])
+				}
+			}
+		}
+	
+		return L[m+1][n+1]
+	}
+
+	static JaroWinklerDistance(s, t) {
+		jaroDist := this.JaroDistance(s, t)
+		prefixLength := 0
+		Loop 4 {
+			if (SubStr(s, A_Index, 1) = SubStr(t, A_Index, 1))
+				prefixLength++
+			else
+				break
+		}
+		return jaroDist + (prefixLength * 0.1 * (1 - jaroDist))
+	}
+	
+	static JaroDistance(s, t) {
+		sLen := StrLen(s)
+		tLen := StrLen(t)
+		
+		if (sLen = 0 and tLen = 0)
+			return 1
+		
+		matchDistance := Floor(Max(sLen, tLen) / 2) - 1
+		sMatches := Array(), tMatches := Array()
+		matches := 0, transpositions := 0
+		
+		Loop Parse, s {
+			start := Max(1, A_Index - matchDistance)
+			end := Min(A_Index + matchDistance, tLen)
+			Loop end - start + 1 {
+				j := start + A_Index - 1
+				if (!tMatches[j] and A_LoopField = SubStr(t, j, 1)) {
+					sMatches[A_Index] := true
+					tMatches[j] := true
+					matches++
+					break
+				}
+			}
+		}
+		
+		if (matches = 0)
+			return 0
+		
+		k := 1
+		Loop Parse, s {
+			if (sMatches[A_Index]) {
+				while (!tMatches[k])
+					k++
+				if (A_LoopField != SubStr(t, k, 1))
+					transpositions++
+				k++
+			}
+		}
+		
+		return (matches / sLen + matches / tLen + (matches - transpositions / 2) / matches) / 3
+	}
+
+	static HammingDistance(s, t) {
+		if (StrLen(s) != StrLen(t))
+			throw Error("Strings must be of equal length")
+		
+		distance := 0
+		Loop Parse, s
+			if (A_LoopField != SubStr(t, A_Index, 1))
+				distance++
+		return distance
+	}
+
+	; Improved FindBestMatch method
+    static FindBestMatch(input, possibilities) {
+        bestMatch := ""
+        highestScore := 0
+
+        for _, possibility in possibilities {
+            score := this.CalculateSimilarityScore(input, possibility)
+            if (score > highestScore) {
+                highestScore := score
+                bestMatch := possibility
+            }
+        }
+
+        return bestMatch
+    }
+
+    ; Calculate similarity score between two strings
+    static CalculateSimilarityScore(str1, str2) {
+        ; Combine multiple similarity metrics for a more robust match
+        levenshteinScore := 1 - (this.LevenshteinDistance(str1, str2) / Max(StrLen(str1), StrLen(str2)))
+        jaroWinklerScore := this.JaroWinklerSimilarity(str1, str2)
+        prefixScore := this.PrefixSimilarity(str1, str2)
+
+        ; Weighted average of scores
+        return (levenshteinScore * 0.4) + (jaroWinklerScore * 0.4) + (prefixScore * 0.2)
+    }
+
+    ; Jaro-Winkler similarity
+    static JaroWinklerSimilarity(s, t) => this.JaroWinklerDistance(s, t)
+
+    ; Prefix similarity
+    static PrefixSimilarity(s, t) {
+        commonPrefixLength := 0
+        minLength := Min(StrLen(s), StrLen(t))
+
+        while (commonPrefixLength < minLength && SubStr(s, commonPrefixLength + 1, 1) == SubStr(t, commonPrefixLength + 1, 1)) {
+            commonPrefixLength++
+        }
+
+        return commonPrefixLength / Max(StrLen(s), StrLen(t))
+    }
+
 }
 
 DamerauLevenshteinDistance(s, t) {
@@ -705,6 +865,7 @@ DamerauLevenshteinDistance(s, t) {
 	}
 	return d[m+1][n+1]
 }
+
 String2.Prototype.Base := Text2
 
 Class Text2 {

@@ -61,6 +61,47 @@ These methods cannot be used as stand-alone. To do that, you must add another ar
 */
 
 class String2 {
+
+	static ToMap(strObj?) {
+        return this._StringToMap(IsSet(strObj) ? strObj : this)
+    }
+
+    static _StringToMap(str) {
+        map := Map()
+        for line in StrSplit(str, "`n", "`r") {
+            if (line := Trim(line)) {
+                parts := StrSplit(line, "=", " `t", 2)
+                if (parts.Length = 2)
+                    map[parts[1]] := parts[2]
+            }
+        }
+        return map
+    }
+
+    static ToArray(strObj?) {
+        return this._StringToArray(IsSet(strObj) ? strObj : this)
+    }
+
+    static _StringToArray(str) {
+        return StrSplit(str, "`n", "`r")
+    }
+
+    static ToObject(strObj?) {
+        return this._StringToObject(IsSet(strObj) ? strObj : this)
+    }
+
+    static _StringToObject(str) {
+        obj := {}
+        for line in StrSplit(str, "`n", "`r") {
+            if (line := Trim(line)) {
+                parts := StrSplit(line, "=", " `t", 2)
+                if (parts.Length = 2)
+                    obj.%parts[1]% := parts[2]
+            }
+        }
+        return obj
+    }
+
 	static __New() {
 		; Add String2 methods and properties into String object
 		__ObjDefineProp := Object.Prototype.DefineProp

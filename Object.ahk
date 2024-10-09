@@ -1,22 +1,61 @@
 #Requires AutoHotkey v2.0+
 #Include <Includes\ObjectTypeExtensions>
 
-ObjToString(toPrint) {
-	toPrint_string := ''
-	switch Type(toPrint) {
-		case "Map", "Array", "Object":
-			toPrint_string := JSONgo.stringify(toPrint)
-		default:
-			try toPrint_string := String(toPrint)
-	}
-	; try FileAppend(toPrint_string "`n", "*", "utf-8")
-	; try Infos(toPrint_string)
-	return toPrint_string
-}
 
-Object.Prototype.DefineProp('ToString', {Call:ObjToString})
+
+; Modify Object prototype
+Object.Prototype.DefineProp("ToString", {Call: (this) => Object2.ToString(this)})
+Object.Prototype.DefineProp("Has", {Call: (this, key) => this.HasOwnProp(key)})
+Object.Prototype.DefineProp("Get", {Call: (this, key, default := "") => this.Has(key) ? this.%key% : default})
+Object.Prototype.DefineProp("ToArray", {Call: (this) => Object2.ToArray(this)})
+Object.Prototype.DefineProp("ToMap", {Call: (this) => Object2.ToMap(this)})
 
 class Object2 extends Object {
+
+	static ToString(toPrint) {
+		toPrint_string := ''
+		switch Type(toPrint) {
+			case "Map", "Array", "Object":
+				toPrint_string := cJSON.Stringify(toPrint)
+			default:
+				try toPrint_string := String(toPrint)
+		}
+		; try FileAppend(toPrint_string "`n", "*", "utf-8")
+		; try Infos(toPrint_string)
+		return toPrint_string
+	}
+
+	static ToArray(obj?) {
+        return this._ObjectToArray(IsSet(obj) ? obj : this)
+    }
+
+    static _ObjectToArray(obj) {
+        arr := []
+        for key, value in obj.OwnProps() {
+            if IsObject(value) {
+                arr.Push({key: key, value: this._ObjectToArray(value)})
+            } else {
+                arr.Push({key: key, value: value})
+            }
+        }
+        return arr
+    }
+
+    static ToMap(obj?) {
+        return this._ObjectToMap(IsSet(obj) ? obj : this)
+    }
+
+    static _ObjectToMap(obj) {
+        map := Map()
+        for key, value in obj.OwnProps() {
+            if IsObject(value) {
+                map[key] := this._ObjectToMap(value)
+            } else {
+                map[key] := value
+            }
+        }
+        return map
+    }
 ; class Object2 {
     
 	/**
@@ -31,7 +70,7 @@ class Object2 extends Object {
      * @returns {Object} Modified object
      */
     Slice(start := 1, end := 0, step := 1) {
-        len := Object2.Length, i := (start < 1) ? len + start : start
+        len := this.Length, i := (start < 1) ? len + start : start
         j := Min((end < 1) ? len + end : end, len)
         r := {}
 

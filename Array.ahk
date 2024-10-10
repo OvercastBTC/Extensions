@@ -28,10 +28,45 @@
     Array.Extend(enums*)                    => Adds the values of other arrays or enumerables to the end of this one.
 */
 
+/*
+	Name: [ObjectType].ahk
+	Version 0.4 (05.09.23)
+	Created: 27.08.22
+	Author: Descolada
+	Author: OvercastBTC (made updates, added methods)
+
+	Description:
+	A compilation of useful [ObjectType] methods.
+
+    [ObjectType].Slice(start:=1, end:=0, step:=1)  => Returns a section of the [ObjectType] from 'start' to 'end', 
+        optionally skipping elements with 'step'.
+    [ObjectType].Swap(a, b)                        => Swaps elements at indexes a and b.
+    [ObjectType].Map(func, [ObjectType]s*)                => Applies a function to each element in the [ObjectType].
+    [ObjectType].ForEach(func)                     => Calls a function for each element in the [ObjectType].
+    [ObjectType].Filter(func)                      => Keeps only values that satisfy the provided function
+    [ObjectType].Reduce(func, initialValue?)       => Applies a function cumulatively to all the values in 
+        the [ObjectType], with an optional initial value.
+    [ObjectType].IndexOf(value, start:=1)          => Finds a value in the [ObjectType] and returns its index.
+    [ObjectType].Find(func, &match?, start:=1)     => Finds a value satisfying the provided function and returns the index.
+        match will be set to the found value. 
+    [ObjectType].Reverse()                         => Reverses the [ObjectType].
+    [ObjectType].Count(value)                      => Counts the number of occurrences of a value.
+    [ObjectType].Sort(OptionsOrCallback?, Key?)    => Sorts an [ObjectType], optionally by object values.
+    [ObjectType].Shuffle()                         => Randomizes the [ObjectType].
+    [ObjectType].Join(delim:=",")                  => Joins all the elements to a string using the provided delimiter.
+    [ObjectType].ToString(delim:='`n')             => Same intent as [ObjectType].Join() : By Axlefublr
+    [ObjectType].Flat()                            => Turns a nested [ObjectType] into a one-level [ObjectType].
+    [ObjectType].Extend(enums*)                    => Adds the values of other [ObjectType]s or enumerables to the end of this one.
+*/
+
 Array.Prototype.base := Array2
 
 class Array2 {
-; class Array2 extends Array{
+
+	static Length => (*) => Array.Length
+
+	static Push(str) => (*) => Array.Push(str)
+
     /**
      * Returns a section of the array from 'start' to 'end', optionally skipping elements with 'step'.
      * Modifies the original array.
@@ -108,15 +143,18 @@ class Array2 {
      * @param func The filter function that accepts one argument.
      * @returns {Array}
      */
-    static Filter(func) {
-        if !HasMethod(func)
-            throw ValueError("Filter: func must be a function", -1)
-        r := []
-        for v in this
-            if func(v)
-                r.Push(v)
-        return this := r
-    }
+	static Filter(func) {
+		if !HasMethod(func){
+			throw ValueError("Filter: func must be a function", -1)
+		}
+		r := []
+		for v in this{
+			if func(v){
+				r.Push(v)
+			}
+		}
+		return this := r
+	}
     /**
      * Applies a function cumulatively to all the values in the array, with an optional initial value.
      * @param func The function that accepts two arguments and returns one value
@@ -267,12 +305,13 @@ class Array2 {
      * Randomizes the array. Slightly faster than Array.Sort(,"Random N")
      * @returns {Array}
      */
-    static Shuffle() {
-        len := this.Length
-        Loop len-1
-            this.Swap(A_index, Random(A_index, len))
-        return this
-    }
+	static Shuffle() {
+		len := this.Length
+		Loop len-1{
+			this.Swap(A_index, Random(A_index, len))
+		}
+		return this
+	}
     /**
      * 
      */
@@ -343,7 +382,7 @@ class Array2 {
             }
             str .= value char
         }
-        return str
+        return this
     }
     static ToString(char?) => this._ArrayToString(char?)
     ; ---------------------------------------------------------------------------
@@ -529,7 +568,6 @@ class Array2 {
         return this
     }
     
-
     /*
         O(n^2) -- worst case
         O(n^2) -- average case
@@ -613,7 +651,6 @@ class Array2 {
         return this
     }
     
-
     /*
         O(n logn) -- all cases
         Sorts 100k indexes in: 4 seconds

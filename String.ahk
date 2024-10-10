@@ -60,6 +60,8 @@ These methods cannot be used as stand-alone. To do that, you must add another ar
 '-==========================================================================-'
 */
 
+String.Prototype := String2
+
 class String2 {
 
 	static ToMap(strObj?) {
@@ -67,15 +69,15 @@ class String2 {
     }
 
     static _StringToMap(str) {
-        map := Map()
+        StrMap := Map()
         for line in StrSplit(str, "`n", "`r") {
             if (line := Trim(line)) {
                 parts := StrSplit(line, "=", " `t", 2)
                 if (parts.Length = 2)
-                    map[parts[1]] := parts[2]
+                    StrMap[parts[1]] := parts[2]
             }
         }
-        return map
+        return StrMap
     }
 
     static ToArray(strObj?) {
@@ -91,15 +93,15 @@ class String2 {
     }
 
     static _StringToObject(str) {
-        obj := {}
+        StrObj := {}
         for line in StrSplit(str, "`n", "`r") {
             if (line := Trim(line)) {
                 parts := StrSplit(line, "=", " `t", 2)
                 if (parts.Length = 2)
-                    obj.%parts[1]% := parts[2]
+                    StrObj.%parts[1]% := parts[2]
             }
         }
-        return obj
+        return StrObj
     }
 
 	static __New() {

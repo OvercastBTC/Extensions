@@ -67,8 +67,8 @@ class Map2 {
             bf := func.Bind(k,v)
             for _, vv in enums
                 bf := bf.Bind(vv.Has(k) ? vv[k] : unset)
-            try bf := bf()
-            this[k] := bf
+            try nbf := bf()
+            this[k] := nbf
         }
         return this
     }

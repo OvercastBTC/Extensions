@@ -48,9 +48,20 @@ class Gui2 {
 		return this
 	}
 
-	static MakeFontNicer(guiObj := this, fontSize := 20) {
+	/**
+	 * 
+	 * @param {Gui Object} guiObj | GuiObj = this or is this [GuiObj.MakeFontNicer(12, 'red', 'TimeNewRoman') | MakeFontNicer(GuiObj [, options])]
+	 * @param {Integer} fontSize | default: 20
+	 * @param {String} color | default: color := 'c0000ff'
+	 * @param {String} fontName | default: fontName := 'Consolas'
+	 * @returns {Gui Object} | returns this
+	 */
+	static MakeFontNicer(guiObj := this, fontSize := 20, color := 'c0000ff', fontName := 'Consolas') {
+		if fontSize ~= 's([\d\s\w]+)' {
+			fontSize.RegExReplace('i)s', '$1')
+		}
 		if (guiObj is Gui) {
-			guiObj.SetFont('s' fontSize ' c0000ff', 'Consolas')
+			guiObj.SetFont('s' fontSize ' ' color, fontName)
 		}
 		return this
 	}
@@ -158,9 +169,16 @@ class Gui2 {
 
     static OriginalPositions := Map()
 
-    static AddCustomizationOptions(GuiObj) {
+    ; ; Static method
+    ; static AddCustomizationOptions(GuiObj) {
+    ;     return Gui2.Prototype.AddCustomizationOptions.Call(GuiObj)
+    ; }
+
+    ; Instance method
+    static AddCustomizationOptions(GuiObj?) {
+        GuiObj := this
         ; Get position for the new group box
-        GuiObj.groupBox.GetPos(&gX, &gY, &gW, &gH)
+        this.GetPos(&gX, &gY, &gW, &gH)
         
         ; Add a new group box for customization options
         GuiObj.AddGroupBox("x" gX " y" (gY + gH + 10) " w" gW " h100", "GUI Customization")
@@ -186,12 +204,14 @@ class Gui2 {
             .OnEvent("Change", (*) => this.UpdateCustomHotkey(GuiObj))
 
         ; Store original positions
-        this.StoreOriginalPositions(GuiObj)
+        Gui2.StoreOriginalPositions(GuiObj)
 
         ; Add methods to GuiObj
-        GuiObj.DefineProp("ApplySettings", {Call: (self, settings) => this.ApplySettings(self, settings)})
-        GuiObj.DefineProp("SaveSettings", {Call: (self) => this.SaveSettings(self)})
-        GuiObj.DefineProp("LoadSettings", {Call: (self) => this.LoadSettings(self)})
+        GuiObj.DefineProp("ApplySettings", {Call: (self, settings) => Gui2.ApplySettings(self, settings)})
+        GuiObj.DefineProp("SaveSettings", {Call: (self) => Gui2.SaveSettings(self)})
+        GuiObj.DefineProp("LoadSettings", {Call: (self) => Gui2.LoadSettings(self)})
+
+        return this
     }
 
     static StoreOriginalPositions(GuiObj) {
@@ -326,7 +346,7 @@ class Gui2 {
 
 	; Static wrapper methods
 	static AddCustomizationOptionsToGui(GuiObj?) {
-		GuiObj.AddCustomizationOptions()
+		this.AddCustomizationOptions()
 		return this
 	}
 
@@ -1571,11 +1591,9 @@ Init		{Gui}.Init := 1, will cause all controls of the Gui to be redrawn on next 
 			{Gui}.Init := 2, will also reinitialize abbreviations
 ;! ---------------------------------------------------------------------------
  ***********************************************************************/
-Class GuiReSizer
-{
+Class GuiReSizer {
     ;{ Call GuiReSizer
-    Static Call(GuiObj, WindowMinMax, GuiW, GuiH)
-    {
+    Static Call(GuiObj, WindowMinMax, GuiW, GuiH) {
         ; On Initial display of Gui use redraw to cleanup first positioning
         Try{
             (GuiObj.Init)
@@ -1779,16 +1797,13 @@ Class GuiReSizer
             }
         }
     }
-    ;}
-    ;{ Now
-    Static Now(GuiObj, Redraw := true, Init := 2)
-    {
-        If Redraw
+
+    Static Now(GuiObj, Redraw := true, Init := 2) {
+        If Redraw {
             GuiObj.Init := Init
-        GuiObj.GetClientPos(, , &Width, &Height)
+        }
+        GuiObj.GetClientPos(&X, &Y, &Width, &Height)
         GuiReSizer(GuiObj, WindowMinMax := 1, Width, Height)
     }
-    ;}
-    ;}
+
 }
-;}

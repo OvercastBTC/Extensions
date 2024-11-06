@@ -147,25 +147,25 @@ class String2 {
 	 * str := "prop1=value1`nprop2=value2"
 	 * obj := String2.ToObject(str)
 	 */
-	; TODO Fix - still not passing tests
-    ; static ToObject(strObj?) {
-    ;     str := Type(strObj) = "String" ? strObj : this
-    ;     if (Type(str) != "String")
-    ;         throw TypeError("Input must be a string")
-        
-    ;     obj := {}
-    ;     if (str = "")
-    ;         return obj
-            
-    ;     for line in StrSplit(str, "`n", "`r") {
-    ;         if (line := Trim(line)) {
-    ;             parts := StrSplit(line, "=", " `t", 2)
-    ;             if (parts.Length = 2 && RegExMatch(parts[1], "^[a-zA-Z_]\w*$"))
-    ;                 obj.%Trim(parts[1])% := Trim(parts[2])
-    ;         }
-    ;     }
-    ;     return obj
-    ; }
+
+	static ToObject(strObj?) {
+		str := Type(strObj) = "String" ? strObj : this
+		if (Type(str) != "String")
+			throw TypeError("Input must be a string")
+		
+		obj := {}
+		if (str = "")
+			return obj
+			
+		for line in StrSplit(str, "`n", "`r") {
+			if (line := Trim(line)) {
+				parts := StrSplit(line, "=", " `t", 2)
+				if (parts.Length = 2 && RegExMatch(parts[1], "^[a-zA-Z_]\w*$"))
+					obj.%Trim(parts[1])% := Trim(parts[2])
+			}
+		}
+		return obj
+	}
 
 	static _StringToMap(str:='') {
         mapObj := Map()

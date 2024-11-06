@@ -1264,9 +1264,9 @@ CompressSpaces(text) => RegexReplace(text, " {2,}", " ")
 * @param text *String* The text to write
 */
 WriteFile(whichFile, text := "") {
-	; fileObj := FileOpen(whichFile, "w", "UTF-8-RAW")
+	fileObj := FileOpen(whichFile, "w", "UTF-8-RAW")
 	; fileObj := FileOpen(whichFile, 'rw', 'UTF-8')
-	fileObj := FileOpen(whichFile, 'rw')
+	; fileObj := FileOpen(whichFile, 'rw')
 	fileObj.Write(text)
 }
 

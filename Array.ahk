@@ -28,14 +28,47 @@
     Array.Extend(enums*)                    => Adds the values of other arrays or enumerables to the end of this one.
 */
 
+; class ArrayExtensions {
+;     static __New() {
+;         for methodName in Array2.OwnProps() {
+;             if methodName != "__New" && HasMethod(Array2, methodName) {
+;                 ; Check if method already exists
+;                 if Array.Prototype.HasOwnProp(methodName) {
+;                     ; Either skip, warn, or override based on your needs
+;                     continue  ; Skip if method exists
+;                     ; Or override:
+;                     ; Array.Prototype.DeleteProp(methodName)
+;                 }
+;                 Array.Prototype.DefineProp(methodName, {
+;                     Call: Array2.%methodName%
+;                 })
+				
+;             }
+;         }
+;     }
+; }
+
 Array.Prototype.base := Array2
 
 class Array2 {
-
-	static Length => this.Length
-
-	static Push(str) => this.Push(str)
-
+	static __New() {
+		; Add all Array2 methods to Array prototype
+		for methodName in Array2.OwnProps() {
+			if methodName != "__New" && HasMethod(Array2, methodName) {
+				; Check if method already exists
+				if Array.Prototype.HasOwnProp(methodName) {
+					; Either skip, warn, or override based on your needs
+					continue  ; Skip if method exists
+					; Or override:
+					; Array.Prototype.DeleteProp(methodName)
+				}
+				Array.Prototype.DefineProp(methodName, {
+					Call: Array2.%methodName%
+				})
+			}
+		}
+	}
+; class Array2 extends Array{
     /**
      * Returns a section of the array from 'start' to 'end', optionally skipping elements with 'step'.
      * Modifies the original array.
@@ -44,6 +77,10 @@ class Array2 {
      * @param step Optional: an integer specifying the incrementation. Default is 1.
      * @returns {Array}
      */
+	static Length() {
+		arrObj := Array()
+		arrObj.Length
+	}
     static Slice(start:=1, end:=0, step:=1) {
         len := this.Length, i := start < 1 ? len + start : start, j := Min(end < 1 ? len + end : end, len), r := [], reverse := False
         if len = 0
@@ -112,18 +149,15 @@ class Array2 {
      * @param func The filter function that accepts one argument.
      * @returns {Array}
      */
-	static Filter(func) {
-		if !HasMethod(func){
-			throw ValueError("Filter: func must be a function", -1)
-		}
-		r := []
-		for v in this{
-			if func(v){
-				r.Push(v)
-			}
-		}
-		return this := r
-	}
+    static Filter(func) {
+        if !HasMethod(func)
+            throw ValueError("Filter: func must be a function", -1)
+        r := []
+        for v in this
+            if func(v)
+                r.Push(v)
+        return this := r
+    }
     /**
      * Applies a function cumulatively to all the values in the array, with an optional initial value.
      * @param func The function that accepts two arguments and returns one value
@@ -274,13 +308,12 @@ class Array2 {
      * Randomizes the array. Slightly faster than Array.Sort(,"Random N")
      * @returns {Array}
      */
-	static Shuffle() {
-		len := this.Length
-		Loop len-1{
-			this.Swap(A_index, Random(A_index, len))
-		}
-		return this
-	}
+    static Shuffle() {
+        len := this.Length
+        Loop len-1
+            this.Swap(A_index, Random(A_index, len))
+        return this
+    }
     /**
      * 
      */
@@ -327,11 +360,13 @@ class Array2 {
         for enum in enums {
             if !HasMethod(enum, "__Enum")
                 throw ValueError("Extend: arr must be an iterable")
-            for _, v in enum
-                this.Push(v)
+            for _, v in enum {
+				this.Push(v)
+			}
         }
         return this
     }
+	
 ; }
 ; ---------------------------------------------------------------------------
 ;! Original end of Descolada's Array
@@ -351,9 +386,9 @@ class Array2 {
             }
             str .= value char
         }
-        return this
+        return str
     }
-    static ToStr(char?) => this._ArrayToString(char?)
+    static ToString(char?) => this._ArrayToString(char?)
     ; ---------------------------------------------------------------------------
     static _ArrayHasValue(valueToFind) {
         for index, value in this {
@@ -375,11 +410,16 @@ class Array2 {
      */
     static SafePush(value) {
         if !this.HasValue(value) {
-            this.Push(value)
+			this.Push(value)
             ; return
         }
         ; throw IndexError("Array already has key", -1, key)
     }
+
+	static Push(v) {
+		arrObj := Array()
+		arrObj.Push(v)
+	}
 
     /**
      * A version of SafePush that you can just pass another array object into to set everything in it.
@@ -387,10 +427,12 @@ class Array2 {
      * @param arrayObj ***Array*** the initial array
      * @param arrayToPush ***Array*** the array to set into the initial array
      */
-    static SafePushArray(ArrayObj) {
+    static SafePushArray(arrayToPush?) {
+		arrayToPush := []
         for each, value in this {
-            this.SafePush(value)
+            arrayToPush.SafePush(value)
         }
+		return arrayToPush
     }
         
     static aReverse() {
@@ -482,7 +524,7 @@ class Array2 {
         Terms:
         Rising array   -- every index matches its value
         Shuffled array -- a shuffled rising array (Fisher-Yates shuffle)
-        Random array   -- array filled with random numbers. the range of each number starts at 1 and ends at the length of the array multiplied by 7 (check the preset parameter of variation in GenerateRandomArray())
+        Random array   -- array filled with random numbers. the range of each number starts at 1 and ends at this length of the array multiplied by 7 (check the preset parameter of variation in GenerateRandomArray())
 
         The time it takes to sort 100k indexes is measured by sorting *shuffled* arrays
     */
@@ -526,8 +568,8 @@ class Array2 {
 
     static FisherYatesShuffle() {
         shufflerIndex := 0
-        while --shufflerIndex > -this.Prototype.Base.Length {
-            randomIndex := Random(-this.Prototype.Base.Length, shufflerIndex)
+        while --shufflerIndex > -this.Length {
+            randomIndex := Random(-this.Length, shufflerIndex)
             if this[randomIndex] = this[shufflerIndex]
                 continue
             temp := this[shufflerIndex]
@@ -537,6 +579,7 @@ class Array2 {
         return this
     }
     
+
     /*
         O(n^2) -- worst case
         O(n^2) -- average case
@@ -545,7 +588,7 @@ class Array2 {
     */
     static BubbleSort() {
         finishedIndex := -1
-        Loop this.Prototype.Base.Length - 1 {
+        Loop this.Length - 1 {
             swaps := 0
             for key, value in this {
                 if value = this[finishedIndex]
@@ -573,7 +616,7 @@ class Array2 {
     */
     static SelectionSort() {
         sortedIndex := 0
-        Loop this.Prototype.Base.Length - 1 {
+        Loop this.Length - 1 {
             sortedIndex++
             NewMinInts := 0
 
@@ -620,6 +663,7 @@ class Array2 {
         return this
     }
     
+
     /*
         O(n logn) -- all cases
         Sorts 100k indexes in: 4 seconds
@@ -652,7 +696,7 @@ class Array2 {
             return fullArray
         }
 
-        arrayLength := this.Prototype.Base.Length
+        arrayLength := this.Length
 
         if arrayLength <= 1
             return this
@@ -694,7 +738,7 @@ class Array2 {
             _PushIndex(value)
         }
 
-        While sortedArrayObj.Length != this.Prototype.Base.Length {
+        While sortedArrayObj.Length != this.Length {
             ;We're waiting for the sorted array to be filled since otherwise we immidiately return an empty array (settimers don't take up the thread while waiting, unlike sleep)
         }
         return sortedArrayObj

@@ -34,25 +34,29 @@
 	Map._MapHasValue(valueToFind)			=> finds if a value is in a map => Same intent as Map.Find() above
 	Map._MapHaskey(keyToFind)				=> finds if a key is in a map
  */
-; #Include <Tools\Info> ;? Added for the Choose()
+
 
 Map.Prototype.base := Map2
 
 class Map2 {
-    /**
-     * Returns all the keys of the Map in an array
-     * @returns {Array}
-     */
-    ; static Keys {
-    ;     get => [this*]
-    ; }
-    /**
-     * Returns all the values of the Map in an array
-     * @returns {Array}
-     */
-    ; static Values {
-    ;     get => [this.__Enum(2).Bind(&_)*]
-    ; }
+
+	static __New() {
+		; Add all Map2 methods to Array prototype
+		for methodName in Map2.OwnProps() {
+			if methodName != "__New" && HasMethod(Map2, methodName) {
+				; Check if method already exists
+				if Map.Prototype.HasOwnProp(methodName) {
+					; Either skip, warn, or override based on your needs
+					continue  ; Skip if method exists
+					; Or override:
+					; Map.Prototype.DeleteProp(methodName)
+				}
+				Map.Prototype.DefineProp(methodName, {
+					Call: Map2.%methodName%
+				})
+			}
+		}
+	}
 
     /**
      * Applies a function to each element in the map (mutates the map).
@@ -67,8 +71,8 @@ class Map2 {
             bf := func.Bind(k,v)
             for _, vv in enums
                 bf := bf.Bind(vv.Has(k) ? vv[k] : unset)
-            try nbf := bf()
-            this[k] := nbf
+            try bf := bf()
+            this[k] := bf
         }
         return this
     }
@@ -182,21 +186,24 @@ class Map2 {
 	 * By default, you can set the same key to a map multiple times.
 	 * Naturally, you'll be able to reference only one of them, which is likely not the behavior you want.
 	 * This function will throw an error if you try to set a key that already exists in the map.
+	 * @description Safely sets a key-value pair, only if the key doesn't already exist
 	 * @param mapObj ***Map*** to set the key-value pair into
 	 * @param key ***String***
 	 * @param value ***Any***
 	 */
-	static SafeSet(key, value) {
-		if !this.Prototype.Base.Has(key) {
-			this.Prototype.Base.Set(key, value)
-			; return ;? disabled => dunno why a return is necessary
-		}
-		; throw IndexError("Map already has key", -1, key) ;? disabled => causes thread to stop
-	}
 
+	static SafeSet(key, value) {
+		MapObj := this
+        if this.HasKey(key)
+            throw IndexError("Map already has key: " key)
+        MapObj.Set(key, value)
+        return this
+    }
+	
 	/**
 	 * A version of SafeSet that you can just pass another map object into to set everything in it.
 	 * Will still throw an error for every key that already exists in the map.
+	 * @description Safely sets multiple key-value pairs from another map
 	 * @param mapObj ***Map*** the initial map
 	 * @param mapToSet ***Map*** the map to set into the initial map
 	 */
@@ -297,18 +304,19 @@ class Map2 {
 			; }
 			str .= key ' : ' value delim
 		}
-		return str
+		; return str
+		return RTrim(str, delim)
 	}
 	static ToString(delim?) => this._MapToString(delim?)
 	; ---------------------------------------------------------------------------
 
 	static _MapHasValue(valueToFind) {
-		for key, value in this {
-			if (value = valueToFind){
-				return true
-			}
-		}
-		return false
+        for key, value in this {
+            if (value = valueToFind) {
+                return value
+            }
+        }
+        return false
 	}
 	static HasValue(valueToFind) => this._MapHasValue(valueToFind)
 

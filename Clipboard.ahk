@@ -397,13 +397,15 @@ class Clip {
 	 * @param cBak 
 	 * @returns {ClipboardAll} 
 	 */
+	static BackupClear(&cBak?) => this._Clipboard_Backup_Clear(&cBak?)
 	static cBakClr(&cBak?) => this._Clipboard_Backup_Clear(&cBak?)
+	static BakClr(&cBak?) => this._Clipboard_Backup_Clear(&cBak?)
 	static _Clipboard_Backup_Clear(&cBak?) {
-		ClipObj := {
-			cBak : cBak,
-			hWndClipOpen  : hWndClipOpen  := this.GetOpenClipboardWindow(),
-			hWndClipOwner : hWndClipOwner := DllCall('GetClipboardOwner')
-		}
+		; ClipObj := {
+		; 	cBak : cBak,
+		; 	hWndClipOpen  : hWndClipOpen  := this.GetOpenClipboardWindow(),
+		; 	hWndClipOwner : hWndClipOwner := DllCall('GetClipboardOwner')
+		; }
 		cBak := ClipboardAll()
 		; this.EmptyClipboard()
 		; this.Sleep(100)
@@ -429,6 +431,7 @@ class Clip {
 		this.CloseClipboard()
 	}
 	static cRestore(cBak) => this._Clipboard_Restore(cBak)
+	static Restore(cBak) => this._Clipboard_Restore(cBak)
 
     static ToCSV() {
         ; This method remains unchanged as it doesn't use JSON

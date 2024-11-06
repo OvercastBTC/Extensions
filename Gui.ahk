@@ -1,6 +1,6 @@
 #Requires AutoHotkey v2+
 #Include <Includes\ObjectTypeExtensions>
- 
+
 Gui.Prototype.Base := Gui2
 
 class Gui2 {
@@ -48,20 +48,9 @@ class Gui2 {
 		return this
 	}
 
-	/**
-	 * 
-	 * @param {Gui Object} guiObj | GuiObj = this or is this [GuiObj.MakeFontNicer(12, 'red', 'TimeNewRoman') | MakeFontNicer(GuiObj [, options])]
-	 * @param {Integer} fontSize | default: 20
-	 * @param {String} color | default: color := 'c0000ff'
-	 * @param {String} fontName | default: fontName := 'Consolas'
-	 * @returns {Gui Object} | returns this
-	 */
-	static MakeFontNicer(guiObj := this, fontSize := 20, color := 'c0000ff', fontName := 'Consolas') {
-		if fontSize ~= 's([\d\s\w]+)' {
-			fontSize.RegExReplace('i)s', '$1')
-		}
+	static MakeFontNicer(guiObj := this, fontSize := 20) {
 		if (guiObj is Gui) {
-			guiObj.SetFont('s' fontSize ' ' color, fontName)
+			guiObj.SetFont('s' fontSize ' c0000ff', 'Consolas')
 		}
 		return this
 	}
@@ -169,16 +158,9 @@ class Gui2 {
 
     static OriginalPositions := Map()
 
-    ; ; Static method
-    ; static AddCustomizationOptions(GuiObj) {
-    ;     return Gui2.Prototype.AddCustomizationOptions.Call(GuiObj)
-    ; }
-
-    ; Instance method
-    static AddCustomizationOptions(GuiObj?) {
-        GuiObj := this
+    static AddCustomizationOptions(GuiObj) {
         ; Get position for the new group box
-        this.GetPos(&gX, &gY, &gW, &gH)
+        GuiObj.groupBox.GetPos(&gX, &gY, &gW, &gH)
         
         ; Add a new group box for customization options
         GuiObj.AddGroupBox("x" gX " y" (gY + gH + 10) " w" gW " h100", "GUI Customization")
@@ -204,14 +186,12 @@ class Gui2 {
             .OnEvent("Change", (*) => this.UpdateCustomHotkey(GuiObj))
 
         ; Store original positions
-        Gui2.StoreOriginalPositions(GuiObj)
+        this.StoreOriginalPositions(GuiObj)
 
         ; Add methods to GuiObj
-        GuiObj.DefineProp("ApplySettings", {Call: (self, settings) => Gui2.ApplySettings(self, settings)})
-        GuiObj.DefineProp("SaveSettings", {Call: (self) => Gui2.SaveSettings(self)})
-        GuiObj.DefineProp("LoadSettings", {Call: (self) => Gui2.LoadSettings(self)})
-
-        return this
+        GuiObj.DefineProp("ApplySettings", {Call: (self, settings) => this.ApplySettings(self, settings)})
+        GuiObj.DefineProp("SaveSettings", {Call: (self) => this.SaveSettings(self)})
+        GuiObj.DefineProp("LoadSettings", {Call: (self) => this.LoadSettings(self)})
     }
 
     static StoreOriginalPositions(GuiObj) {
@@ -346,7 +326,7 @@ class Gui2 {
 
 	; Static wrapper methods
 	static AddCustomizationOptionsToGui(GuiObj?) {
-		this.AddCustomizationOptions()
+		GuiObj.AddCustomizationOptions()
 		return this
 	}
 
@@ -1591,9 +1571,11 @@ Init		{Gui}.Init := 1, will cause all controls of the Gui to be redrawn on next 
 			{Gui}.Init := 2, will also reinitialize abbreviations
 ;! ---------------------------------------------------------------------------
  ***********************************************************************/
-Class GuiReSizer {
+Class GuiReSizer
+{
     ;{ Call GuiReSizer
-    Static Call(GuiObj, WindowMinMax, GuiW, GuiH) {
+    Static Call(GuiObj, WindowMinMax, GuiW, GuiH)
+    {
         ; On Initial display of Gui use redraw to cleanup first positioning
         Try{
             (GuiObj.Init)
@@ -1797,13 +1779,424 @@ Class GuiReSizer {
             }
         }
     }
-
-    Static Now(GuiObj, Redraw := true, Init := 2) {
-        If Redraw {
+    ;}
+    ;{ Now
+    Static Now(GuiObj, Redraw := true, Init := 2)
+    {
+        If Redraw
             GuiObj.Init := Init
-        }
-        GuiObj.GetClientPos(&X, &Y, &Width, &Height)
+        GuiObj.GetClientPos(, , &Width, &Height)
         GuiReSizer(GuiObj, WindowMinMax := 1, Width, Height)
     }
-
+    ;}
+    ;}
 }
+;}
+/************************************************************************
+ * @description
+ * @file AutoComplete.v2.ahk
+ * @author
+ * @date 2024/08/19
+ * @version 0.0.0
+ * @resource https://github.com/Pulover/CbAutoComplete
+ * @changes Updated to AutoHotkey v2 (2.0.11)
+ * @author Pulover (origional)
+ * @resource https://github.com/Pulover/CbAutoComplete
+ * @author Ark565 (& others) (v2-beta)
+ * @resource https://www.reddit.com/r/AutoHotkey/s/4InT1j8Mro
+ * @author OvercastBTC (updates to v2 [2.0.11])
+ ***********************************************************************/
+
+#Requires AutoHotkey v2.0+
+; #Include <Directives\__AE.v2>
+; #Include <Common\Common_Rec_Texts>
+#Include <Links\AhkLib>
+#Include <Includes/ObjectTypeExtensions>
+; ---------------------------------------------------------------------------
+/** @region AutoComplete() */
+; ---------------------------------------------------------------------------
+AutoComplete(CtlObj, ListObj, GuiObj?) {
+    static CB_GETEDITSEL := 320, CB_SETEDITSEL := 322, valueFound := false
+    local Start :=0, End := 0,
+
+    cText := CtlObj.Text
+
+    currContent := CtlObj.Text
+
+    CtlObj.Value := currContent
+    ; QSGui['your name'].Value := currContent
+    ; QSGui.Add('Text','Section','Text')
+    ; QSGui.Show("AutoSize")
+    ; QSGui.Show()
+    ; if ((GetKeyState("Delete", "P")) || (GetKeyState("Backspace", "P"))){
+    if ((GetKeyState('Delete')) || (GetKeyState('Backspace'))){
+        return
+    }
+
+    valueFound := false
+    ; ---------------------------------------------------------------------------
+/** @i for index, value in entries */
+    ; ---------------------------------------------------------------------------
+/** @i Check if the current value matches the target value */
+    ; ---------------------------------------------------------------------------
+    for index, value in ListObj {
+        ; ---------------------------------------------------------------------------
+/** @i Exit the loop if the value is found */
+        ; ---------------------------------------------------------------------------
+        if (value = currContent) {
+            valueFound := true
+            break
+        }
+    }
+    ; ---------------------------------------------------------------------------
+/** @i Exit Nested request */
+    ; ---------------------------------------------------------------------------
+    if (valueFound){
+        return
+    }
+    ; ---------------------------------------------------------------------------
+/** @i Start := 0, End :=0 */
+    ; ---------------------------------------------------------------------------
+    MakeShort(0, &Start, &End)
+    try {
+        if (ControlChooseString(cText, CtlObj) > 0) {
+            Start := StrLen(currContent)
+            End := StrLen(CtlObj.Text)
+            PostMessage(CB_SETEDITSEL, 0, MakeLong(Start, End),,CtlObj.Hwnd)
+        }
+    } Catch as e {
+        ControlSetText(currContent, CtlObj)
+        ControlSetText(cText, CtlObj)
+        PostMessage(CB_SETEDITSEL, 0, MakeLong(StrLen(cText), StrLen(cText)),,CtlObj.Hwnd)
+    }
+
+    MakeShort(Long, &LoWord, &HiWord) => (LoWord := Long & 0xffff, HiWord := Long >> 16)
+
+    MakeLong(LoWord, HiWord) {
+        return (HiWord << 16) | (LoWord & 0xffff)
+    }
+}
+
+#HotIf WinActive(A_ScriptName)
+#5::testAutoComplete()
+
+testAutoComplete() {
+; SetCapsLockState("Off")
+acInfos := Infos('AutoComplete enabled'
+                'Press "Shift+{Enter}",to activate'
+            )
+; acInfos := Infos('Press "ctrl + a" to activate, or press "Shift+Enter"')
+; Hotkey(" ", (*) => createGUI())
+; Hotkey("^a", (*) => createGUI())
+Hotkey('+Enter', (*) => createGUI() )
+; createGUI()
+createGUI() {
+    initQuery := "Recommendation Library"
+    initQuery := ""
+    ; global entriesList := ["Red", "Green", "Blue"]
+    mList := []
+    ; mlist := understanding_the_risk
+    mlist := Links_AhkLib
+    ; Infos(mlist)
+    ; entriesList := [mlist]
+    ; entries := []
+    entries := ''
+    entriesList := []
+    m:=''
+    for each, m in mList {
+        entriesList.SafePush(m)
+    }
+    e:=''
+    for each, e in entriesList {
+        ; entriesList := ''
+        ; entries := ''
+        ; entriesList .= value '`n'
+        entries .= e '`n'
+    }
+
+    global QSGui, initQuery, entriesList
+    global width := Round(A_ScreenWidth / 4)
+    QSGui := Gui("AlwaysOnTop +Resize +ToolWindow Caption", "Recommendation Picker")
+    QSGui.SetColor := 0x161821
+    QSGui.BackColor := 0x161821
+    QSGui.SetFont( "s10 q5", "Fira Code")
+    ; QSCB := QSGui.AddComboBox("vQSEdit w200", entriesList)
+    QSCB := QSGui.AddComboBox("vQSEdit w" width ' h200' ' Wrap', entriesList)
+    qEdit := QSGui.AddEdit('vqEdit w' width ' h200')
+    ; qEdit.OnEvent('Change', (*) => updateEdit(QSCB, entriesList))
+    QSGui_Change(QSCB) => qEdit.OnEvent('Change',qEdit)
+    QSGui.Add('Text','Section')
+    QSGui.Opt('+Owner ' QSGui.Hwnd)
+    ; QSCB := QSGui.AddComboBox("vQSEdit w" width ' h200', entriesList)
+    QSCB.Text := initQuery
+    QSCB.OnEvent("Change", (*) => AutoComplete(QSCB, entriesList))
+    ; QSCB.OnEvent('Change', (*) => updateEdit(QSCB, entriesList))
+    QSBtn := QSGui.AddButton("default hidden yp hp w0", "OK")
+    QSBtn.OnEvent("Click", (*) => processInput())
+    QSGui.OnEvent("Close", (*) => QSGui.Destroy())
+    QSGui.OnEvent("Escape", (*) => QSGui.Destroy())
+    ; QSGui.Show( "w222")
+    ; QSGui.Show("w" width ' h200')
+    QSGui.Show( "AutoSize")
+}
+
+processInput() {
+    QSSubmit := QSGui.Submit()    ; Save the contents of named controls into an object.
+    if QSSubmit.QSEdit {
+        ; MsgBox(QSSubmit.QSEdit, "Debug GUI")
+        initQuery := QSSubmit.QSEdit
+        Infos.DestroyAll()
+        Sleep(100)
+        updated_Infos := Infos(QSSubmit.QSEdit)
+
+    }
+    QSGui.Destroy()
+    WinWaitClose(updated_Infos.hwnd)
+    Run(A_ScriptName)
+}
+}
+
+; class AutoCompleteGUI {
+;     static Create(data) {
+;         return AutoCompleteGUI(data)
+;     }
+
+;     __New(data) {
+;         this.data := this.ProcessInput(data)
+;         this.CreateGUI()
+;     }
+
+;     ProcessInput(input) {
+;         switch Type(input) {
+;             case "String":
+;                 if (FileExist(input)) {
+;                     return this.LoadFile(input)
+;                 } else {
+;                     return StrSplit(input, "`n", "`r")
+;                 }
+;             case "Array", "Map":
+;                 return input
+;             case "Object":
+;                 return input.OwnProps()
+;             default:
+;                 throw ValueError("Unsupported input type")
+;         }
+;     }
+
+;     ; LoadFile(filename) {
+;     ;     ext := FileExt(filename)
+;     ;     switch ext {
+;     ;         case "json":
+;     ;             return JSON.Parse(FileRead(filename))
+;     ;         case "ini":
+;     ;             return this.ParseIni(filename)
+;     ;         case "txt":
+;     ;             return StrSplit(FileRead(filename), "`n", "`r")
+;     ;         default:
+;     ;             throw ValueError("Unsupported file type")
+;     ;     }
+;     ; }
+
+;     LoadFile(filename) {
+;         ext := this.FileExt(filename)  ; Using class method
+;         switch ext {
+;             case "json":
+;                 return JSON.Parse(FileRead(filename))
+;             case "ini":
+;                 return this.ParseIni(filename)
+;             case "txt":
+;                 return StrSplit(FileRead(filename), "`n", "`r")
+;             default:
+;                 throw ValueError("Unsupported file type")
+;         }
+;     }
+
+;     ; New method added to existing class
+;     FileExt(filename) {
+;         SplitPath(filename,, &dir, &ext)
+;         return ext
+;     }
+
+;     ParseIni(filename) {
+;         result := Map()
+;         IniRead(sections, filename)
+;         for section in StrSplit(sections, "`n") {
+;             result[section] := IniRead(filename, section)
+;         }
+;         return result
+;     }
+
+;     CreateGUI() {
+;         this.gui := Gui("+Resize +MinSize320x240", "Enhanced AutoComplete")
+;         this.gui.OnEvent("Size", (*) => this.OnResize())
+
+;         this.gui.Add("Text", "w320", "Search:")
+;         this.searchBox := this.gui.Add("Edit", "w320 vSearchTerm")
+;         this.searchBox.OnEvent("Change", (*) => this.UpdateList())
+
+;         this.listBox := this.gui.Add("ListBox", "w320 h200 vSelectedItem")
+;         this.listBox.OnEvent("DoubleClick", (*) => this.SelectItem())
+
+;         this.gui.Add("Button", "w100 vOK", "Select").OnEvent("Click", (*) => this.SelectItem())
+;         this.gui.Show()
+
+;         this.UpdateList()
+;     }
+
+;     UpdateList() {
+;         searchTerm := this.searchBox.Value
+;         filteredItems := []
+
+;         for item in this.data {
+;             if (RegExMatch(item, "i)" . searchTerm)) {
+;                 filteredItems.Push(item)
+;             }
+;         }
+
+;         this.listBox.Delete()
+;         this.listBox.Add(filteredItems)
+;     }
+
+;     SelectItem() {
+;         if (selected := this.listBox.Text) {
+;             MsgBox("Selected: " . selected)
+;             this.gui.Destroy()
+;         }
+;     }
+
+;     OnResize() {
+;         if (this.gui.Pos.w = 320 or this.gui.Pos.h = 240) {
+;             return
+;         }
+
+;         ctrlWidth := this.gui.Pos.w - 20
+;         listHeight := this.gui.Pos.h - 120
+
+;         this.searchBox.Move(,, ctrlWidth)
+;         this.listBox.Move(,, ctrlWidth, listHeight)
+;     }
+; }
+
+; ; Example usage
+; #HotIf WinActive(A_ScriptName)
+; F1:: {
+;     data := [
+;         "Apple", "Banana", "Cherry", "Date", "Elderberry",
+;         "Fig", "Grape", "Honeydew", "Kiwi", "Lemon",
+;         "Mango", "Nectarine", "Orange", "Papaya", "Quince"
+;     ]
+;     AutoCompleteGUI.Create(data)
+; }
+
+class AutoCompleteGui extends Gui {
+    __New(suggestions := [], minChars := 1, triggerString := "") {
+        super.__New("+AlwaysOnTop -Caption +ToolWindow")
+        this.suggestions := this.ProcessSuggestions(suggestions)
+        this.minChars := minChars
+        this.triggerString := triggerString
+        this.CreateGui()
+    }
+
+    ProcessSuggestions(input) {
+        result := []
+        if IsObject(input) {
+            if Type(input) is Array {
+                for item in input {
+                    result.Push(this.ProcessSuggestions(item)*)
+                }
+            } else if Type(input) is Map || Type(input) is Object {
+                for key, value in input {
+                    result.Push(IsObject(value) ? key : value)
+                }
+            }
+        } else if Type(input) == "String" {
+            result := StrSplit(input, "`n", "`r")
+        }
+        return result
+    }
+
+    CreateGui() {
+        this.listBox := this.Add("ListBox", "w200 r10 vSuggestionList")
+        this.listBox.OnEvent("DoubleClick", (*) => this.SelectSuggestion())
+        this.OnEvent("Close", (*) => this.Hide())
+        this.OnEvent("Escape", (*) => this.Hide())
+    }
+
+    Show(input, x, y) {
+        filteredSuggestions := this.FilterSuggestions(input)
+        this.listBox.Delete()
+        this.listBox.Add(filteredSuggestions)
+        super.Show(Format("x{1} y{2} AutoSize NoActivate", x, y))
+    }
+
+    FilterSuggestions(input) {
+        filteredList := []
+        for suggestion in this.suggestions {
+            distance := String2.DamerauLevenshteinDistance(input, SubStr(suggestion, 1, StrLen(input)))
+            if (distance <= 2) {  ; Adjust this threshold as needed
+                filteredList.Push(suggestion)
+            }
+        }
+        return filteredList
+    }
+
+    SelectSuggestion() {
+        if (selected := this.listBox.Text) {
+            if this.targetHwnd {
+                ControlSetText(selected, "ahk_id " this.targetHwnd)
+            }
+            this.Hide()
+        }
+    }
+
+    ConnectTo(controlObj) {
+        this.targetHwnd := controlObj.Hwnd
+        controlObj.OnEvent("Change", (*) => this.OnInputChange(controlObj))
+    }
+
+    OnInputChange(controlObj) {
+        text := controlObj.Text
+        if (StrLen(text) >= this.minChars) &&
+			(this.triggerString == "" || InStr(text, this.triggerString) == 1) {
+            controlPos := controlObj.Pos
+            this.Show(text, controlPos.X, controlPos.Y + controlPos.H)
+        } else {
+            this.Hide()
+        }
+    }
+
+    DemoAutoComplete() {
+        demoGui := Gui("+AlwaysOnTop +Resize", "AutoComplete Demo")
+        demoGui.SetFont("s10", "Segoe UI")
+        edit := demoGui.Add("Edit", "w300 vInputField")
+        this.ConnectTo(edit)
+        demoGui.Add("Text", "xm y+10", "Type to see suggestions. Press Shift+Enter to submit.")
+        demoGui.OnEvent("Close", (*) => ExitApp())
+        demoGui.Show()
+
+        HotIf(*) => WinActive("AutoComplete Demo")
+        Hotkey("+Enter", (*) => this.ProcessInput(demoGui))
+    }
+
+    ProcessInput(demoGui) {
+        if submitValue := demoGui.Submit()["InputField"] {
+            MsgBox("You selected: " submitValue)
+        }
+    }
+
+    AddListObj(newSuggestions) {
+        this.suggestions.Push(this.ProcessSuggestions(newSuggestions)*)
+    }
+}
+
+; ; Create an instance of AutoCompleteGui with custom settings
+; ac := AutoCompleteGui(, 2, "dsp.")  ; Show suggestions after 2 chars, and only if input starts with "dsp."
+
+; ; Add suggestions from various sources
+; ac.AddListObj(["apple", "banana", "cherry"])
+; ; ac.AddListObj({car: "Ford", bike: "Trek"})
+; ac.AddListObj(Map("color", "red", "shape", "circle"))
+; ac.AddListObj("dog`ncat`nfish")
+
+; ; Run the demo
+; ac.DemoAutoComplete()

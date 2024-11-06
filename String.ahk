@@ -64,44 +64,137 @@ String.Prototype := String2
 
 class String2 {
 
-	static ToMap(strObj?) {
-        return this._StringToMap(IsSet(strObj) ? strObj : this)
+	; /**
+	;  * @description Converts a string to a Map object
+	;  * @param {String} strObj Optional string to convert, uses 'this' if not provided
+	;  * @returns {Map} Map object with key-value pairs from the string
+	;  * @example
+	;  * str := "key1=value1`nkey2=value2"
+	;  * mapObj := String.ToMap(str)
+	;  * ;!Or: 
+	;  * mapObj := str.ToMap()
+	;  */
+	static ToMap(strObj*) {
+		return this._StringToMap(Type('String') && IsSet(strObj) ? strObj : this)
+	}
+    
+
+	/**
+	 * @description Converts a string to an Array by splitting on newlines
+	 * @param {String} strObj Optional string to convert, uses 'this' if not provided
+	 * @returns {Array} Array containing lines from the string
+	 * @throws {TypeError} If input is not a string
+	 * @example
+	 * str := "line1`nline2`nline3"
+	 * arr := str.ToArray(str)
+	 * ;! Or
+	 * arrObj := str.ToArray()
+	 */
+
+	static ToArray(strObj*) {
+		return this._StringToArray(Type('String') && IsSet(strObj) ? strObj : this)
+	}
+
+	; /**
+	;  * @description Converts a string to an Object with properties
+	;  * @param {String} strObj Optional string to convert, uses 'this' if not provided
+	;  * @returns {Object} Object with properties from the string
+	;  * @example
+	;  * str := "prop1=value1`nprop2=value2"
+	;  * obj := String2.ToObject(str)
+	;  * ; Or: obj := str.ToObject()
+	;  */
+    ; static ToObject(strObj*) {
+    ;     return this._StringToObject(Type('String') && IsSet(strObj) ? strObj : this)
+    ; }
+
+	/**
+	 * @description Converts a string to a Map object
+	 * @param {String} strObj Optional string to convert, uses 'this' if not provided
+	 * @returns {Map} Map object with key-value pairs from the string
+	 * @throws {TypeError} If input is not a string
+	 * @example
+	 * str := "key1=value1`nkey2=value2"
+	 * mapObj := String2.ToMap(str)
+	 */
+
+	; TODO Fix - still not passing tests
+    ; static ToMap(strObj?) {
+    ;     str := Type(strObj) = "String" ? strObj : this
+    ;     if (Type(str) != "String")
+    ;         throw TypeError("Input must be a string")
+        
+    ;     map := Map()
+    ;     if (str = "")
+    ;         return map
+            
+    ;     for line in StrSplit(str, "`n", "`r") {
+    ;         if (line := Trim(line)) {
+    ;             parts := StrSplit(line, "=", " `t", 2)
+    ;             if (parts.Length = 2)
+    ;                 map[Trim(parts[1])] := Trim(parts[2])
+    ;         }
+    ;     }
+    ;     return map
+    ; }
+	
+	/**
+	 * @description Converts a string to an Object with properties
+	 * @param {String} strObj Optional string to convert, uses 'this' if not provided
+	 * @returns {Object} Object with properties from the string
+	 * @throws {TypeError} If input is not a string
+	 * @example
+	 * str := "prop1=value1`nprop2=value2"
+	 * obj := String2.ToObject(str)
+	 */
+	; TODO Fix - still not passing tests
+    ; static ToObject(strObj?) {
+    ;     str := Type(strObj) = "String" ? strObj : this
+    ;     if (Type(str) != "String")
+    ;         throw TypeError("Input must be a string")
+        
+    ;     obj := {}
+    ;     if (str = "")
+    ;         return obj
+            
+    ;     for line in StrSplit(str, "`n", "`r") {
+    ;         if (line := Trim(line)) {
+    ;             parts := StrSplit(line, "=", " `t", 2)
+    ;             if (parts.Length = 2 && RegExMatch(parts[1], "^[a-zA-Z_]\w*$"))
+    ;                 obj.%Trim(parts[1])% := Trim(parts[2])
+    ;         }
+    ;     }
+    ;     return obj
+    ; }
+
+	static _StringToMap(str:='') {
+        mapObj := Map()
+		str := this
+        for line in StrSplit(str, "`n", "`r") {
+        ; for line in StrSplit(this, "`n", "`r") {
+            if (line := Trim(line)) {
+                parts := StrSplit(line, "=", " `t", 2)
+                if (parts.Length = 2)
+                    mapObj[parts[1]] := parts[2]
+            }
+        }
+        return mapObj
+    }
+	
+	static _StringToArray(str:='') {
+		return StrSplit(!str? this : str, "`n", "`r")
     }
 
-    static _StringToMap(str) {
-        StrMap := Map()
+	static _StringToObject(str) {
+        obj := {}
         for line in StrSplit(str, "`n", "`r") {
             if (line := Trim(line)) {
                 parts := StrSplit(line, "=", " `t", 2)
                 if (parts.Length = 2)
-                    StrMap[parts[1]] := parts[2]
+                    obj.%parts[1]% := parts[2]
             }
         }
-        return StrMap
-    }
-
-    static ToArray(strObj?) {
-        return this._StringToArray(IsSet(strObj) ? strObj : this)
-    }
-
-    static _StringToArray(str) {
-        return StrSplit(str, "`n", "`r")
-    }
-
-    static ToObject(strObj?) {
-        return this._StringToObject(IsSet(strObj) ? strObj : this)
-    }
-
-    static _StringToObject(str) {
-        StrObj := {}
-        for line in StrSplit(str, "`n", "`r") {
-            if (line := Trim(line)) {
-                parts := StrSplit(line, "=", " `t", 2)
-                if (parts.Length = 2)
-                    StrObj.%parts[1]% := parts[2]
-            }
-        }
-        return StrObj
+        return obj
     }
 
 	static __New() {
@@ -118,43 +211,29 @@ class String2 {
 		__ObjDefineProp(String.Prototype, "WLength", {get:(arg)=>String2.WLength(arg)})
 	}
 
-	; static __Item[args*] {
-	; 	get {
-	; 		if args.length = 2
-	; 			return SubStr(args[1], args[2], 1)
-	; 		else {
-	; 			len := StrLen(args[1])
-	; 			if args[2] < 0
-	; 				args[2] := len+args[2]+1
-	; 			if args[3] < 0
-	; 				args[3] := len+args[3]+1
-	; 			if args[3] >= args[2]
-	; 				return SubStr(args[1], args[2], args[3]-args[2]+1)
-	; 			else
-	; 				return SubStr(args[1], args[3], args[2]-args[3]+1).Reverse()
-	; 		}
-	; 	}
-	; }
-
 	static __Item[args*] {
 		get {
 			if (args.Length = 2) {
 				index := IsInteger(args[2]) ? args[2] : 1
 				return SubStr(args[1], index, 1)
-			} else {
+			}
+			else {
 				len := StrLen(args[1])
 				start := IsInteger(args[2]) ? args[2] : 1
 				end := IsInteger(args[3]) ? args[3] : len
 				
-				if (start < 0)
+				if (start < 0){
 					start := len + start + 1
-				if (end < 0)
+				}
+				if (end < 0){
 					end := len + end + 1
-				
-				if (end >= start)
+				}
+				if (end >= start){
 					return SubStr(args[1], start, end - start + 1)
-				else
+				}
+				else{
 					return SubStr(args[1], end, start - end + 1).Reverse()
+				}
 			}
 		}
 	}
@@ -174,8 +253,9 @@ class String2 {
 	static Sort(args*)    => Sort(this, args*)
 	static Find(args*)    => InStr(this, args*)
 	static SplitPath()    => (SplitPath(this, &a1, &a2, &a3, &a4, &a5), {FileName: a1, Dir: a2, Ext: a3, NameNoExt: a4, Drive: a5})
+	
 	/**
-	 * Returns the match object
+	 * @description Returns the match object
 	 * @param needleRegex *String* What pattern to match
 	 * @param startingPos *Integer* Specify a number to start matching at. By default, starts matching at the beginning of the string
 	 * @returns {Object}
@@ -193,7 +273,7 @@ class String2 {
 	static RegExReplace(needleRegex, replacement?, &outputVarCount?, limit?, startingPos?) => RegExReplace(this, needleRegex, replacement?, &outputVarCount?, limit?, startingPos?)
 
 	/**
-	 * Add character(s) to left side of the input string.
+	 * @description Add character(s) to left side of the input string.
 	 * example: "aaa".LPad("+", 5)
 	 * output: +++++aaa
 	 * @param padding Text you want to add
@@ -210,7 +290,7 @@ class String2 {
 	}
 
 	/**
-	 * Add character(s) to right side of the input string.
+	 * @description Add character(s) to right side of the input string.
 	 * example: "aaa".RPad("+", 5)
 	 * output: aaa+++++
 	 * @param padding Text you want to add
@@ -227,7 +307,7 @@ class String2 {
 	}
 
 	/**
-	 * Count the number of occurrences of needle in the string
+	 * @description Count the number of occurrences of needle in the string
 	 * input: "12234".Count("2")
 	 * output: 2
 	 * @param needle Text to search for
@@ -240,7 +320,7 @@ class String2 {
 	}
 
 	/**
-	 * Duplicate the string 'count' times.
+	 * @description Duplicate the string 'count' times.
 	 * input: "abc".Repeat(3)
 	 * output: "abcabcabc"
 	 * @param count *Integer*
@@ -249,7 +329,7 @@ class String2 {
 	static Repeat(count) => StrReplace(Format("{:" count "}",""), " ", this)
 
 	/**
-	 * Reverse the string.
+	 * @description Reverse the string.
 	 * @returns {String}
 	 */
 	static Reverse() {
@@ -264,7 +344,7 @@ class String2 {
 	}
 
 	/**
-	 * Insert the string inside 'insert' into position 'pos'
+	 * @description Insert the string inside 'insert' into position 'pos'
 	 * input: "abc".Insert("d", 2)
 	 * output: "adbc"
 	 * @param insert The text to insert
@@ -294,7 +374,7 @@ class String2 {
 	}
 
 	/**
-	 * Replace part of the string with the string in 'overwrite' starting from position 'pos'
+	 * @description Replace part of the string with the string in 'overwrite' starting from position 'pos'
 	 * input: "aaabbbccc".Overwrite("zzz", 4)
 	 * output: "aaazzzccc"
 	 * @param overwrite Text to insert.
@@ -313,7 +393,7 @@ class String2 {
 	}
 
 	/**
-	 * Delete a range of characters from the specified string.
+	 * @description Delete a range of characters from the specified string.
 	 * input: "aaabbbccc".Delete(4, 3)
 	 * output: "aaaccc"
 	 * @param start The position where to start deleting.
@@ -330,7 +410,7 @@ class String2 {
 	}
 
 	/**
-	 * Wrap the string so each line is never more than a specified length.
+	 * @description Wrap the string so each line is never more than a specified length.
 	 * input: "Apples are a round fruit, usually red".LineWrap(20, "---")
 	 * output: "Apples are a round f
 	 *          ---ruit, usually red"
@@ -383,7 +463,7 @@ class String2 {
 	}
 
 	/**
-	 * Wrap the string so each line is never more than a specified length.
+	 * @description Wrap the string so each line is never more than a specified length.
 	 * Unlike LineWrap(), this method takes into account words separated by a space.
 	 * input: "Apples are a round fruit, usually red.".WordWrap(20, "---")
 	 * output: "Apples are a round
@@ -418,7 +498,7 @@ class String2 {
 	}
 
 	/**
-	* Insert a line of text at the specified line number.
+	* @description Insert a line of text at the specified line number.
 	* The line you specify is pushed down 1 and your text is inserted at its
 	* position. A "line" can be determined by the delimiter parameter. Not
 	* necessarily just a `r or `n. But perhaps you want a | as your "line".
@@ -456,7 +536,7 @@ class String2 {
 	}
 
 	/**
-	 * Delete a line of text at the specified line number.
+	 * @description Delete a line of text at the specified line number.
 	 * The line you specify is deleted and all lines below it are shifted up.
 	 * A "line" can be determined by the delimiter parameter. Not necessarily
 	 * just a `r or `n. But perhaps you want a | as your "line".
@@ -471,26 +551,31 @@ class String2 {
 	static DeleteLine(line, delim:="`n", exclude:="`r") {
 		new := ""
 		; checks to see if we are trying to delete a non-existing line.
-		count:=this.Count(delim)+1
-		if (abs(line)>Count)
+		count := this.Count(delim) + 1
+		if (abs(line)>Count){
 			throw ValueError("DeleteLine: the line number cannot be greater than the number of lines", -1)
-		if (line<0)
+		}
+		if (line<0){
 			line:=count+line+1
-		else if (line=0)
+		}
+		else if (line=0){
 			throw ValueError("DeleteLine: line number cannot be 0", -1)
+		}
 
 		Loop parse, this, delim, exclude {
 			if (a_index==line) {
 				Continue
-			} else
+			} 
+			else{
 				(new .= A_LoopField . delim)
+			}
 		}
 
 		return SubStr(new,1,-StrLen(delim))
 	}
 
 	/**
-	 * Read the content of the specified line in a string. A "line" can be
+	 * @description Read the content of the specified line in a string. A "line" can be
 	 * determined by the delimiter parameter. Not necessarily just a `r or `n.
 	 * But perhaps you want a | as your "line".
 	 * input: "aaa|bbb|ccc|ddd|eee|fff".ReadLine(4, "|")
@@ -501,29 +586,36 @@ class String2 {
 	 * @returns {String}
 	 */
 	static ReadLine(line, delim:="`n", exclude:="`r") {
-		out := "", count:=this.Count(delim)+1
 
-		if (line="R")
+		out := ""
+		count := this.Count(delim) + 1
+
+		if (line="R"){
 			line := Random(1, count)
-		else if (line="L")
+		}
+		else if (line="L"){
 			line := count
-		else if abs(line)>Count
+		}
+		else if abs(line)>Count{
 			throw ValueError("ReadLine: the line number cannot be greater than the number of lines", -1)
-		else if (line<0)
+		}
+		else if (line<0){
 			line:=count+line+1
-		else if (line=0)
+		}
+		else if (line=0){
 			throw ValueError("ReadLine: line number cannot be 0", -1)
-
+		}
 		Loop parse, this, delim, exclude {
-			if A_Index = line
+			if A_Index = line{
 				return A_LoopField
+			}
 		}
 		throw Error("ReadLine: something went wrong, the line was not found", -1)
 	}
 
 
 	/**
-	 * Replace all consecutive occurrences of 'delim' with only one occurrence.
+	 * @description Replace all consecutive occurrences of 'delim' with only one occurrence.
 	 * input: "aaa|bbb|||ccc||ddd".RemoveDuplicates("|")
 	 * output: "aaa|bbb|ccc|ddd"
 	 * @param delim *String*
@@ -532,7 +624,7 @@ class String2 {
 
 
 	/**
-	 * Checks whether the string contains any of the needles provided.
+	 * @description Checks whether the string contains any of the needles provided.
 	 * input: "aaa|bbb|ccc|ddd".Contains("eee", "aaa")
 	 * output: 1 (although the string doesn't contain "eee", it DOES contain "aaa")
 	 * @param needles
@@ -546,7 +638,7 @@ class String2 {
 	}
 
 	/**
-	 * Centers a block of text to the longest item in the string.
+	 * @description Centers a block of text to the longest item in the string.
 	 * example: "aaa`na`naaaaaaaa".Center()
 	 * output: "aaa
 	 *           a
@@ -577,7 +669,7 @@ class String2 {
 	}
 
 	/**
-	 * Align a block of text to the right side.
+	 * @description Align a block of text to the right side.
 	 * input: "aaa`na`naaaaaaaa".Right()
 	 * output: "     aaa
 	 *                 a
@@ -602,7 +694,7 @@ class String2 {
 	}
 
 	/**
-	 * Join a list of strings together to form a string separated by delimiter this was called with.
+	 * @description Join a list of strings together to form a string separated by delimiter this was called with.
 	 * input: "|".Concat("111", "222", "333", "abc")
 	 * output: "111|222|333|abc"
 	 * @param words A list of strings separated by a comma.
@@ -617,7 +709,7 @@ class String2 {
 	}
 
 	/**
-	 * Calculates the Damerau-Levenshtein distance between two strings.
+	 * @description Calculates the Damerau-Levenshtein distance between two strings.
 	 * @param s The first string to compare.
 	 * @param t The second string to compare.
 	 * @returns {Integer} The number of operations required to transform one string into another.
@@ -694,33 +786,6 @@ class String2 {
 		}
 		return d[m+1][n+1]
 	}
-
-	; Choose(options*){
-	; 	if options.length == 1 {
-	; 		return options[1]
-	; 	}
-		
-	; 	else {
-	; 		infoObjs := [Infos("")]
-	; 		for index, option in options {
-	; 			if infoObjs.Length >= Infos.maximumInfos
-	; 				break
-	; 			infoObjs.Push(Infos(option))
-	; 		}
-	; 		loop {
-	; 			for index, infoObj in infoObjs {
-	; 				if WinExist(infoObj.hwnd)
-	; 					continue
-	; 				text := infoObj.text
-	; 				break 2
-	; 			}
-	; 		}
-	; 		for index, infoObj in infoObjs {
-	; 			infoObj.Destroy()
-	; 		}
-	; 		return text
-	; 	}
-	; }
 
 	static LongestCommonSubsequence(s, t) {
 		m := StrLen(s)
@@ -1257,3 +1322,147 @@ SwitchFiles(path1, path2) {
 	file1Write.Close()
 	file2Write.Close()
 }
+
+/**
+ * @description Test suite for String2 conversion methods
+ * @version 1.0.4
+ */
+class StringConversionTests extends TestSuite {
+    static TestToMap() {
+        ; Basic test with string literal
+        testStr1 := "key1=value1`nkey2=value2"
+        map1 := String2.ToMap(testStr1)  ; Test static method
+        this.AssertEqual("value1", map1["key1"], "Basic key=value parsing failed")
+        
+        ; Test with spaces and empty lines
+        testStr2 := "key1 = value1`n`nkey2  =   value2  "
+        map2 := testStr2.ToMap()  ; Test instance method
+        value1 := map2.Get("key1", "")  ; Use Get with default value
+        value2 := map2.Get("key2", "")
+        this.AssertEqual("value1", value1, "Whitespace handling failed")
+        this.AssertEqual("value2", value2, "Whitespace handling failed")
+        
+        ; Test empty string
+        testStr3 := ""
+        map3 := String2.ToMap(testStr3)
+        this.AssertEqual(0, map3.Count, "Empty string should create empty map")
+        
+        return true
+    }
+
+    static TestToArray() {
+        ; Basic test
+        testStr1 := "line1`nline2`nline3"
+        arr1 := String2.ToArray(testStr1)
+        this.AssertEqual(3, arr1.Length, "Basic line splitting failed")
+        this.AssertEqual("line2", arr1[2], "Array element mismatch")
+        
+        ; Test empty string
+        testStr2 := ""
+        arr2 := String2.ToArray(testStr2)
+        this.AssertEqual(0, arr2.Length, "Empty string should create empty array")
+        
+        ; Test with mixed line endings
+        testStr3 := "line1`r`nline2`rline3`nline4"
+        arr3 := testStr3.ToArray()  ; Test instance method
+        ; Debug output
+        OutputDebug("Array length: " arr3.Length "`n")
+        for i, v in arr3
+            OutputDebug("Index " i ": '" v "'`n")
+        this.AssertEqual(4, arr3.Length, "Mixed line ending handling failed")
+        this.AssertEqual("line3", arr3[3], "Line content mismatch")
+        
+        return true
+    }
+
+    static TestToObject() {
+        ; Basic test
+        testStr1 := "prop1=value1`nprop2=value2"
+        obj1 := String2.ToObject(testStr1)
+        this.AssertEqual("value1", obj1.prop1, "Basic property conversion failed")
+        
+        ; Test invalid property names
+        testStr2 := "valid=ok`n123=invalid`nvalid2=ok2"
+        obj2 := String2.ToObject(testStr2)
+        this.AssertEqual("ok", obj2.valid, "Valid property handling failed")
+        this.AssertTrue(!obj2.HasOwnProp("123"), "Invalid property name should be skipped")
+        
+        ; Test empty string
+        testStr3 := ""
+        obj3 := String2.ToObject(testStr3)
+        this.AssertEqual(0, ObjOwnPropCount(obj3), "Empty string should create empty object")
+        
+        return true
+    }
+
+    static TestErrorHandling() {
+        ; Test ToMap with invalid input
+        try {
+            badInput := [1, 2, 3]  ; Initialize the variable
+            map := String2.ToMap(badInput)
+            return false  ; Should not reach here
+        } catch TypeError as err {
+            this.AssertTrue(InStr(err.Message, "Input must be a string"), "Wrong error message for ToMap")
+        }
+        
+        ; Test ToArray with invalid input
+        try {
+            badInput := Map()  ; Initialize the variable
+            arr := String2.ToArray(badInput)
+            return false  ; Should not reach here
+        } catch TypeError as err {
+            this.AssertTrue(InStr(err.Message, "Input must be a string"), "Wrong error message for ToArray")
+        }
+        
+        ; Test ToObject with invalid input
+        try {
+            badInput := 42  ; Initialize the variable
+            obj := String2.ToObject(badInput)
+            return false  ; Should not reach here
+        } catch TypeError as err {
+            this.AssertTrue(InStr(err.Message, "Input must be a string"), "Wrong error message for ToObject")
+        }
+        
+        return true
+    }
+
+    static RunAllTests() {
+        results := Map()
+        
+        ; Run all test methods
+        testMethods := ["TestToMap", "TestToArray", "TestToObject", "TestErrorHandling"]
+        for testName in testMethods {
+            try {
+                if (this.%testName%()) {
+                    results[testName] := "✓ Pass"
+                } else {
+                    results[testName] := "✗ Fail"
+                }
+            } catch as err {
+                results[testName] := "✗ Error: " err.Message
+            }
+        }
+        
+        ; Format output
+        output := "String Conversion Test Results:`n`n"
+        for testName, result in results {
+            output .= Format("{}: {}`n", testName, result)
+        }
+        
+        ; Display results
+        Infos(output)
+        Clip.Send(output)
+        ; Return results for programmatic use
+        return results
+    }
+}
+
+; Run the tests
+; StringConversionTests.RunAllTests()
+
+; str := "line1`nline2`nline3"
+; str := "key1=value1`nkey2=value2"
+
+; Obj := str.ToMap(str)
+
+; Infos(Obj.ToString())

@@ -7,12 +7,12 @@ Most of them are not mine, and will be from the libraries of other people.
 
 Why reinvent the wheel right?
 
-A special thanks to [**@GLaser_Made**](https://github.com/LaserMade) for helping me
+A special thanks to [**@Laser_Made**](https://github.com/LaserMade) for helping me
 convert many of the functions into class methods and integrating them.
 
 ## People to check out for cool libraries:
 
-* [**@GLaser_Made**](https://github.com/LaserMade)
+* [**@Laser_Made**](https://github.com/LaserMade)
 * [**@GroggyOtter**](https://github.com/GroggyOtter)
 * [**@thqby**](https://github.com/thqby)
 * [**@Descolada**](https://github.com/Descolada)

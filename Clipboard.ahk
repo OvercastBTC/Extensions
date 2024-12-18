@@ -101,51 +101,173 @@ class Clip {
 	}
 	static SetDelays(n) => this._SetDelays(n)
 	; ---------------------------------------------------------------------------
-    /**
-     * @param {String|Array|Map|Object|Class} input The content to send
-     * @param {String} endChar The ending character(s) to append
-     * @param {Boolean} isClipReverted Whether to revert the clipboard
-     * @param {Integer} untilRevert Time in ms before reverting the clipboard
-     * @returns {String} The sent content
-     */
-    static Send(input?, endChar := '', isClipReverted := true, untilRevert := 500) {
-        prevClip := '', content := ''
-		this.SM_BISL(&sm)
-        if (!IsSet(input)) {
-            input := this
-        }
-
-        content := this.ConvertToString(input)
-
-        isClipReverted ? (prevClip := ClipboardAll()) : 0
+	
+	/**
+	 * Sets clipboard content as RTF format
+	 * @param {String} rtfText The RTF formatted text
+	 */
+	static _SetClipboardRTF(rtfText) {
+		; Register RTF format if needed
+		static CF_RTF := DllCall("RegisterClipboardFormat", "Str", "Rich Text Format", "UInt")
 		
-		; try Infos('input: ' input
-		; 		'`n'
-		; 		'content: ' content
-		; 		'`n'
-		; 		'isClipReverted: ' isClipReverted
-		; 		'`n'
-		; 		'A_Clipboard: ' A_Clipboard
-		; 	)
+		; Open and clear clipboard
+		DllCall("OpenClipboard", "Ptr", A_ScriptHwnd)
+		DllCall("EmptyClipboard")
 		
-		this.Sleep(100)
+		; Allocate and copy RTF data
+		hGlobal := DllCall("GlobalAlloc", "UInt", 0x42, "Ptr", StrPut(rtfText, "UTF-8"))
+		pGlobal := DllCall("GlobalLock", "Ptr", hGlobal, "Ptr")
+		StrPut(rtfText, pGlobal, "UTF-8")
+		DllCall("GlobalUnlock", "Ptr", hGlobal)
+		
+		; Set clipboard data and close
+		DllCall("SetClipboardData", "UInt", CF_RTF, "Ptr", hGlobal)
+		DllCall("CloseClipboard")
+		this.Sleep()
+	}
+	
+	/**
+	 * Sends text as RTF format to the clipboard
+	 * @param {String} rtfText The RTF formatted text to send
+	 * @param {String} endChar The ending character(s) to append
+	 * @param {Boolean} isClipReverted Whether to revert the clipboard
+	 * @param {Integer} untilRevert Time in ms before reverting clipboard
+	 * @returns {String} The sent content
+	 */
+	static SendRTF(rtfText?, endChar := '', isClipReverted := true, untilRevert := 500) {
+		prevClip := ''
+		
+		if (!IsSet(rtfText)) {
+			rtfText := this
+		}
 
+		isClipReverted ? prevClip := ClipboardAll() : ''
+		
 		this.ClearClipboard()
-
-		this.Sleep(100)
-		; try Infos('A_Clipboard (after clear): ' A_Clipboard)
-        A_Clipboard := content . endChar
+		this._SetClipboardRTF(rtfText . endChar)
 		
-		this.Sleep(100)
+		Send('{sc2A Down}{sc152}{sc2A Up}') 		;! {Shift}{Insert}
+		; Send('{sc1D Down}{sc2F}{sc1D Up}') 			;! {Control}{v}
+		
+		if (isClipReverted) {
+			SetTimer((*) => A_Clipboard := prevClip, -untilRevert)
+		}
+		
+		return rtfText
+	}
 
-        SetTimer(() => Send('{sc2A Down}{sc152}{sc2A Up}'), -ClipWait(1)) 	;! {Shift}{Insert}
-        ; SetTimer(() => Send('{sc1D Down}{sc2F}{sc1D Up}'), -ClipWait(1)) 	;! {Control}{v}
-
-        isClipReverted ? SetTimer((*) => A_Clipboard := prevClip, -untilRevert) : 0
-        ; isClipReverted ? SetTimer((*) => A_Clipboard := prevClip, untilRevert) : 0
-
-        return content
+	static DefaultFormat := "rtf"  ; Can be "rtf", "html", "markdown", or "text"
+    
+    ; static Send(text, format := "") {
+    ;     if (format == "")
+    ;         format := this.DefaultFormat
+            
+    ;     ; Detect format if not specified
+    ;     detectedFormat := this.DetectFormat(text)
+        
+    ;     ; Convert if needed
+    ;     if (detectedFormat != format) {
+    ;         text := this.ConvertFormat(text, detectedFormat, format)
+    ;     }
+        
+    ;     ; Send to clipboard with appropriate method
+    ;     switch format {
+    ;         case "rtf":
+    ;             this.SendRTF(text)
+    ;         case "html":
+    ;             this.SendHTML(text)
+    ;         case "markdown":
+    ;             this.SendMarkdown(text)
+    ;         case "json":
+    ;             this.SendJSON(text)
+    ;         default:
+    ;             A_Clipboard := text
+    ;     }
+    ; }
+    
+    static DetectFormat(text) {
+        if RegExMatch(text, "^{\rtf1")
+            return "rtf"
+        if RegExMatch(text, "^<!DOCTYPE html|^<html")
+            return "html"
+        if RegExMatch(text, "^#|^\*\*|^- ")
+            return "markdown"
+        if RegExMatch(text, '^{[\s\n]*""')
+            return "json"
+        return "text"
     }
+    
+    static ConvertFormat(text, fromFormat, toFormat) {
+        if (fromFormat == toFormat)
+            return text
+            
+        switch fromFormat {
+            case "text":
+                return text.rtf()
+            case "html":
+                return FormatConverter.HTMLToRTF(text)
+            case "markdown":
+                return FormatConverter.MarkdownToRTF(text)
+            case "json":
+                ; Placeholder for JSON formatting
+                return text
+        }
+        return text
+    }
+
+	/**
+	 * Enhanced Send method with RTF detection
+	 * @param {String|Array|Map|Object|Class} input The content to send
+	 * @param {String} endChar The ending character(s) to append
+	 * @param {Boolean} isClipReverted Whether to revert the clipboard
+	 * @param {Integer} untilRevert Time in ms before reverting clipboard
+	 * @returns {String} The sent content
+	 */
+	static Send(input?, endChar := '', isClipReverted := true, untilRevert := 500) {
+		if (!IsSet(input)) {
+			input := this
+		}
+
+		; Check if content is RTF
+		if (this._IsRTFContent(input)) {
+			return this.SendRTF(input, endChar, isClipReverted, untilRevert)
+		}
+
+		; Original Send implementation for non-RTF content
+		content := this.ConvertToString(input)
+		prevClip := ''
+		
+		isClipReverted ? prevClip := ClipboardAll() : ''
+		
+		; this.Sleep()
+		this.ClearClipboard()
+		; this.Sleep()
+
+		A_Clipboard := content . endChar
+		this.Sleep(100)
+		
+		Send('{sc2A Down}{sc152}{sc2A Up}') 		;! {Shift}{Insert}
+		; Send('{sc1D Down}{sc2F}{sc1D Up}') 			;! {Control}{v}
+
+		if (isClipReverted) {
+			SetTimer((*) => A_Clipboard := prevClip, -untilRevert)
+		}
+		
+		return content
+	}
+
+	/**
+	 * Checks if content appears to be RTF formatted
+	 * @param {String} content The content to check
+	 * @returns {Boolean} True if content appears to be RTF
+	 */
+	static _IsRTFContent(content) {
+		if (Type(content) != "String")
+			return false
+			
+		; Basic RTF detection - checks for common RTF header
+		return RegExMatch(content, "i)^{\s*\\rtf1\b") ? true : false
+	}
 
     /**
      * @param {Any} input The input to convert to string

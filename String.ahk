@@ -60,9 +60,320 @@ These methods cannot be used as stand-alone. To do that, you must add another ar
 '-==========================================================================-'
 */
 
+class RTFFormat {
+    static Properties := {
+        FontFamily: "Times New Roman",
+        FontSize: 22,  ; RTF uses half-points
+        FontColor: "000000",
+        DefaultFont: "froman",
+        DefaultPrq: 2,
+        CharSet: 1252,
+        StyleMappings: Map(
+            "strike", "\strike",
+            "super", "\super",
+            "sub", "\sub",
+            "bullet", "• ",
+            "align-left", "\ql",
+            "align-right", "\qr",
+            "align-center", "\qc",
+            "align-justify", "\qj"
+        )
+    }
+
+    static GetHeader() {
+        return Format('
+			(
+				{\rtf1\ansi\ansicpg{1}\deff0\nouicompat\deflang1033'
+				'{{\fonttbl{{\f0\{2}\fprq{3}\fcharset0 {4};}}}}'
+				'{{\colortbl ;\red0\green0\blue0;}}'
+				'\viewkind4\uc1\pard\cf1\f0\fs{5}
+			)',
+			this.Properties.CharSet,
+			this.Properties.DefaultFont,
+			this.Properties.DefaultPrq,
+			this.Properties.FontFamily,
+			this.Properties.FontSize)
+    }
+
+    static ApplyFontStyle(text, family, size := "") {
+        rtf := this.GetHeader()
+        if (size != "")
+            rtf .= "\fs" size
+        if (family != "")
+            rtf .= "\fname " family
+        rtf .= " " text "}"
+        return rtf
+    }
+
+    static ApplyFormatting(text, format) {
+        if this.Properties.StyleMappings.Has(format)
+            return this.Properties.StyleMappings[format] . " " text . (format ~= "align" ? "" : "\" format "0")
+        return text
+    }
+}
+
+/**
+ * @class FormatConverter
+ * @description Enhanced converter between plain text, HTML, RTF, and Markdown formats
+ */
+class FormatConverter {
+	; Properties for document formatting
+	static Properties := {
+		FontFamily: "Times New Roman",
+		FontSize: 11,
+		FontColor: "000000",
+		ParagraphSpacing: 0.5,
+		LineHeight: 1.2,
+		DefaultMargin: 0,
+		DefaultPadding: "0.5em 0",
+		CharSet: 1252
+	}
+
+	; RTF specific properties
+	static RTFProperties := {
+		FontIndex: 0,
+		ColorIndex: 1,
+		DefaultFont: "froman",
+		DefaultPrq: 2,
+		DefaultFontSize: 22  ; RTF font size (half-points)
+	}
+
+	static GetRTFHeader() {
+		return Format('
+			(
+				{\rtf1\ansi\ansicpg{1}\deff0\nouicompat\deflang1033
+				{{\fonttbl{{\f0\{2}\fprq{3}\fcharset0 {4};}}}}
+				{{\colortbl ;\red0\green0\blue0;}}
+				\viewkind4\uc1\pard\cf1\f0\fs{5}
+			)',
+			this.Properties.CharSet,
+			this.RTFProperties.DefaultFont,
+			this.RTFProperties.DefaultPrq,
+			this.Properties.FontFamily,
+			this.RTFProperties.DefaultFontSize)
+	}
+
+	/**
+	 * @description Updated HTML to RTF conversion method with improved tag handling
+	 */
+	static HTMLToRTF(html := '') {
+		if (!IsSet(html) || html = '')
+			return ''
+			
+		; Start with header
+		rtf := this.GetRTFHeader()
+
+		; Pre-process line breaks for consistent handling
+		html := StrReplace(html, "`n", "\line ")
+		
+		; Handle both <b> and <strong> tags with proper spacing
+		html := RegExReplace(html, '<(b|bold|strong)[^>]*>', '\b ')
+		html := RegExReplace(html, '</(b|bold|strong)>', '\b0 ')
+		
+		; Handle other formatting tags with proper spacing
+		html := RegExReplace(html, '<br[^>]*>|<BR[^>]*>', '\line ')
+		html := RegExReplace(html, '<p[^>]*>', '\par ')
+		html := RegExReplace(html, '</p>', '\par\par ')
+		html := RegExReplace(html, '<(i|italics|em)[^>]*>', '\i ')
+		html := RegExReplace(html, '</(i|italics|em)>', '\i0 ')
+		html := RegExReplace(html, '<u[^>]*>', '\ul ')
+		html := RegExReplace(html, '</u>', '\ul0 ')
+		html := RegExReplace(html, '<s>([^\n]+)</s>', '\strike $1\strike0 ')
+
+		; Handle list items
+		html := RegExReplace(html, '<li[^>]*>', '\par • ')
+		html := RegExReplace(html, '</li>', '')
+		
+		; Clean up any double spacing
+		; html := RegExReplace(html, '\s+', ' ')
+		html := RegExReplace(html, '\\par\s*\\par\s*\\par', '\par\par')
+		
+		; Remove any remaining HTML tags
+		html := RegExReplace(html, '<[^>]+>', '')
+		
+		; Add processed content and close RTF
+		rtf .= html '}'
+		
+		return rtf
+	}
+
+	/**
+	 * @description Updated Markdown to HTML conversion with improved formatting
+	 */
+	static MarkdownToHTML(markdown := '') {
+		if (!IsSet(markdown) || markdown = '')
+			return ''
+
+		; Pre-process linebreaks for consistent handling
+		markdown := StrReplace(markdown, "`r`n", "`n")
+		html := markdown
+		
+		; Headers (with proper spacing)
+		html := RegExReplace(html, "m)^# ([^`n]+)$", "<h1>$1</h1>`n")
+		html := RegExReplace(html, "m)^## ([^`n]+)$", "<h2>$1</h2>`n")
+		
+		; Bold (with proper spacing)
+		html := RegExReplace(html, "\*\*([^\*]+?)\*\*", "<strong>$1</strong>")
+		html := RegExReplace(html, "__([^_]+?)__", "<strong>$1</strong>")
+		
+		; Italic (with proper spacing)
+		html := RegExReplace(html, "\*([^\*]+?)\*", "<em>$1</em>")
+		html := RegExReplace(html, "_([^_]+?)_", "<em>$1</em>")
+		
+		; Lists (with proper nesting)
+		html := RegExReplace(html, "m)^- (.+)$", "<li>$1</li>")
+		html := RegExReplace(html, "(<li>.*</li>`n)+", "<ul>`n$0</ul>`n")
+		
+		; Paragraphs (with proper spacing)
+		html := RegExReplace(html, "(`n`n|^)(?!<[uo]l|<[hp]|<li)(.+?)(?=`n`n|$)", "<p>$2</p>")
+		
+		; Wrap with HTML structure
+		html := Format('
+		(
+			<!DOCTYPE html>
+			<html>
+			<head>
+			<meta charset="utf-8">
+			<style>
+			ul {{ margin-left: 1em; padding-left: 1em; }}
+			li {{ margin: 0.25em 0; }}
+			</style>
+			</head>
+			<body>
+			{3}
+			</body>
+			</html>
+		)', 
+		this.Properties.FontFamily,
+		this.Properties.FontSize,
+		html)
+
+		return html
+	}
+
+	/**
+	 * @description Directly converts Markdown to RTF format without HTML intermediate step
+	 * @param {String} markdown The markdown text to convert 
+	 * @returns {String} RTF formatted text
+	 */
+	static MarkdownToRTF(markdown := '') {
+		if (!IsSet(markdown) || markdown = '') {
+			return ''
+		}
+	
+		; Start with RTF header
+		rtf := this.GetRTFHeader()
+		text := markdown
+	
+		; Define font sizes
+		static defaultSize := 22    ; Standard text size (11pt * 2)
+		static dS := defaultSize
+	
+		; Set initial font size
+		text := Format("\fs{1} {2}", defaultSize, text)
+	
+		; Handle empty lines first
+		text := RegExReplace(text, "(`r`n|\n|\r)", "\par ")
+	
+		; Order matters! Process complex patterns first, then simpler ones
+		
+		; Headers/Titles with underline+bold+italics
+		text := RegExReplace(text, "__\*\*([^:]+?):\*\*__", Format("\fs{1}\ul\b $1:\b0\ul0 ", defaultSize))  ; Underline+Bold with colon
+		text := RegExReplace(text, "__\*\*([^*]+?)\*\*__", Format("\fs{1}\ul\b $1\b0\ul0 ", defaultSize))   ; Underline+Bold without colon
+	
+		; Parenthetical italics
+		text := RegExReplace(text, "\(\*([^*]+?)\*\)", Format("(\i $1\i0)", defaultSize))  ; Italics in parentheses
+		text := RegExReplace(text, "e\.g\.,", Format("\i e.g.,\i0 ", defaultSize))         ; Italicize "e.g.,"
+		text := RegExReplace(text, "\(e\.g\.,([^)]+?)\)", Format("(\i e.g.,$1\i0)", defaultSize))  ; Handle "(e.g., text)"
+		
+		; Sections and Tables - do not italicize these based on screenshot
+		; text := RegExReplace(text, "Section \d+\.\d+\.\d+(\.\d+)?", Format("\i $0\i0 ", defaultSize))
+		; text := RegExReplace(text, "Table \d+", Format("\i $0\i0 ", defaultSize))
+	
+		; Complex formatting combinations
+		text := RegExReplace(text, "_\*\*\*([^*]+?)\*\*\*_", Format("\fs{1}\i\b $1\b0\i0 ", defaultSize))  ; Bold+Italic
+		text := RegExReplace(text, "\*\*_([^_]+?)_\*\*", Format("\fs{1}\b\i $1\i0\b0 ", defaultSize))      ; Bold+Italic alternate
+		text := RegExReplace(text, "_\*\*([^*]+?)\*\*_", Format("\fs{1}\i\b $1\b0\i0 ", defaultSize))      ; Italic+Bold
+		
+		; Simple formatting
+		text := RegExReplace(text, "\*\*([^*]+?)\*\*", Format("\fs{1}\b $1\b0 ", defaultSize))   ; Bold
+		text := RegExReplace(text, "_([^_]+?)_", Format("\fs{1}\i $1\i0 ", defaultSize))         ; Italic with underscore
+		text := RegExReplace(text, "\*([^*]+?)\*", Format("\fs{1}\i $1\i0 ", defaultSize))       ; Italic with asterisk
+		text := RegExReplace(text, "__([^_]+?)__", Format("\fs{1}\ul $1\ul0 ", defaultSize))     ; Underline
+	
+		; Lists
+		text := RegExReplace(text, "m)- ", "\bullet  ")  ; Double space after bullet to match spacing
+		text := Format("\fs{1} {2}", defaultSize, text)   ; Reset font size after bullets
+	
+		; Clean up extra spaces and lines but preserve intentional formatting
+		text := RegExReplace(text, "\s+$", "")            ; Trim trailing spaces only
+		text := RegExReplace(text, "\\par\s*\\par", "\par\par")
+		
+		; Final formatting
+		text := Format("\fs{1} {2}", defaultSize, text)
+	
+		; Close RTF
+		rtf .= text '}'
+		
+		return rtf
+	}
+
+}
+
 String.Prototype := String2
 
 class String2 {
+
+	; static __New() {
+	; 	; Add all Map2 methods to Array prototype
+	; 	for methodName in String2.OwnProps() {
+	; 		if methodName != "__New" && HasMethod(String2, methodName) {
+	; 			; Check if method already exists
+	; 			if String.Prototype.Base.HasOwnProp(methodName) {
+	; 				; Either skip, warn, or override based on your needs
+	; 				continue  ; Skip if method exists
+	; 				; Or override:
+	; 				; Map.Prototype.DeleteProp(methodName)
+	; 			}
+	; 			String.Prototype.DefineProp(methodName, {
+	; 				Call: String2.%methodName%
+	; 			})
+	; 		}
+	; 	}
+	; }
+
+	static rtf(text:=''){
+		if !IsSet(text) || text := '' {
+			text := this
+		}
+		; Auto-detect format and convert if needed
+		if RegExMatch(text, "^{\rtf1"){ ; Already RTF
+			return text
+		}
+		if RegExMatch(text, "^<!DOCTYPE html|^<html"){ ; HTML
+			return FormatConverter.HTMLToRTF(text)
+		}
+		if RegExMatch(text, "^#|^\*\*|^- "){ ; Markdown
+			return FormatConverter.MarkdownToRTF(text)
+		}
+		; Plain text - convert to RTF
+		return RTFFormat.ApplyFontStyle(text, RTFFormat.Properties.FontFamily)
+	
+	}
+
+	static __New() {
+		; Add String2 methods and properties into String object
+		__ObjDefineProp := Object.Prototype.DefineProp
+		for __String2_Prop in String2.OwnProps() {
+			if !(__String2_Prop ~= "__Init|__Item|Prototype|Length") {
+				if HasMethod(String2, __String2_Prop)
+					__ObjDefineProp(String.Prototype, __String2_Prop, {call:String2.%__String2_Prop%})
+			}
+		}
+		__ObjDefineProp(String.Prototype, "__Item", {get:(args*)=>String2.__Item[args*]})
+		__ObjDefineProp(String.Prototype, "Length", {get:(arg)	=>String2.Length(arg)})
+		__ObjDefineProp(String.Prototype, "WLength",{get:(arg)	=>String2.WLength(arg)})
+	}
 
 	; /**
 	;  * @description Converts a string to a Map object
@@ -196,20 +507,6 @@ class String2 {
         }
         return obj
     }
-
-	static __New() {
-		; Add String2 methods and properties into String object
-		__ObjDefineProp := Object.Prototype.DefineProp
-		for __String2_Prop in String2.OwnProps() {
-			if !(__String2_Prop ~= "__Init|__Item|Prototype|Length") {
-				if HasMethod(String2, __String2_Prop)
-					__ObjDefineProp(String.Prototype, __String2_Prop, {call:String2.%__String2_Prop%})
-			}
-		}
-		__ObjDefineProp(String.Prototype, "__Item", {get:(args*)=>String2.__Item[args*]})
-		__ObjDefineProp(String.Prototype, "Length", {get:(arg)=>String2.Length(arg)})
-		__ObjDefineProp(String.Prototype, "WLength", {get:(arg)=>String2.WLength(arg)})
-	}
 
 	static __Item[args*] {
 		get {

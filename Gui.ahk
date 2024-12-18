@@ -15,6 +15,88 @@ class Gui2 {
     static CLIENTEDGE 			:= this.WS_EX_CLIENTEDGE
     static APPWINDOW 			:= this.WS_EX_APPWINDOW
 
+	static __New() {
+		; Add all Gui2 methods to Gui prototype
+		for methodName in Gui2.OwnProps() {
+			if methodName != "__New" && HasMethod(Gui2, methodName) {
+				; Check if method already exists
+				if Gui.Prototype.HasOwnProp(methodName) {
+					; Either skip, warn, or override based on your needs
+					continue  ; Skip if method exists
+					; Or override:
+					; Gui.Prototype.DeleteProp(methodName)
+				}
+				Gui.Prototype.DefineProp(methodName, {
+					Call: Gui2.%methodName%
+				})
+			}
+		}
+	}
+
+	/**
+	 * Add a RichEdit control to a GUI
+	 * @param {Gui} guiObj The GUI object to add the control to
+	 * @param {String} options Control options string
+	 * @param {String} text Initial text content
+	 * @returns {RichEdit} The created RichEdit control
+	 */
+	static AddRichEdit(guiObj?, options := "", text := "") {
+		if !guiObj {
+			guiObj := this
+		}
+		; Default options if none provided
+		if (options = "") {
+			options := "w400 h300"  ; Default size
+		}
+
+		; Create RichEdit control
+		reObj := RichEdit(guiObj, options)
+		
+		; Set initial text if provided
+		if (text != "") {
+			reObj.SetText(text)
+		}
+		
+		; Configure default settings
+		reObj.SetOptions(["SELECTIONBAR"])  ; Enable selection bar
+		reObj.AutoURL(true)                 ; Enable URL detection
+		reObj.SetEventMask([
+			"SELCHANGE",                    ; Selection change events
+			"LINK",                         ; Link click events
+			"PROTECTED"                     ; Protected text events
+		])
+		
+		return reObj
+	}
+	
+	/**
+	 * Extension method for Gui class
+	 * @param {String} options Control options
+	 * @param {String} text Initial text
+	 * @returns {RichEdit} The created RichEdit control
+	 */
+	static AddRTE(options := "", text := "") {
+		return this.AddRichEdit(this, options, text)
+	}
+
+	; static AddRichTextEdit(options := "", text := ""){
+	; 	return this.AddRichEdit(this, options, text)
+	; }
+	/**
+	 * Extension method for Gui class
+	 * @param {String} options Control options
+	 * @param {String} text Initial text
+	 * @returns {RichEdit} The created RichEdit control
+	 */
+	static AddRichTextEdit(options := "", text := "") => this.AddRichEdit(this, options, text)
+	/**
+	 * Extension method for Gui class
+	 * @param {String} options Control options
+	 * @param {String} text Initial text
+	 * @returns {RichEdit} The created RichEdit control
+	 */
+	static AddRichText(options := "", text := "") => this.AddRichEdit(this, options, text)
+
 	static SetDefaultFont(guiObj := this, fontObj := '') {
         if (guiObj is Gui) {
 
@@ -326,6 +408,9 @@ class Gui2 {
 
 	; Static wrapper methods
 	static AddCustomizationOptionsToGui(GuiObj?) {
+		if !GuiObj {
+			guiObj := this
+		}
 		GuiObj.AddCustomizationOptions()
 		return this
 	}
@@ -614,199 +699,6 @@ class CleanInputBox extends Gui {
 		this.Destroy()
 	}
 }
-
-; class Infos extends Gui {
-
-;     static fontSize := 8
-;     static distance := 4
-;     static unit := A_ScreenDPI / 144
-;     static guiWidth := Infos.fontSize * Infos.unit * Infos.distance
-;     static maximumInfos := Floor(A_ScreenHeight / Infos.guiWidth)
-;     static spots := Infos._GeneratePlacesArray()
-;     static maxNumberedHotkeys := 12
-;     static maxWidthInChars := 110
-
-;     ; Add a writable text property
-;     __text := ''
-;     text {
-;         get => this.__text
-;         set => this.__text := value
-;     }
-
-;     __New(text, autoCloseTimeout := 0) {
-;         super.__New('AlwaysOnTop -Caption +ToolWindow')
-;         this.autoCloseTimeout := autoCloseTimeout
-;         this.text := text
-;         this.spaceIndex := 0
-;         if !this._GetAvailableSpace() {
-;             this._StopDueToNoSpace()
-;             return
-;         }
-;         this._CreateGui()
-;         this._SetupHotkeysAndEvents()
-;         this._SetupAutoclose()
-;         this._Show()
-;     }
-
-;     _CreateGui() {
-;         this.DarkMode()
-;         this.MakeFontNicer(Infos.fontSize)  ; This will use the instance method
-;         this.NeverFocusWindow()
-;         this.gcText := this.AddText(, this._FormatText())
-;         return this
-;     }
-
-;     ; Explicitly define inherited methods
-;     DarkMode(BackgroundColor := '') {
-;         return Gui2.DarkMode(this, BackgroundColor)
-;     }
-
-; 	; Instance method
-; 	MakeFontNicer(fontSize := 20) {
-; 		; this.SetFont('s' fontSize ' c0000ff', 'Consolas')
-; 		super.SetFont('s' fontSize ' c0000ff', 'Consolas')
-; 		; this.fontProperties.UpdateFont(this)
-; 		return this
-; 	}
-
-;     NeverFocusWindow() {
-;         return Gui2.NeverFocusWindow(this)
-;     }
-
-;     static DestroyAll(*) {
-;         for index, infoObj in Infos.spots {
-;             if (infoObj is Infos) {
-;                 infoObj.Destroy()
-;             }
-;         }
-;     }
-
-;     static _GeneratePlacesArray() {
-;         availablePlaces := []
-;         loop Infos.maximumInfos {
-;             availablePlaces.Push(false)
-;         }
-;         return availablePlaces
-;     }
-
-;     ReplaceText(newText) {
-;         try WinExist(this)
-;         catch
-;             return Infos(newText, this.autoCloseTimeout)
-
-;         if StrLen(newText) = StrLen(this.gcText.Text) {
-;             this.gcText.Text := newText
-;             this._SetupAutoclose()
-;             return this
-;         }
-
-;         Infos.spots[this.spaceIndex] := false
-;         return Infos(newText, this.autoCloseTimeout)
-;     }
-
-;     Destroy(*) {
-;         if (!WinExist(this.Hwnd)) {
-;             return false
-;         }
-;         this.RemoveHotkeys()
-;         super.Destroy()
-;         if (this.spaceIndex > 0) {  ; Only clear the spot if spaceIndex is valid
-;             Infos.spots[this.spaceIndex] := false
-;         }
-;         return true
-;     }
-
-;     RemoveHotkeys() {
-;         hotkeys := ['Escape', '^Escape'], hk := ''
-;         if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
-;             hotkeys.Push('F' this.spaceIndex)
-;         }
-;         HotIfWinExist('ahk_id ' this.Hwnd)
-;         for hk in hotkeys {
-;             try {
-;                 Hotkey(hk, 'Off')
-;             }
-;         }
-;         HotIf()
-;     }
-
-;     _FormatText() {
-;         ftext := String(this.text)
-;         lines := ftext.Split('`n')
-;         if lines.Length > 1 {
-;             ftext := this._FormatByLine(lines)
-;         }
-;         else {
-;             ftext := this._LimitWidth(ftext)
-;         }
-;         return String(this.text).Replace('&', '&&')
-;     }
-
-;     _FormatByLine(lines) {
-;         newLines := []
-;         for index, line in lines {
-;             newLines.Push(this._LimitWidth(line))
-;         }
-;         ftext := ''
-;         for index, line in newLines {
-;             if index = newLines.Length {
-;                 ftext .= line
-;                 break
-;             }
-;             ftext .= line '`n'
-;         }
-;         return ftext
-;     }
-
-;     _LimitWidth(ltext) {
-;         if StrLen(ltext) < Infos.maxWidthInChars {
-;             return ltext
-;         }
-;         insertions := 0
-;         while (insertions + 1) * Infos.maxWidthInChars + insertions < StrLen(ltext) {
-;             insertions++
-;             ltext := ltext.Insert('`n', insertions * Infos.maxWidthInChars + insertions)
-;         }
-;         return ltext
-;     }
-
-;     _GetAvailableSpace() {
-;         for index, isOccupied in Infos.spots {
-;             if !isOccupied {
-;                 this.spaceIndex := index
-;                 Infos.spots[index] := this
-;                 return true
-;             }
-;         }
-;         return false
-;     }
-
-;     _CalculateYCoord() => Round(this.spaceIndex * Infos.guiWidth - Infos.guiWidth)
-
-;     _StopDueToNoSpace() => this.Destroy()
-
-;     _SetupHotkeysAndEvents() {
-;         HotIfWinExist('ahk_id ' this.Hwnd)
-;         Hotkey('Escape', this.Destroy.Bind(this), 'On')
-;         Hotkey('^Escape', Infos.DestroyAll, 'On')
-;         if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
-;             Hotkey('F' this.spaceIndex, this.Destroy.Bind(this), 'On')
-;         }
-;         HotIf()
-;         this.gcText.OnEvent('Click', this.Destroy.Bind(this))
-;         this.OnEvent('Close', this.Destroy.Bind(this))
-;     }
-
-;     _SetupAutoclose() {
-;         if this.autoCloseTimeout {
-;             SetTimer(this.Destroy.Bind(this), -this.autoCloseTimeout)
-;         }
-;     }
-
-;     _Show() => (this.Show('AutoSize NA x0 y' this._CalculateYCoord()))
-; }
-
-; Make sure to keep this line at the end of your script
 
 class Infos {
     static fontSize := 8
@@ -1810,7 +1702,7 @@ Class GuiReSizer
 #Requires AutoHotkey v2.0+
 ; #Include <Directives\__AE.v2>
 ; #Include <Common\Common_Rec_Texts>
-#Include <Links\AhkLib>
+#Include <Includes/Notes>
 #Include <Includes/ObjectTypeExtensions>
 ; ---------------------------------------------------------------------------
 /** @region AutoComplete() */
@@ -1835,13 +1727,13 @@ AutoComplete(CtlObj, ListObj, GuiObj?) {
 
     valueFound := false
     ; ---------------------------------------------------------------------------
-/** @i for index, value in entries */
+	/** @i for index, value in entries */
     ; ---------------------------------------------------------------------------
-/** @i Check if the current value matches the target value */
+	/** @i Check if the current value matches the target value */
     ; ---------------------------------------------------------------------------
     for index, value in ListObj {
         ; ---------------------------------------------------------------------------
-/** @i Exit the loop if the value is found */
+	/** @i Exit the loop if the value is found */
         ; ---------------------------------------------------------------------------
         if (value = currContent) {
             valueFound := true
@@ -1849,13 +1741,13 @@ AutoComplete(CtlObj, ListObj, GuiObj?) {
         }
     }
     ; ---------------------------------------------------------------------------
-/** @i Exit Nested request */
+	/** @i Exit Nested request */
     ; ---------------------------------------------------------------------------
     if (valueFound){
         return
     }
     ; ---------------------------------------------------------------------------
-/** @i Start := 0, End :=0 */
+	/** @i Start := 0, End :=0 */
     ; ---------------------------------------------------------------------------
     MakeShort(0, &Start, &End)
     try {

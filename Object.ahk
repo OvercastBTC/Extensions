@@ -5,14 +5,16 @@
 
 ; Modify Object prototype
 Object.Prototype.DefineProp("ToString", {Call: (this) => Object2.ToString(this)})
-Object.Prototype.DefineProp("Has", {Call: (this, key) => this.HasOwnProp(key)})
-Object.Prototype.DefineProp("Get", {Call: (this, key, default := "") => this.Has(key) ? this.%key% : default})
-Object.Prototype.DefineProp("ToArray", {Call: (this) => Object2.ToArray(this)})
-Object.Prototype.DefineProp("ToMap", {Call: (this) => Object2.ToMap(this)})
+Object.Prototype.DefineProp("Has", 		{Call: (this, key) => this.HasOwnProp(key)})
+Object.Prototype.DefineProp("Get", 		{Call: (this, key, default := "") => this.Has(key) ? this.%key% : default})
+Object.Prototype.DefineProp("ToArray", 	{Call: (this) => Object2.ToArray(this)})
+Object.Prototype.DefineProp("ToMap", 	{Call: (this) => Object2.ToMap(this)})
 
 class Object2 extends Object {
+
 	static __New() {
-		; Add all Map2 methods to Array prototype
+
+		; Add all Object2 methods to Object prototype
 		for methodName in Object2.OwnProps() {
 			if methodName != "__New" && HasMethod(Object2, methodName) {
 				; Check if method already exists
@@ -28,6 +30,7 @@ class Object2 extends Object {
 			}
 		}
 	}
+	
 	static ToString(toPrint) {
 		toPrint_string := ''
 		switch Type(toPrint) {

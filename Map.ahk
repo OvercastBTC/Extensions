@@ -124,18 +124,19 @@ class Map2 {
      * Counts the number of occurrences of a value
      * @param value The value to count. Can also be a function that accepts a value and evaluates to true/false.
      */
-    static Count(value) {
-        count := 0
-        if HasMethod(value) {
-            for _, v in this
-                if value(v?)
-                    count++
-        } else
-            for _, v in this
-                if v == value
-                    count++
-        return count
-    }
+    ; static Count(value) {
+    ;     count := 0
+    ;     if HasMethod(value) {
+    ;         for _, v in this
+    ;             if value(v?)
+    ;                 count++
+    ;     } else
+    ;         for _, v in this
+    ;             if v == value
+    ;                 count++
+    ;     return count
+    ; }
+
     /**
      * Adds the contents of other enumerables to this one.
      * @param enums The enumerables that are used to extend this one.
@@ -318,6 +319,7 @@ class Map2 {
         }
         return false
 	}
+
 	static HasValue(valueToFind) => this._MapHasValue(valueToFind)
 
 	static _MapHaskey(keyToFind) {

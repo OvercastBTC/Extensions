@@ -1,23 +1,25 @@
-/*
-	Name: Array.ahk
-	Version 0.4 (05.09.23)
-	Created: 27.08.22
-	Author: Descolada
+/************************************************************************
+ * @name Array.ahk
+ * @description A compilation of useful array methods.
+ * @author Descolada
+ * @version 0.4 (05.09.23)
+ * @created 08.27.22
+ * @author OvercastBTC
+ * @date 2024/12/05
+ * @version 12.05.24
+ ***********************************************************************/
 
-	Description:
-	A compilation of useful array methods.
-
+/**
+ * @example
     Array.Slice(start:=1, end:=0, step:=1)  => Returns a section of the array from 'start' to 'end', 
         optionally skipping elements with 'step'.
     Array.Swap(a, b)                        => Swaps elements at indexes a and b.
     Array.Map(func, arrays*)                => Applies a function to each element in the array.
     Array.ForEach(func)                     => Calls a function for each element in the array.
     Array.Filter(func)                      => Keeps only values that satisfy the provided function
-    Array.Reduce(func, initialValue?)       => Applies a function cumulatively to all the values in 
-        the array, with an optional initial value.
+    Array.Reduce(func, initialValue?)       => Applies a function cumulatively to all the values in the array, with an optional initial value.
     Array.IndexOf(value, start:=1)          => Finds a value in the array and returns its index.
-    Array.Find(func, &match?, start:=1)     => Finds a value satisfying the provided function and returns the index.
-        match will be set to the found value. 
+    Array.Find(func, &match?, start:=1)     => Finds a value satisfying the provided function and returns the index. Match will be set to the found value. 
     Array.Reverse()                         => Reverses the array.
     Array.Count(value)                      => Counts the number of occurrences of a value.
     Array.Sort(OptionsOrCallback?, Key?)    => Sorts an array, optionally by object values.
@@ -28,61 +30,54 @@
     Array.Extend(enums*)                    => Adds the values of other arrays or enumerables to the end of this one.
 */
 
-; class ArrayExtensions {
-;     static __New() {
-;         for methodName in Array2.OwnProps() {
-;             if methodName != "__New" && HasMethod(Array2, methodName) {
-;                 ; Check if method already exists
-;                 if Array.Prototype.HasOwnProp(methodName) {
-;                     ; Either skip, warn, or override based on your needs
-;                     continue  ; Skip if method exists
-;                     ; Or override:
-;                     ; Array.Prototype.DeleteProp(methodName)
-;                 }
-;                 Array.Prototype.DefineProp(methodName, {
-;                     Call: Array2.%methodName%
-;                 })
-				
-;             }
-;         }
-;     }
-; }
+; ---------------------------------------------------------------------------
 
-Array.Prototype.base := Array2
+/**
+ * @description Sets the Prototype.Base for Array to be built by Array2 and its properties, then add all the properties in Array
+ */
+Array.Prototype.Base := Array2
 
-class Array2 {
+; ---------------------------------------------------------------------------
+
+Class Array2 {
+
 	static __New() {
-		; Add all Array2 methods to Array prototype
-		for methodName in Array2.OwnProps() {
-			if methodName != "__New" && HasMethod(Array2, methodName) {
-				; Check if method already exists
-				if Array.Prototype.HasOwnProp(methodName) {
-					; Either skip, warn, or override based on your needs
-					continue  ; Skip if method exists
-					; Or override:
-					; Array.Prototype.DeleteProp(methodName)
-				}
-				Array.Prototype.DefineProp(methodName, {
-					Call: Array2.%methodName%
-				})
-			}
-		}
+        ; Add all Array2 methods to Array prototype
+        for methodName in Array2.OwnProps() {
+            if methodName != "__New" && HasMethod(Array2, methodName) {
+                ; Check if method already exists
+                if Array.Prototype.HasOwnProp(methodName) {
+                    ; Skip if method exists to avoid overwriting
+                    continue
+                }
+                ; Add the method to Array.Prototype
+                Array.Prototype.DefineProp(methodName, {
+                    Call: Array2.%methodName%
+                })
+            }
+        }
+    }
+
+	static Length() {
+		arrObj := Array()
+		arrObj.Length()
 	}
-; class Array2 extends Array{
-    /**
+
+	static Push(v) {
+		arrObj := Array()
+		arrObj.Push(v)
+	}
+
+	/**
      * Returns a section of the array from 'start' to 'end', optionally skipping elements with 'step'.
-     * Modifies the original array.
      * @param start Optional: index to start from. Default is 1.
      * @param end Optional: index to end at. Can be negative. Default is 0 (includes the last element).
      * @param step Optional: an integer specifying the incrementation. Default is 1.
      * @returns {Array}
      */
-	static Length() {
-		arrObj := Array()
-		arrObj.Length
-	}
     static Slice(start:=1, end:=0, step:=1) {
-        len := this.Length, i := start < 1 ? len + start : start, j := Min(end < 1 ? len + end : end, len), r := [], reverse := False
+        len := this.Length, i := start < 1 ? len + start : start, j := Min(end < 1 ? len + end : end, len)
+        r := []
         if len = 0
             return []
         if i < 1
@@ -102,6 +97,7 @@ class Array2 {
         }
         return this := r
     }
+
     /**
      * Swaps elements at indexes a and b
      * @param a First elements index to swap
@@ -114,6 +110,7 @@ class Array2 {
         this[a] := temp
         return this
     }
+
     /**
      * Applies a function to each element in the array (mutates the array).
      * @param func The mapping function that accepts one argument.
@@ -132,6 +129,7 @@ class Array2 {
         }
         return this
     }
+
     /**
      * Applies a function to each element in the array.
      * @param func The callback function with arguments Callback(value[, index, array]).
@@ -144,7 +142,8 @@ class Array2 {
             func(v, i, this)
         return this
     }
-    /**
+
+	/**
      * Keeps only values that satisfy the provided function
      * @param func The filter function that accepts one argument.
      * @returns {Array}
@@ -158,13 +157,14 @@ class Array2 {
                 r.Push(v)
         return this := r
     }
+
     /**
-     * Applies a function cumulatively to all the values in the array, with an optional initial value.
+     * Applies a function cumulatively to all the values in the array.
      * @param func The function that accepts two arguments and returns one value
-     * @param initialValue Optional: the starting value. If omitted, the first value in the array is used.
+     * @param initialValue Optional: the starting value. If omitted, first array value is used.
      * @returns {func return type}
      * @example
-     * [1,2,3,4,5].Reduce((a,b) => (a+b)) ; returns 15 (the sum of all the numbers)
+     * [1,2,3,4,5].Reduce((a,b) => (a+b)) ; returns 15 (sum of all numbers)
      */
     static Reduce(func, initialValue?) {
         if !HasMethod(func)
@@ -181,10 +181,12 @@ class Array2 {
         }
         return out
     }
+
     /**
      * Finds a value in the array and returns its index.
      * @param value The value to search for.
      * @param start Optional: the index to start the search from. Default is 1.
+     * @returns {Integer} Index of found value or 0 if not found
      */
     static IndexOf(value, start:=1) {
         if !IsInteger(start)
@@ -197,7 +199,21 @@ class Array2 {
         }
         return 0
     }
+
     /**
+     * Joins all the elements to a string using the provided delimiter.
+     * @param delim Optional: the delimiter to use. Default is newline.
+     * @returns {String}
+     */
+    static Join(delim:="`n") {
+        result := ''
+        for v in this {
+            result .= v delim
+		}
+        return (len := StrLen(delim)) ? SubStr(result, 1, -len) : result
+    }
+
+	/**
      * Finds a value satisfying the provided function and returns its index.
      * @param func The condition function that accepts one argument.
      * @param match Optional: is set to the found value
@@ -218,8 +234,10 @@ class Array2 {
         }
         return 0
     }
+
     /**
      * Reverses the array.
+     * @returns {Array}
      * @example
      * [1,2,3].Reverse() ; returns [3,2,1]
      */
@@ -229,9 +247,11 @@ class Array2 {
             this.Swap(i, len - i)
         return this
     }
+
     /**
      * Counts the number of occurrences of a value
      * @param value The value to count. Can also be a function.
+     * @returns {Integer}
      */
     static Count(value) {
         count := 0
@@ -245,96 +265,7 @@ class Array2 {
                     count++
         return count
     }
-    /**
-     * Sorts an array, optionally by object keys
-     * @param OptionsOrCallback Optional: either a callback function, or one of the following:
-     * 
-     *     N => array is considered to consist of only numeric values. This is the default option.
-     *     C, C1 or COn => case-sensitive sort of strings
-     *     C0 or COff => case-insensitive sort of strings
-     * 
-     *     The callback function should accept two parameters elem1 and elem2 and return an integer:
-     *     Return integer < 0 if elem1 less than elem2
-     *     Return 0 is elem1 is equal to elem2
-     *     Return > 0 if elem1 greater than elem2
-     * @param Key Optional: Omit it if you want to sort a array of primitive values (strings, numbers etc).
-     *     If you have an array of objects, specify here the key by which contents the object will be sorted.
-     * @returns {Array}
-     */
-    static Sort(optionsOrCallback:="N", key?) {
-        static sizeofFieldType := 16 ; Same on both 32-bit and 64-bit
-        if HasMethod(optionsOrCallback)
-            pCallback := CallbackCreate(CustomCompare.Bind(optionsOrCallback), "F Cdecl", 2), optionsOrCallback := ""
-        else {
-            if InStr(optionsOrCallback, "N")
-                pCallback := CallbackCreate(IsSet(key) ? NumericCompareKey.Bind(key) : NumericCompare, "F CDecl", 2)
-            if RegExMatch(optionsOrCallback, "i)C(?!0)|C1|COn")
-                pCallback := CallbackCreate(IsSet(key) ? StringCompareKey.Bind(key,,True) : StringCompare.Bind(,,True), "F CDecl", 2)
-            if RegExMatch(optionsOrCallback, "i)C0|COff")
-                pCallback := CallbackCreate(IsSet(key) ? StringCompareKey.Bind(key) : StringCompare, "F CDecl", 2)
-            if InStr(optionsOrCallback, "Random")
-                pCallback := CallbackCreate(RandomCompare, "F CDecl", 2)
-            if !IsSet(pCallback)
-                throw ValueError("No valid options provided!", -1)
-        }
-        mFields := NumGet(ObjPtr(this) + (8 + (VerCompare(A_AhkVersion, "<2.1-") > 0 ? 3 : 5)*A_PtrSize), "Ptr") ; in v2.0: 0 is VTable. 2 is mBase, 3 is mFields, 4 is FlatVector, 5 is mLength and 6 is mCapacity
-        DllCall("msvcrt.dll\qsort", "Ptr", mFields, "UInt", this.Length, "UInt", sizeofFieldType, "Ptr", pCallback, "Cdecl")
-        CallbackFree(pCallback)
-        if RegExMatch(optionsOrCallback, "i)R(?!a)")
-            this.Reverse()
-        if InStr(optionsOrCallback, "U")
-            this := this.Unique()
-        return this
 
-        CustomCompare(compareFunc, pFieldType1, pFieldType2) => (ValueFromFieldType(pFieldType1, &fieldValue1), ValueFromFieldType(pFieldType2, &fieldValue2), compareFunc(fieldValue1, fieldValue2))
-        NumericCompare(pFieldType1, pFieldType2) => (ValueFromFieldType(pFieldType1, &fieldValue1), ValueFromFieldType(pFieldType2, &fieldValue2), (fieldValue1 > fieldValue2) - (fieldValue1 < fieldValue2))
-        NumericCompareKey(key, pFieldType1, pFieldType2) => (ValueFromFieldType(pFieldType1, &fieldValue1), ValueFromFieldType(pFieldType2, &fieldValue2), (f1 := fieldValue1.HasProp("__Item") ? fieldValue1[key] : fieldValue1.%key%), (f2 := fieldValue2.HasProp("__Item") ? fieldValue2[key] : fieldValue2.%key%), (f1 > f2) - (f1 < f2))
-        StringCompare(pFieldType1, pFieldType2, casesense := False) => (ValueFromFieldType(pFieldType1, &fieldValue1), ValueFromFieldType(pFieldType2, &fieldValue2), StrCompare(fieldValue1 "", fieldValue2 "", casesense))
-        StringCompareKey(key, pFieldType1, pFieldType2, casesense := False) => (ValueFromFieldType(pFieldType1, &fieldValue1), ValueFromFieldType(pFieldType2, &fieldValue2), StrCompare(fieldValue1.%key% "", fieldValue2.%key% "", casesense))
-        RandomCompare(pFieldType1, pFieldType2) => (Random(0, 1) ? 1 : -1)
-
-        ValueFromFieldType(pFieldType, &fieldValue?) {
-            static SYM_STRING := 0, PURE_INTEGER := 1, PURE_FLOAT := 2, SYM_MISSING := 3, SYM_OBJECT := 5
-            switch SymbolType := NumGet(pFieldType + 8, "Int") {
-                case PURE_INTEGER: fieldValue := NumGet(pFieldType, "Int64") 
-                case PURE_FLOAT: fieldValue := NumGet(pFieldType, "Double") 
-                case SYM_STRING: fieldValue := StrGet(NumGet(pFieldType, "Ptr")+2*A_PtrSize)
-                case SYM_OBJECT: fieldValue := ObjFromPtrAddRef(NumGet(pFieldType, "Ptr")) 
-                case SYM_MISSING: return		
-            }
-        }
-    }
-    /**
-     * Randomizes the array. Slightly faster than Array.Sort(,"Random N")
-     * @returns {Array}
-     */
-    static Shuffle() {
-        len := this.Length
-        Loop len-1
-            this.Swap(A_index, Random(A_index, len))
-        return this
-    }
-    /**
-     * 
-     */
-    static Unique() {
-        unique := Map()
-        for v in this
-            unique[v] := 1
-        return [unique*]
-    }
-    /**
-     * Joins all the elements to a string using the provided delimiter.
-     * @param delim Optional: the delimiter to use. Default is comma.
-     * @returns {String}
-     */
-	; static Join(delim:=",") {
-	static Join(delim:="`n") { ;? OvercastBTC: changed default to `n
-		result := ""
-		for v in this
-			result .= v delim
-		return (len := StrLen(delim)) ? SubStr(result, 1, -len) : result
-	}
     /**
      * Turns a nested array into a one-level array
      * @returns {Array}
@@ -351,7 +282,8 @@ class Array2 {
         }
         return this := r
     }
-    /**
+
+	/**
      * Adds the contents of another array to the end of this one.
      * @param enums The arrays or other enumerables that are used to extend this one.
      * @returns {Array}
@@ -361,22 +293,17 @@ class Array2 {
             if !HasMethod(enum, "__Enum")
                 throw ValueError("Extend: arr must be an iterable")
             for _, v in enum {
-				this.Push(v)
-			}
+                this.Push(v)
+            }
         }
         return this
     }
-	
-; }
-; ---------------------------------------------------------------------------
-;! Original end of Descolada's Array
-; ---------------------------------------------------------------------------
-;! Below is Axlefublr's Array additions, that were converted to a class
-;! Special thanks to Laser_Made for the assistance
-; ---------------------------------------------------------------------------
 
-; Class Array2 extends Array {
-; Class Array2 {
+    /**
+     * Converts array to string with custom delimiter
+     * @param char Optional: delimiter character. Default is newline.
+     * @returns {String}
+     */
     static _ArrayToString(char := '`n') {
         str := ''
         for index, value in this {
@@ -388,160 +315,48 @@ class Array2 {
         }
         return str
     }
+
+    /**
+     * Alias for _ArrayToString
+     */
     static ToString(char?) => this._ArrayToString(char?)
-    ; ---------------------------------------------------------------------------
+
+    /**
+     * Checks if array contains a value
+     * @param valueToFind The value to search for
+     * @returns {Any|False} The found value or False if not found
+     */
     static _ArrayHasValue(valueToFind) {
         for index, value in this {
-            if (value = valueToFind){
+            if (value = valueToFind) {
                 return value
             }
         }
         return false
     }
-    static HasValue(valueToFind) => this._ArrayHasValue(valueToFind)
-    ; ---------------------------------------------------------------------------
+
     /**
-     * By default, you can set the same value to an array multiple times.
-     * Naturally, you'll be able to reference only one of them, which is likely not the behavior you want.
-     * This function will throw an error if you try to set a value that already exists in the array.
-     * @param arrayObj ***Array*** to set the index-value pair into
-     * @param each ***index*** (or A_Index)
-     * @param value ***Any***
+     * Alias for _ArrayHasValue
+     */
+    static HasValue(valueToFind) => this._ArrayHasValue(valueToFind)
+
+    /**
+     * Safely push a value to array only if it doesn't exist
+     * @param value The value to push
+     * @throws {IndexError} If value already exists
      */
     static SafePush(value) {
         if !this.HasValue(value) {
-			this.Push(value)
-            ; return
+            this.Push(value)
         }
-        ; throw IndexError("Array already has key", -1, key)
     }
 
-	static Push(v) {
-		arrObj := Array()
-		arrObj.Push(v)
-	}
-
-    /**
-     * A version of SafePush that you can just pass another array object into to set everything in it.
-     * Will still throw an error for every key that already exists in the array.
-     * @param arrayObj ***Array*** the initial array
-     * @param arrayToPush ***Array*** the array to set into the initial array
+	/**
+     * Generates an array of random numbers
+     * @param indexes Number of elements to generate
+     * @param variation Multiplier for maximum random value
+     * @returns {Array}
      */
-    static SafePushArray(arrayToPush?) {
-		arrayToPush := []
-        for each, value in this {
-            arrayToPush.SafePush(value)
-        }
-		return arrayToPush
-    }
-        
-    static aReverse() {
-        reversedArray := Array()
-        for each, value in this {
-            reversedArray.Push(value, each)
-        }
-        return reversedArray
-    }
-
-    Choose(options*){
-		if options.length == 1 {
-			return options[1]
-		}
-		
-		else {
-			infoObjs := [Infos("")]
-			for index, option in options {
-				if infoObjs.Length >= Infos.maximumInfos
-					break
-				infoObjs.Push(Infos(option))
-			}
-			loop {
-				for index, infoObj in infoObjs {
-					if WinExist(infoObj.hwnd)
-						continue
-					text := infoObj.text
-					break 2
-				}
-			}
-			for index, infoObj in infoObjs {
-				infoObj.Destroy()
-			}
-			return text
-		}
-	} 
-    static Choose(options*){
-		if options.length == 1 {
-			return options[1]
-		}
-		
-		else {
-			infoObjs := [Infos("")]
-			for index, option in options {
-				if infoObjs.Length >= Infos.maximumInfos
-					break
-				infoObjs.Push(Infos(option))
-			}
-			loop {
-				for index, infoObj in infoObjs {
-					if WinExist(infoObj.hwnd)
-						continue
-					text := infoObj.text
-					break 2
-				}
-			}
-			for index, infoObj in infoObjs {
-				infoObj.Destroy()
-			}
-			return text
-		}
-	} 
-
-    static _ChooseArray(valueName) {
-        if this.Prototype.Base.Has(valueName){
-            return this[valueName]
-        }
-        options := []
-        for each, value in this {
-            if InStr(value, valueName){
-                options.Push(value)
-            }
-        }
-        chosen := this.Choose(options*)
-        if chosen{
-            return this[chosen]
-        }
-        return ""
-    }
-    ; ---------------------------------------------------------------------------
-    /*
-        This library contains multiple sorting algorithms and array-related functions to test them out
-        You'll see the Big O notation for every sorting algorithm: worst, average and best case
-        What each of those means in the context of the sorting algorithm will likely not be explicitly explained
-
-        Some sorting algorithms will have been tested in terms of real time taken to sort 100000 indexes
-        Take the time coming from the tests with a huge rock of salt, it's there simply to have a rough comparison between sorting algorithms
-
-        Terms:
-        Rising array   -- every index matches its value
-        Shuffled array -- a shuffled rising array (Fisher-Yates shuffle)
-        Random array   -- array filled with random numbers. the range of each number starts at 1 and ends at this length of the array multiplied by 7 (check the preset parameter of variation in GenerateRandomArray())
-
-        The time it takes to sort 100k indexes is measured by sorting *shuffled* arrays
-    */
-
-    static ArrToStr(delimiter := "") {
-        str := ""
-        for key, value in this {
-            if key = this.Length {
-                str .= value
-                break
-            }
-            str .= value delimiter
-        }
-        return str
-    }
-    
-
     static GenerateRandomArray(indexes, variation := 7) {
         arrayObj := []
         Loop indexes {
@@ -550,6 +365,11 @@ class Array2 {
         return arrayObj
     }
 
+    /**
+     * Generates a sequential array from 1 to indexes
+     * @param indexes The length of the array to generate
+     * @returns {Array}
+     */
     static GenerateRisingArray(indexes) {
         arrayObj := []
         i := 1
@@ -560,12 +380,21 @@ class Array2 {
         return arrayObj
     }
 
+    /**
+     * Generates a shuffled array of sequential numbers
+     * @param indexes The length of the array to generate
+     * @returns {Array}
+     */
     static GenerateShuffledArray(indexes) {
         risingArray := this.GenerateRisingArray(indexes)
         shuffledArray := this.FisherYatesShuffle()
         return shuffledArray
     }
 
+    /**
+     * Implements Fisher-Yates shuffle algorithm
+     * @returns {Array}
+     */
     static FisherYatesShuffle() {
         shufflerIndex := 0
         while --shufflerIndex > -this.Length {
@@ -578,14 +407,24 @@ class Array2 {
         }
         return this
     }
-    
 
-    /*
-        O(n^2) -- worst case
-        O(n^2) -- average case
-        O(n)   -- best case
-        Sorts 100k indexes in: 1 hour 40 minutes
-    */
+    /**
+     * Removes duplicate values from array
+     * @returns {Array}
+     */
+    static Unique() {
+        unique := Map()
+        for v in this
+            unique[v] := 1
+        return [unique*]
+    }
+
+	/**
+     * Implementation of Bubble Sort
+     * O(n^2) -- worst and average case
+     * O(n)   -- best case
+     * @returns {Array}
+     */
     static BubbleSort() {
         finishedIndex := -1
         Loop this.Length - 1 {
@@ -608,12 +447,12 @@ class Array2 {
         }
         return this
     }
-    
 
-    /*
-        O(n^2) -- all cases
-        Sorts 100k indexes in: 1 hour 3 minutes
-    */
+    /**
+     * Implementation of Selection Sort
+     * O(n^2) -- all cases
+     * @returns {Array}
+     */
     static SelectionSort() {
         sortedIndex := 0
         Loop this.Length - 1 {
@@ -640,14 +479,13 @@ class Array2 {
         }
         return this
     }
-    
 
-    /*
-        O(n^2) -- worst case
-        O(n^2) -- average case
-        O(n)   -- best case
-        Sorts 100k indexes in: 40 minutes
-    */
+    /**
+     * Implementation of Insertion Sort
+     * O(n^2) -- worst and average case
+     * O(n)   -- best case
+     * @returns {Array}
+     */
     static InsertionSort() {
         for key, value in this {
             if key = 1
@@ -662,12 +500,12 @@ class Array2 {
         }
         return this
     }
-    
 
-    /*
-        O(n logn) -- all cases
-        Sorts 100k indexes in: 4 seconds
-    */
+	/**
+     * Implementation of Merge Sort
+     * O(n logn) -- all cases
+     * @returns {Array}
+     */
     static MergeSort() {
         Merge(leftArray, rightArray, fullArrayLength) {
             leftArraySize := fullArrayLength // 2
@@ -714,24 +552,24 @@ class Array2 {
             i++
         }
 
-        leftArray := this.MergeSort()
-        rightArray := this.MergeSort()
-        ; return Merge(leftArray, rightArray, arrayLength)
-        return this
+        leftArray := leftArray.MergeSort()
+        rightArray := rightArray.MergeSort()
+        return Merge(leftArray, rightArray, arrayLength)
     }
-    
 
-    /*
-        O(n + k) -- all cases
-        Where "k" is the highest integer in the array
-        The more indexes you want to sort, the bigger "thread delay" will have to be
-        This sorting algorithm is *not* practical, use it exclusively for fun!
-    */
+    /**
+     * Implementation of Sleep Sort (for fun!)
+     * O(n + k) -- all cases
+     * Where "k" is the highest integer in the array
+     * @param threadDelay Optional: delay multiplier for sorting. Default is 30.
+     * @returns {Array}
+     * @warning This sorting algorithm is not practical, use only for demonstration!
+     */
     static SleepSort(threadDelay := 30) {
         sortedArrayObj := []
 
         _PushIndex(passedValue) {
-            Settimer(() => sortedArrayObj.Push(passedValue), -passedValue * threadDelay)
+            SetTimer(() => sortedArrayObj.Push(passedValue), -passedValue * threadDelay)
         }
 
         for key, value in this {
@@ -739,28 +577,205 @@ class Array2 {
         }
 
         While sortedArrayObj.Length != this.Length {
-            ;We're waiting for the sorted array to be filled since otherwise we immidiately return an empty array (settimers don't take up the thread while waiting, unlike sleep)
+            ; Wait for the sorted array to be filled
         }
         return sortedArrayObj
     }
+
     /**
-     * IndexOfValue
-     * Original from Descolada
+     * Main Sort method with various options
+     * @param optionsOrCallback Optional: callback function or sorting options
+     * @param key Optional: key to sort by for object arrays
+     * @returns {Array}
      */
-    /**
-     * Finds a value in the array and returns its index.
-     * @param value The value to search for.
-     * @param start Optional: the index to start the search from. Default is 1.
-     */
-        static IndexOfValue(value, start:=1) {
-            if !IsInteger(start)
-                throw ValueError("IndexOf: start value must be an integer")
-            for i, v in this {
-                if i < start
-                    continue
-                if v == value
-                    return i
-            }
-            return 0
+    static Sort(optionsOrCallback := "N", key?) {
+        static sizeofFieldType := 16  ; Same on both 32-bit and 64-bit
+        
+        if HasMethod(optionsOrCallback)
+            pCallback := CallbackCreate(this.CustomCompare.Bind(optionsOrCallback), "F Cdecl", 2)
+        else if InStr(optionsOrCallback, "N")
+            pCallback := CallbackCreate(IsSet(key) ? this.NumericCompareKey.Bind(key) : this.NumericCompare, "F CDecl", 2)
+        else if RegExMatch(optionsOrCallback, "i)C(?!0)|C1|COn")
+            pCallback := CallbackCreate(IsSet(key) ? this.StringCompareKey.Bind(key,,True) : this.StringCompare.Bind(,,True), "F CDecl", 2)
+        else if RegExMatch(optionsOrCallback, "i)C0|COff")
+            pCallback := CallbackCreate(IsSet(key) ? this.StringCompareKey.Bind(key) : this.StringCompare, "F CDecl", 2)
+        else if InStr(optionsOrCallback, "Random")
+            pCallback := CallbackCreate(this.RandomCompare, "F CDecl", 2)
+        else
+            throw ValueError("No valid options provided!", -1)
+        
+        ; Sort using qsort from msvcrt.dll
+        mFields := NumGet(ObjPtr(this) + (8 + (VerCompare(A_AhkVersion, "<2.1-") > 0 ? 3 : 5)*A_PtrSize), "Ptr")
+        DllCall("msvcrt.dll\qsort", "Ptr", mFields, "UInt", this.Length, "UInt", sizeofFieldType, "Ptr", pCallback, "Cdecl")
+        CallbackFree(pCallback)
+
+        ; Handle additional options
+        if RegExMatch(optionsOrCallback, "i)R(?!a)")
+            this.Reverse()
+        if InStr(optionsOrCallback, "U")
+            this := this.Unique()
+        
+        return this
+    }
+
+	; Helper functions for Sort method
+    static CustomCompare(compareFunc, pFieldType1, pFieldType2) {
+        this.ValueFromFieldType(pFieldType1, &fieldValue1)
+        this.ValueFromFieldType(pFieldType2, &fieldValue2)
+        return compareFunc(fieldValue1, fieldValue2)
+    }
+
+    static NumericCompare(pFieldType1, pFieldType2) {
+        this.ValueFromFieldType(pFieldType1, &fieldValue1)
+        this.ValueFromFieldType(pFieldType2, &fieldValue2)
+        return (fieldValue1 > fieldValue2) - (fieldValue1 < fieldValue2)
+    }
+
+    static NumericCompareKey(key, pFieldType1, pFieldType2) {
+        this.ValueFromFieldType(pFieldType1, &fieldValue1)
+        this.ValueFromFieldType(pFieldType2, &fieldValue2)
+        f1 := fieldValue1.HasProp("__Item") ? fieldValue1[key] : fieldValue1.%key%
+        f2 := fieldValue2.HasProp("__Item") ? fieldValue2[key] : fieldValue2.%key%
+        return (f1 > f2) - (f1 < f2)
+    }
+
+    static StringCompare(pFieldType1, pFieldType2, caseSense := False) {
+        this.ValueFromFieldType(pFieldType1, &fieldValue1)
+        this.ValueFromFieldType(pFieldType2, &fieldValue2)
+        return StrCompare(fieldValue1 "", fieldValue2 "", caseSense)
+    }
+
+    static StringCompareKey(key, pFieldType1, pFieldType2, caseSense := False) {
+        this.ValueFromFieldType(pFieldType1, &fieldValue1)
+        this.ValueFromFieldType(pFieldType2, &fieldValue2)
+        return StrCompare(fieldValue1.%key% "", fieldValue2.%key% "", caseSense)
+    }
+
+    static RandomCompare(pFieldType1, pFieldType2) {
+        return Random(0, 1) ? 1 : -1
+    }
+
+    static ValueFromFieldType(pFieldType, &fieldValue?) {
+        static SYM_STRING := 0, PURE_INTEGER := 1, PURE_FLOAT := 2
+        static SYM_MISSING := 3, SYM_OBJECT := 5
+
+        switch SymbolType := NumGet(pFieldType + 8, "Int") {
+            case PURE_INTEGER:
+                fieldValue := NumGet(pFieldType, "Int64")
+            case PURE_FLOAT:
+                fieldValue := NumGet(pFieldType, "Double")
+            case SYM_STRING:
+                fieldValue := StrGet(NumGet(pFieldType, "Ptr") + 2*A_PtrSize)
+            case SYM_OBJECT:
+                fieldValue := ObjFromPtrAddRef(NumGet(pFieldType, "Ptr"))
+            case SYM_MISSING:
+                return
         }
+    }
+}
+
+#Requires AutoHotkey v2.0
+#SingleInstance Force
+
+class SymbolicLinkHandler {
+    static Create(destinationPath, sourcePath, isDir := false) {
+        ; Ensure paths are absolute and clean
+        sourcePath := this.GetFullPath(sourcePath)
+        destinationPath := this.GetFullPath(destinationPath)
+        
+        ; Check if destination directory exists
+        destDir := RegExReplace(destinationPath, "\\[^\\]+$")
+        if !DirExist(destDir) {
+            try DirCreate(destDir)
+            catch as e {
+                return { success: false, error: "Cannot create destination directory: " e.Message }
+            }
+        }
+
+        ; Check for and remove existing link/file
+        if FileExist(destinationPath) {
+            try {
+                attributes := FileGetAttrib(destinationPath)
+                if InStr(attributes, "L")  ; It's a symbolic link
+                    RunWait('cmd.exe /c rmdir "' destinationPath '"',, "Hide")
+                else
+                    FileDelete(destinationPath)
+            }
+            catch as e {
+                return { success: false, error: "Cannot remove existing file: " e.Message }
+            }
+        }
+
+        ; Attempt to create symbolic link
+        try {
+            if this.HasAdminRights() {
+                ; Direct method if we have admin rights
+                result := DllCall("Kernel32.dll\CreateSymbolicLinkW", 
+                    "Str", destinationPath, 
+                    "Str", sourcePath, 
+                    "UInt", isDir ? 1 : 0)
+                if (result)
+                    return { success: true }
+            } else {
+                ; Fallback to elevated CMD if we don't have admin rights
+                command := 'cmd.exe /c mklink ' (isDir ? '/D ' : '') 
+                    . '"' destinationPath '" "'
+                    . sourcePath '"'
+                RunWait(command,, "Hide")
+                if FileExist(destinationPath)
+                    return { success: true }
+            }
+        }
+        catch as e {
+            return { success: false, error: "Failed to create symbolic link: " e.Message }
+        }
+
+        return { success: false, error: "Unknown error creating symbolic link" }
+    }
+
+    static Remove(linkPath) {
+        if !FileExist(linkPath)
+            return { success: true }  ; Already gone
+
+        try {
+            attributes := FileGetAttrib(linkPath)
+            if InStr(attributes, "L") {  ; It's a symbolic link
+                RunWait('cmd.exe /c rmdir "' linkPath '"',, "Hide")
+            } else {
+                FileDelete(linkPath)
+            }
+            return { success: true }
+        }
+        catch as e {
+            return { success: false, error: "Failed to remove link: " e.Message }
+        }
+    }
+
+    static GetFullPath(path) {
+        ; Convert relative path to absolute
+        if (SubStr(path, 1, 1) = ".")
+            path := A_WorkingDir "\" path
+        return RegExReplace(path, "\\+", "\")  ; Clean up multiple backslashes
+    }
+
+    static HasAdminRights() {
+        try {
+            return DllCall("shell32\IsUserAnAdmin")
+        }
+        catch {
+            return false
+        }
+    }
+
+    static IsSymlink(path) {
+        if !FileExist(path)
+            return false
+        try {
+            attributes := FileGetAttrib(path)
+            return InStr(attributes, "L")
+        }
+        catch {
+            return false
+        }
+    }
 }

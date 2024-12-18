@@ -2,6 +2,12 @@
 ; #Include <Directives\__AE.v2>
 #Include <Includes\ObjectTypeExtensions>
 
+class key2 {
+    static vk := {
+        Delete: "Delete"  ; Virtual key name for Delete key
+    }
+}
+
 class HotkeyProcessor {
 	static ProcessHotkey(hotkeyString) {
 		; Remove ~, *, and $ from the left side of the string
@@ -82,16 +88,16 @@ class key {
 
     class sc {
         static esc := 'sc01'
-        static 1 := 'sc02'
-        static 2 := 'sc03'
-        static 3 := 'sc04'
-        static 4 := 'sc05'
-        static 5 := 'sc06'
-        static 6 := 'sc07'
-        static 7 := 'sc08'
-        static 8 := 'sc09'
-        static 9 := 'sc0A'
-        static 0 := 'sc0B'
+        static _1 := 'sc02'
+        static _2 := 'sc03'
+        static _3 := 'sc04'
+        static _4 := 'sc05'
+        static _5 := 'sc06'
+        static _6 := 'sc07'
+        static _7 := 'sc08'
+        static _8 := 'sc09'
+        static _9 := 'sc0A'
+        static _0 := 'sc0B'
         static minus := 'sc0C'
         static equal := 'sc0D'
         static backspace := 'sc0E'
@@ -196,33 +202,35 @@ class key {
 
     class vk extends key {
 		static __New() {
-            this.SelectAll    := '^' this.sc.a
-            this.SelectHome   := '^' this.sc.Home
-            this.SelectEnd    := '^' this.sc.End
+            this.SelectAll    	:= '^' this.sc.a
+            this.SelectHome   	:= '^' this.sc.Home
+            this.SelectEnd    	:= '^' this.sc.End
             ; this.italics      := '{' this.CONTROL ' Down}' '{' this.KEY_I '}' '{' this.CONTROL ' Up}'
-            this.italics      := '^' this.sc.i
-            this.bold         := '^' this.sc.b
-            this.underline    := '^' this.sc.u
-            this.AlignLeft    := '^' this.sc.l
-            this.AlignRight   := '^' this.sc.r
-            this.AlignCenter  := '^' this.sc.e
-            this.Justified    := '^' this.sc.j
-            this.Cut          := '^' this.sc.x
-            this.Copy         := '^' this.sc.c
-            this.Paste        := '^' this.sc.v
-            this.Undo         := '^' this.sc.z
-            this.Redo         := '^' this.sc.y
-            this.pastespecial := '^!' this.sc.v
-            this.BulletedList := '+' this.sc.f12
-            this.InsertTable  := '^' this.sc.F12
-            this.SuperScript  := '^='
-            this.SubScript    := '^+='
-            this.Search       := this.sc.F5 ; 'F5'
-            this.Find         := '^' this.sc.f
-            this.Replace      := '^' this.sc.h
-            this.CtrlEnter    := '^' this.sc.enter
-            this.Save         := '^' this.sc.s
-            this.Open         := '^' this.sc.o
+            this.italics      	:= '^' this.sc.i
+            this.bold         	:= '^' this.sc.b
+            this.underline    	:= '^' this.sc.u
+            this.AlignLeft    	:= '^' this.sc.l
+            this.AlignRight   	:= '^' this.sc.r
+            this.AlignCenter  	:= '^' this.sc.e
+            this.Justified    	:= '^' this.sc.j
+            this.Cut          	:= '^' this.sc.x
+            this.Copy         	:= '^' this.sc.c
+            this.Paste        	:= '^' this.sc.v
+            this.Undo         	:= '^' this.sc.z
+            this.Redo         	:= '^' this.sc.y
+            this.pastespecial 	:= '^!' this.sc.v
+            this.BulletedList 	:= '+' this.sc.f12
+            this.InsertTable  	:= '^' this.sc.F12
+            this.SuperScript  	:= '^='
+            this.SubScript    	:= '^+='
+            this.wSupScript 	:= '^.'
+            this.wSubScript    	:= '^,'
+            this.Search       	:= this.sc.F5 ; 'F5'
+            this.Find         	:= '^' this.sc.f
+            this.Replace      	:= '^' this.sc.h
+            this.CtrlEnter    	:= '^' this.sc.enter
+            this.Save         	:= '^' this.sc.s
+            this.Open         	:= '^' this.sc.o
         }
 		static LBUTTON 				:= 'vk01' 			; Left mouse button
 		static RBUTTON 				:= 'vk02' 			; Right mouse button
@@ -456,7 +464,7 @@ class key {
 	Class hotkeyVK extends key {
 		static Find 	:= '^' this.vk.KEY_F
 		static Search 	:= this.vk.F5
-		static Replace 	:= '^' this.vk.KEY_H
+		static Replace 	:= '^vk48'
 	}
 
 	/**
@@ -578,7 +586,7 @@ class key {
 	}
 
 	static isVKSCFormat(key) {
-		return RegExMatch(key, "i)^\{VK \w+ sc\w+\}$")
+		return RegExMatch(key, "i)^\{VK_\w+ sc\w+\}$")
 	}
 
 	/**
@@ -937,451 +945,445 @@ class key {
 		}
 	}
 
-	;! doesn't work in either form
-	static dllpaste => (*) => DllCall("user32.dll\keybd_event"
-									; , "char", 0x56  ; 'V' key
-									, "char", WM_PASTE := 0x0302
-									, "char", 0
-									, "uint", 0x0001 | 0x0002  ; KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP
-    								, "ptr", 0)
-
     Class vksc extends key{
         static italics := this.vk.CONTROL ' & ' this.sc.i
         static BulletedList := this.vk.SHIFT ' & ' this.sc.f12
     }
     ; static down := " down"
     ; static up := " up"
+	; sc := {}
     static lb := "{"
     static rb := "}"
-    static shift        := this.lb this.sc.shift this.rb
-    static shiftup      := this.lb this.sc.shift this.syntax.up this.rb
-    static shiftdown    := this.lb this.sc.shift this.syntax.down this.rb
-    static lshift       := this.lb this.sc.lshift this.rb
-    static lshiftup     := this.lb this.sc.lshift this.syntax.up this.rb
-    static lshiftdown   := this.lb this.sc.lshift this.syntax.down this.rb
-    static rshift       := this.lb this.sc.rshift this.rb
-    static rshiftup     := this.lb this.sc.rshift this.syntax.up this.rb
-    static rshiftdown   := this.lb this.sc.rshift this.syntax.down this.rb
+    static shift        := '{' this.sc.shift '}'
+    static shiftup      := '{' this.sc.shift ' up}'
+    static shiftdown    := '{' this.sc.shift ' down}'
+    static lshift       := '{' this.sc.lshift '}'
+    static lshiftup     := '{' this.sc.lshift ' up}'
+    static lshiftdown   := '{' this.sc.lshift ' down}'
+    static rshift       := '{' this.sc.rshift '}'
+    static rshiftup     := '{' this.sc.rshift ' up}'
+    static rshiftdown   := '{' this.sc.rshift ' down}'
 
-    static ctrl         := this.lb this.sc.ctrl this.rb
-    static control      := this.lb this.sc.ctrl this.rb
-    static controldown  := this.lb this.sc.ctrl this.syntax.down this.rb
-    static ctrldown     := this.lb this.sc.ctrl this.syntax.down this.rb
-    static controlup    := this.lb this.sc.ctrl this.syntax.up this.rb
-    static ctrlup       := this.lb this.sc.ctrl this.syntax.up this.rb
-    static lctrl        := this.lb this.sc.lctrl this.rb
-    static lctrldown    := this.lb this.sc.lctrl this.syntax.down this.rb
-    static lctrlup      := this.lb this.sc.lctrl this.syntax.up this.rb
-    static rctrl        := this.lb this.sc.rctrl this.rb
-    static rctrldown    := this.lb this.sc.rctrl this.syntax.down this.rb
-    static rctrlup      := this.lb this.sc.rctrl this.syntax.up this.rb
+    static ctrl         := '{' this.sc.ctrl '}'
+    static control      := '{' this.sc.ctrl '}'
+    static controldown  := '{' this.sc.ctrl ' down}'
+    static ctrldown     := '{' this.sc.ctrl ' down}'
+    static controlup    := '{' this.sc.ctrl ' up}'
+    static ctrlup       := '{' this.sc.ctrl ' up}'
+    static lctrl        := '{' this.sc.lctrl '}'
+    static lctrldown    := '{' this.sc.lctrl ' down}'
+    static lctrlup      := '{' this.sc.lctrl ' up}'
+    static rctrl        := '{' this.sc.rctrl '}'
+    static rctrldown    := '{' this.sc.rctrl ' down}'
+    static rctrlup      := '{' this.sc.rctrl ' up}'
 
-    static alt          := this.lb this.sc.alt this.rb
-    static altup        := this.lb this.sc.alt this.syntax.up this.rb
-    static altdown      := this.lb this.sc.alt this.syntax.down this.rb
-    static lalt         := this.lb this.sc.lalt this.rb
-    static laltup       := this.lb this.sc.lalt this.syntax.up this.rb
-    static laltdown     := this.lb this.sc.lalt this.syntax.down this.rb
-    static ralt         := this.lb this.sc.ralt this.rb
-    static raltup       := this.lb this.sc.ralt this.syntax.up this.rb
-    static raltdown     := this.lb this.sc.ralt this.syntax.down this.rb
+    static alt          := '{' this.sc.alt '}'
+    static altup        := '{' this.sc.alt ' up}'
+    static altdown      := '{' this.sc.alt ' down}'
+    static lalt         := '{' this.sc.lalt '}'
+    static laltup       := '{' this.sc.lalt ' up}'
+    static laltdown     := '{' this.sc.lalt ' down}'
+    static ralt         := '{' this.sc.ralt '}'
+    static raltup       := '{' this.sc.ralt ' up}'
+    static raltdown     := '{' this.sc.ralt ' down}'
 
-    static win          := this.lb this.sc.win this.rb
-    static winup        := this.lb this.sc.win this.syntax.up this.rb
-    static windown      := this.lb this.sc.win this.syntax.down this.rb
-    static lwin         := this.lb this.sc.lwin this.rb
-    static lwinup       := this.lb this.sc.lwin this.syntax.up this.rb
-    static lwindown     := this.lb this.sc.lwin this.syntax.down this.rb
-    static rwin         := this.lb this.sc.rwin this.rb
-    static rwinup       := this.lb this.sc.rwin this.syntax.up this.rb
-    static rwindown     := this.lb this.sc.rwin this.syntax.down this.rb
+    static win          := '{' this.sc.win '}'
+    static winup        := '{' this.sc.win ' up}'
+    static windown      := '{' this.sc.win ' down}'
+    static lwin         := '{' this.sc.lwin '}'
+    static lwinup       := '{' this.sc.lwin ' up}'
+    static lwindown     := '{' this.sc.lwin ' down}'
+    static rwin         := '{' this.sc.rwin '}'
+    static rwinup       := '{' this.sc.rwin ' up}'
+    static rwindown     := '{' this.sc.rwin ' down}'
 
     ; Define individual key properties for all keys in sc class
-    static esc := this.lb this.sc.esc this.rb
-    static escup := this.lb this.sc.esc this.syntax.up this.rb
-    static escdown := this.lb this.sc.esc this.syntax.down this.rb
+    static esc := '{' this.sc.esc '}'
+    static escup := '{' this.sc.esc ' up}'
+    static escdown := '{' this.sc.esc ' down}'
 
-    static 1 := this.lb this.sc.1 this.rb
-    static 1up := this.lb this.sc.1 this.syntax.up this.rb
-    static 1down := this.lb this.sc.1 this.syntax.down this.rb
+    static _1 := '{' this.sc._1 '}'
+    static _1up := '{' this.sc._1 ' up}'
+    static 1down := '{' this.sc._1 ' down}'
 
-    static 2 := this.lb this.sc.2 this.rb
-    static 2up := this.lb this.sc.2 this.syntax.up this.rb
-    static 2down := this.lb this.sc.2 this.syntax.down this.rb
+    static _2 := '{' this.sc._2 '}'
+    static 2up := '{' this.sc._2 ' up}'
+    static 2down := '{' this.sc._2 ' down}'
 
-    static 3 := this.lb this.sc.3 this.rb
-    static 3up := this.lb this.sc.3 this.syntax.up this.rb
-    static 3down := this.lb this.sc.3 this.syntax.down this.rb
+    static _3 := '{' this.sc._3 '}'
+    static 3up := '{' this.sc._3 ' up}'
+    static 3down := '{' this.sc._3 ' down}'
 
-    static 4 := this.lb this.sc.4 this.rb
-    static 4up := this.lb this.sc.4 this.syntax.up this.rb
-    static 4down := this.lb this.sc.4 this.syntax.down this.rb
+    static _4 := '{' this.sc._4 '}'
+    static 4up := '{' this.sc._4 ' up}'
+    static 4down := '{' this.sc._4 ' down}'
 
-    static 5 := this.lb this.sc.5 this.rb
-    static 5up := this.lb this.sc.5 this.syntax.up this.rb
-    static 5down := this.lb this.sc.5 this.syntax.down this.rb
+    static _5 := '{' this.sc._5 '}'
+    static 5up := '{' this.sc._5 ' up}'
+    static 5down := '{' this.sc._5 ' down}'
 
-    static 6 := this.lb this.sc.6 this.rb
-    static 6up := this.lb this.sc.6 this.syntax.up this.rb
-    static 6down := this.lb this.sc.6 this.syntax.down this.rb
+    static _6 := '{' this.sc._6 '}'
+    static _6up := '{' this.sc._6 ' up}'
+    static _6down := '{' this.sc._6 ' down}'
 
-    static 7 := this.lb this.sc.7 this.rb
-    static 7up := this.lb this.sc.7 this.syntax.up this.rb
-    static 7down := this.lb this.sc.7 this.syntax.down this.rb
+    static _7 := '{' this.sc._7 '}'
+    static _7up := '{' this.sc._7 ' up}'
+    static _7down := '{' this.sc._7 ' down}'
 
-    static 8 := this.lb this.sc.8 this.rb
-    static 8up := this.lb this.sc.8 this.syntax.up this.rb
-    static 8down := this.lb this.sc.8 this.syntax.down this.rb
+    static _8 := '{' this.sc._8 '}'
+    static _8up := '{' this.sc._8 ' up}'
+    static _8down := '{' this.sc._8 ' down}'
 
-    static 9 := this.lb this.sc.9 this.rb
-    static 9up := this.lb this.sc.9 this.syntax.up this.rb
-    static 9down := this.lb this.sc.9 this.syntax.down this.rb
+    static _9 := '{' this.sc._9 '}'
+    static _9up := '{' this.sc._9 ' up}'
+    static _9down := '{' this.sc._9 ' down}'
 
-    static 0 := this.lb this.sc.0 this.rb
-    static 0up := this.lb this.sc.0 this.syntax.up this.rb
-    static 0down := this.lb this.sc.0 this.syntax.down this.rb
+    static _0 := '{' this.sc._0 '}'
+    static _0up := '{' this.sc._0 ' up}'
+    static _0down := '{' this.sc._0 ' down}'
 
-    static minus := this.lb this.sc.minus this.rb
-    static minusup := this.lb this.sc.minus this.syntax.up this.rb
-    static minusdown := this.lb this.sc.minus this.syntax.down this.rb
+    static minus := '{' this.sc.minus '}'
+    static minusup := '{' this.sc.minus ' up}'
+    static minusdown := '{' this.sc.minus ' down}'
 
-    static equal := this.lb this.sc.equal this.rb
-    static equalup := this.lb this.sc.equal this.syntax.up this.rb
-    static equaldown := this.lb this.sc.equal this.syntax.down this.rb
+    static equal := '{' this.sc.equal '}'
+    static equalup := '{' this.sc.equal ' up}'
+    static equaldown := '{' this.sc.equal ' down}'
 
-    static backspace := this.lb this.sc.backspace this.rb
-    static backspaceup := this.lb this.sc.backspace this.syntax.up this.rb
-    static backspacedown := this.lb this.sc.backspace this.syntax.down this.rb
+    static backspace := '{' this.sc.backspace '}'
+    static backspaceup := '{' this.sc.backspace ' up}'
+    static backspacedown := '{' this.sc.backspace ' down}'
 
-    static tab := this.lb this.sc.tab this.rb
-    static tabup := this.lb this.sc.tab this.syntax.up this.rb
-    static tabdown := this.lb this.sc.tab this.syntax.down this.rb
+    static tab := '{' this.sc.tab '}'
+    static tabup := '{' this.sc.tab ' up}'
+    static tabdown := '{' this.sc.tab ' down}'
 
-    static q := this.lb this.sc.q this.rb
-    static qup := this.lb this.sc.q this.syntax.up this.rb
-    static qdown := this.lb this.sc.q this.syntax.down this.rb
+    static q := '{' this.sc.q '}'
+    static qup := '{' this.sc.q ' up}'
+    static qdown := '{' this.sc.q ' down}'
 
-    static w := this.lb this.sc.w this.rb
-    static wup := this.lb this.sc.w this.syntax.up this.rb
-    static wdown := this.lb this.sc.w this.syntax.down this.rb
+    static w := '{' this.sc.w '}'
+    static wup := '{' this.sc.w ' up}'
+    static wdown := '{' this.sc.w ' down}'
 
-    static e := this.lb this.sc.e this.rb
-    static eup := this.lb this.sc.e this.syntax.up this.rb
-    static edown := this.lb this.sc.e this.syntax.down this.rb
+    static e := '{' this.sc.e '}'
+    static eup := '{' this.sc.e ' up}'
+    static edown := '{' this.sc.e ' down}'
 
-    static r := this.lb this.sc.r this.rb
-    static rup := this.lb this.sc.r this.syntax.up this.rb
-    static rdown := this.lb this.sc.r this.syntax.down this.rb
+    static r := '{' this.sc.r '}'
+    static rup := '{' this.sc.r ' up}'
+    static rdown := '{' this.sc.r ' down}'
 
-    static t := this.lb this.sc.t this.rb
-    static tup := this.lb this.sc.t this.syntax.up this.rb
-    static tdown := this.lb this.sc.t this.syntax.down this.rb
+    static t := '{' this.sc.t '}'
+    static tup := '{' this.sc.t ' up}'
+    static tdown := '{' this.sc.t ' down}'
 
-    static y := this.lb this.sc.y this.rb
-    static yup := this.lb this.sc.y this.syntax.up this.rb
-    static ydown := this.lb this.sc.y this.syntax.down this.rb
+    static y := '{' this.sc.y '}'
+    static yup := '{' this.sc.y ' up}'
+    static ydown := '{' this.sc.y ' down}'
 
-    static u := this.lb this.sc.u this.rb
-    static uup := this.lb this.sc.u this.syntax.up this.rb
-    static udown := this.lb this.sc.u this.syntax.down this.rb
+    static u := '{' this.sc.u '}'
+    static uup := '{' this.sc.u ' up}'
+    static udown := '{' this.sc.u ' down}'
 
-    static i := this.lb this.sc.i this.rb
-    static iup := this.lb this.sc.i this.syntax.up this.rb
-    static idown := this.lb this.sc.i this.syntax.down this.rb
+    static i := '{' this.sc.i '}'
+    static iup := '{' this.sc.i ' up}'
+    static idown := '{' this.sc.i ' down}'
 
-    static o := this.lb this.sc.o this.rb
-    static oup := this.lb this.sc.o this.syntax.up this.rb
-    static odown := this.lb this.sc.o this.syntax.down this.rb
+    static o := '{' this.sc.o '}'
+    static oup := '{' this.sc.o ' up}'
+    static odown := '{' this.sc.o ' down}'
 
-    static p := this.lb this.sc.p this.rb
-    static pup := this.lb this.sc.p this.syntax.up this.rb
-    static pdown := this.lb this.sc.p this.syntax.down this.rb
+    static p := '{' this.sc.p '}'
+    static pup := '{' this.sc.p ' up}'
+    static pdown := '{' this.sc.p ' down}'
 
-    static lbracket := this.lb this.sc.lbracket this.rb
-    static lbracketup := this.lb this.sc.lbracket this.syntax.up this.rb
-    static lbracketdown := this.lb this.sc.lbracket this.syntax.down this.rb
+    static lbracket := '{' this.sc.lbracket '}'
+    static lbracketup := '{' this.sc.lbracket ' up}'
+    static lbracketdown := '{' this.sc.lbracket ' down}'
 
-    static rbracket := this.lb this.sc.rbracket this.rb
-    static rbracketup := this.lb this.sc.rbracket this.syntax.up this.rb
-    static rbracketdown := this.lb this.sc.rbracket this.syntax.down this.rb
+    static rbracket := '{' this.sc.rbracket '}'
+    static rbracketup := '{' this.sc.rbracket ' up}'
+    static rbracketdown := '{' this.sc.rbracket ' down}'
 
-    static enter := this.lb this.sc.enter this.rb
-    static enterup := this.lb this.sc.enter this.syntax.up this.rb
-    static enterdown := this.lb this.sc.enter this.syntax.down this.rb
+    static enter := '{' this.sc.enter '}'
+    static enterup := '{' this.sc.enter ' up}'
+    static enterdown := '{' this.sc.enter ' down}'
 
-    static a := this.lb this.sc.a this.rb
-    static aup := this.lb this.sc.a this.syntax.up this.rb
-    static adown := this.lb this.sc.a this.syntax.down this.rb
+    static a := '{' this.sc.a '}'
+    static aup := '{' this.sc.a ' up}'
+    static adown := '{' this.sc.a ' down}'
 
-    static s := this.lb this.sc.s this.rb
-    static sup := this.lb this.sc.s this.syntax.up this.rb
-    static sdown := this.lb this.sc.s this.syntax.down this.rb
+    static s := '{' this.sc.s '}'
+    static sup := '{' this.sc.s ' up}'
+    static sdown := '{' this.sc.s ' down}'
 
-    static d := this.lb this.sc.d this.rb
-    static dup := this.lb this.sc.d this.syntax.up this.rb
-    static ddown := this.lb this.sc.d this.syntax.down this.rb
+    static d := '{' this.sc.d '}'
+    static dup := '{' this.sc.d ' up}'
+    static ddown := '{' this.sc.d ' down}'
 
-    static f := this.lb this.sc.f this.rb
-    static fup := this.lb this.sc.f this.syntax.up this.rb
-    static fdown := this.lb this.sc.f this.syntax.down this.rb
+    static f := '{' this.sc.f '}'
+    static fup := '{' this.sc.f ' up}'
+    static fdown := '{' this.sc.f ' down}'
 
-    static g := this.lb this.sc.g this.rb
-    static gup := this.lb this.sc.g this.syntax.up this.rb
-    static gdown := this.lb this.sc.g this.syntax.down this.rb
+    static g := '{' this.sc.g '}'
+    static gup := '{' this.sc.g ' up}'
+    static gdown := '{' this.sc.g ' down}'
 
-    static h := this.lb this.sc.h this.rb
-    static hup := this.lb this.sc.h this.syntax.up this.rb
-    static hdown := this.lb this.sc.h this.syntax.down this.rb
+    static h := '{' this.sc.h '}'
+    static hup := '{' this.sc.h ' up}'
+    static hdown := '{' this.sc.h ' down}'
 
-    static j := this.lb this.sc.j this.rb
-    static jup := this.lb this.sc.j this.syntax.up this.rb
-    static jdown := this.lb this.sc.j this.syntax.down this.rb
+    static j := '{' this.sc.j '}'
+    static jup := '{' this.sc.j ' up}'
+    static jdown := '{' this.sc.j ' down}'
 
-    static k := this.lb this.sc.k this.rb
-    static kup := this.lb this.sc.k this.syntax.up this.rb
-    static kdown := this.lb this.sc.k this.syntax.down this.rb
+    static k := '{' this.sc.k '}'
+    static kup := '{' this.sc.k ' up}'
+    static kdown := '{' this.sc.k ' down}'
 
-    static l := this.lb this.sc.l this.rb
-    static lup := this.lb this.sc.l this.syntax.up this.rb
-    static ldown := this.lb this.sc.l this.syntax.down this.rb
+    static l := '{' this.sc.l '}'
+    static lup := '{' this.sc.l ' up}'
+    static ldown := '{' this.sc.l ' down}'
 
-    static semicolon := this.lb this.sc.semicolon this.rb
-    static semicolonup := this.lb this.sc.semicolon this.syntax.up this.rb
-    static semicolondown := this.lb this.sc.semicolon this.syntax.down this.rb
+    static semicolon := '{' this.sc.semicolon '}'
+    static semicolonup := '{' this.sc.semicolon ' up}'
+    static semicolondown := '{' this.sc.semicolon ' down}'
 
-    static quote := this.lb this.sc.quote this.rb
-    static quoteup := this.lb this.sc.quote this.syntax.up this.rb
-    static quotedown := this.lb this.sc.quote this.syntax.down this.rb
+    static quote := '{' this.sc.quote '}'
+    static quoteup := '{' this.sc.quote ' up}'
+    static quotedown := '{' this.sc.quote ' down}'
 
-    static backtick := this.lb this.sc.backtick this.rb
-    static backtickup := this.lb this.sc.backtick this.syntax.up this.rb
-    static backtickdown := this.lb this.sc.backtick this.syntax.down this.rb
+    static backtick := '{' this.sc.backtick '}'
+    static backtickup := '{' this.sc.backtick ' up}'
+    static backtickdown := '{' this.sc.backtick ' down}'
 
-    static backslash := this.lb this.sc.backslash this.rb
-    static backslashup := this.lb this.sc.backslash this.syntax.up this.rb
-    static backslashdown := this.lb this.sc.backslash this.syntax.down this.rb
+    static backslash := '{' this.sc.backslash '}'
+    static backslashup := '{' this.sc.backslash ' up}'
+    static backslashdown := '{' this.sc.backslash ' down}'
 
-    static z := this.lb this.sc.z this.rb
-    static zup := this.lb this.sc.z this.syntax.up this.rb
-    static zdown := this.lb this.sc.z this.syntax.down this.rb
+    static z := '{' this.sc.z '}'
+    static zup := '{' this.sc.z ' up}'
+    static zdown := '{' this.sc.z ' down}'
 
-    static x := this.lb this.sc.x this.rb
-    static xup := this.lb this.sc.x this.syntax.up this.rb
-    static xdown := this.lb this.sc.x this.syntax.down this.rb
+    static x := '{' this.sc.x '}'
+    static xup := '{' this.sc.x ' up}'
+    static xdown := '{' this.sc.x ' down}'
 
-    static c := this.lb this.sc.c this.rb
-    static cup := this.lb this.sc.c this.syntax.up this.rb
-    static cdown := this.lb this.sc.c this.syntax.down this.rb
+    static c := '{' this.sc.c '}'
+    static cup := '{' this.sc.c ' up}'
+    static cdown := '{' this.sc.c ' down}'
 
-    static v := this.lb this.sc.v this.rb
-    static vup := this.lb this.sc.v this.syntax.up this.rb
-    static vdown := this.lb this.sc.v this.syntax.down this.rb
+    static v := '{' this.sc.v '}'
+    static vup := '{' this.sc.v ' up}'
+    static vdown := '{' this.sc.v ' down}'
 
-    static b := this.lb this.sc.b this.rb
-    static bup := this.lb this.sc.b this.syntax.up this.rb
-    static bdown := this.lb this.sc.b this.syntax.down this.rb
+    static b := '{' this.sc.b '}'
+    static bup := '{' this.sc.b ' up}'
+    static bdown := '{' this.sc.b ' down}'
 
-    static n := this.lb this.sc.n this.rb
-    static nup := this.lb this.sc.n this.syntax.up this.rb
-    static ndown := this.lb this.sc.n this.syntax.down this.rb
+    static n := '{' this.sc.n '}'
+    static nup := '{' this.sc.n ' up}'
+    static ndown := '{' this.sc.n ' down}'
 
-    static m := this.lb this.sc.m this.rb
-    static mup := this.lb this.sc.m this.syntax.up this.rb
-    static mdown := this.lb this.sc.m this.syntax.down this.rb
+    static m := '{' this.sc.m '}'
+    static mup := '{' this.sc.m ' up}'
+    static mdown := '{' this.sc.m ' down}'
 
-    static comma := this.lb this.sc.comma this.rb
-    static commaup := this.lb this.sc.comma this.syntax.up this.rb
-    static commadown := this.lb this.sc.comma this.syntax.down this.rb
+    static comma := '{' this.sc.comma '}'
+    static commaup := '{' this.sc.comma ' up}'
+    static commadown := '{' this.sc.comma ' down}'
 
-    static period := this.lb this.sc.period this.rb
-    static periodup := this.lb this.sc.period this.syntax.up this.rb
-    static perioddown := this.lb this.sc.period this.syntax.down this.rb
+    static period := '{' this.sc.period '}'
+    static periodup := '{' this.sc.period ' up}'
+    static perioddown := '{' this.sc.period ' down}'
 
-    static slash := this.lb this.sc.slash this.rb
-    static slashup := this.lb this.sc.slash this.syntax.up this.rb
-    static slashdown := this.lb this.sc.slash this.syntax.down this.rb
+    static slash := '{' this.sc.slash '}'
+    static slashup := '{' this.sc.slash ' up}'
+    static slashdown := '{' this.sc.slash ' down}'
 
-    static numpadMult := this.lb this.sc.numpadMult this.rb
-    static numpadMultup := this.lb this.sc.numpadMult this.syntax.up this.rb
-    static numpadMultdown := this.lb this.sc.numpadMult this.syntax.down this.rb
+    static numpadMult := '{' this.sc.numpadMult '}'
+    static numpadMultup := '{' this.sc.numpadMult ' up}'
+    static numpadMultdown := '{' this.sc.numpadMult ' down}'
 
-    static space := this.lb this.sc.space this.rb
-    static spaceup := this.lb this.sc.space this.syntax.up this.rb
-    static spacedown := this.lb this.sc.space this.syntax.down this.rb
+    static space := '{' this.sc.space '}'
+    static spaceup := '{' this.sc.space ' up}'
+    static spacedown := '{' this.sc.space ' down}'
 
-    static capslock := this.lb this.sc.capslock this.rb
-    static capslockup := this.lb this.sc.capslock this.syntax.up this.rb
-    static capslockdown := this.lb this.sc.capslock this.syntax.down this.rb
+    static capslock := '{' this.sc.capslock '}'
+    static capslockup := '{' this.sc.capslock ' up}'
+    static capslockdown := '{' this.sc.capslock ' down}'
 
-    static f1 := this.lb this.sc.f1 this.rb
-    static f1up := this.lb this.sc.f1 this.syntax.up this.rb
-    static f1down := this.lb this.sc.f1 this.syntax.down this.rb
+    static f1 := '{' this.sc.f1 '}'
+    static f1up := '{' this.sc.f1 ' up}'
+    static f1down := '{' this.sc.f1 ' down}'
     
-    static f2 := this.lb this.sc.f2 this.rb
-    static f2up := this.lb this.sc.f2 this.syntax.up this.rb
-    static f2down := this.lb this.sc.f2 this.syntax.down this.rb
+    static f2 := '{' this.sc.f2 '}'
+    static f2up := '{' this.sc.f2 ' up}'
+    static f2down := '{' this.sc.f2 ' down}'
 
-    static f3 := this.lb this.sc.f3 this.rb
-    static f3up := this.lb this.sc.f3 this.syntax.up this.rb
-    static f3down := this.lb this.sc.f3 this.syntax.down this.rb
+    static f3 := '{' this.sc.f3 '}'
+    static f3up := '{' this.sc.f3 ' up}'
+    static f3down := '{' this.sc.f3 ' down}'
 
-    static f4 := this.lb this.sc.f4 this.rb
-    static f4up := this.lb this.sc.f4 this.syntax.up this.rb
-    static f4down := this.lb this.sc.f4 this.syntax.down this.rb
+    static f4 := '{' this.sc.f4 '}'
+    static f4up := '{' this.sc.f4 ' up}'
+    static f4down := '{' this.sc.f4 ' down}'
 
-    static f5 := this.lb this.sc.f5 this.rb
-    static f5up := this.lb this.sc.f5 this.syntax.up this.rb
-    static f5down := this.lb this.sc.f5 this.syntax.down this.rb
+    static f5 := '{' this.sc.f5 '}'
+    static f5up := '{' this.sc.f5 ' up}'
+    static f5down := '{' this.sc.f5 ' down}'
 
-    static f6 := this.lb this.sc.f6 this.rb
-    static f6up := this.lb this.sc.f6 this.syntax.up this.rb
-    static f6down := this.lb this.sc.f6 this.syntax.down this.rb
+    static f6 := '{' this.sc.f6 '}'
+    static f6up := '{' this.sc.f6 ' up}'
+    static f6down := '{' this.sc.f6 ' down}'
 
-    static f7 := this.lb this.sc.f7 this.rb
-    static f7up := this.lb this.sc.f7 this.syntax.up this.rb
-    static f7down := this.lb this.sc.f7 this.syntax.down this.rb
+    static f7 := '{' this.sc.f7 '}'
+    static f7up := '{' this.sc.f7 ' up}'
+    static f7down := '{' this.sc.f7 ' down}'
 
-    static f8 := this.lb this.sc.f8 this.rb
-    static f8up := this.lb this.sc.f8 this.syntax.up this.rb
-    static f8down := this.lb this.sc.f8 this.syntax.down this.rb
+    static f8 := '{' this.sc.f8 '}'
+    static f8up := '{' this.sc.f8 ' up}'
+    static f8down := '{' this.sc.f8 ' down}'
 
-    static f9 := this.lb this.sc.f9 this.rb
-    static f9up := this.lb this.sc.f9 this.syntax.up this.rb
-    static f9down := this.lb this.sc.f9 this.syntax.down this.rb
+    static f9 := '{' this.sc.f9 '}'
+    static f9up := '{' this.sc.f9 ' up}'
+    static f9down := '{' this.sc.f9 ' down}'
 
-    static f10 := this.lb this.sc.f10 this.rb
-    static f10up := this.lb this.sc.f10 this.syntax.up this.rb
-    static f10down := this.lb this.sc.f10 this.syntax.down this.rb
+    static f10 := '{' this.sc.f10 '}'
+    static f10up := '{' this.sc.f10 ' up}'
+    static f10down := '{' this.sc.f10 ' down}'
 
-    static numlock := this.lb this.sc.numlock this.rb
-    static numlockup := this.lb this.sc.numlock this.syntax.up this.rb
-    static numlockdown := this.lb this.sc.numlock this.syntax.down this.rb
+    static numlock := '{' this.sc.numlock '}'
+    static numlockup := '{' this.sc.numlock ' up}'
+    static numlockdown := '{' this.sc.numlock ' down}'
 
-    static scrolllock := this.lb this.sc.scrolllock this.rb
-    static scrolllockup := this.lb this.sc.scrolllock this.syntax.up this.rb
-    static scrolllockdown := this.lb this.sc.scrolllock this.syntax.down this.rb
+    static scrolllock := '{' this.sc.scrolllock '}'
+    static scrolllockup := '{' this.sc.scrolllock ' up}'
+    static scrolllockdown := '{' this.sc.scrolllock ' down}'
 
-    static numpad7 := this.lb this.sc.numpad7 this.rb
-    static numpad7up := this.lb this.sc.numpad7 this.syntax.up this.rb
-    static numpad7down := this.lb this.sc.numpad7 this.syntax.down this.rb
+    static numpad7 := '{' this.sc.numpad7 '}'
+    static numpad7up := '{' this.sc.numpad7 ' up}'
+    static numpad7down := '{' this.sc.numpad7 ' down}'
 
-    static numpad8 := this.lb this.sc.numpad8 this.rb
-    static numpad8up := this.lb this.sc.numpad8 this.syntax.up this.rb
-    static numpad8down := this.lb this.sc.numpad8 this.syntax.down this.rb
+    static numpad8 := '{' this.sc.numpad8 '}'
+    static numpad8up := '{' this.sc.numpad8 ' up}'
+    static numpad8down := '{' this.sc.numpad8 ' down}'
 
-    static numpad9 := this.lb this.sc.numpad9 this.rb
-    static numpad9up := this.lb this.sc.numpad9 this.syntax.up this.rb
-    static numpad9down := this.lb this.sc.numpad9 this.syntax.down this.rb
+    static numpad9 := '{' this.sc.numpad9 '}'
+    static numpad9up := '{' this.sc.numpad9 ' up}'
+    static numpad9down := '{' this.sc.numpad9 ' down}'
 
-    static numpadMinus := this.lb this.sc.numpadMinus this.rb
-    static numpadMinusup := this.lb this.sc.numpadMinus this.syntax.up this.rb
-    static numpadMinusdown := this.lb this.sc.numpadMinus this.syntax.down this.rb
+    static numpadMinus := '{' this.sc.numpadMinus '}'
+    static numpadMinusup := '{' this.sc.numpadMinus ' up}'
+    static numpadMinusdown := '{' this.sc.numpadMinus ' down}'
 
-    static numpad4 := this.lb this.sc.numpad4 this.rb
-    static numpad4up := this.lb this.sc.numpad4 this.syntax.up this.rb
-    static numpad4down := this.lb this.sc.numpad4 this.syntax.down this.rb
+    static numpad4 := '{' this.sc.numpad4 '}'
+    static numpad4up := '{' this.sc.numpad4 ' up}'
+    static numpad4down := '{' this.sc.numpad4 ' down}'
 
-    static numpad5 := this.lb this.sc.numpad5 this.rb
-    static numpad5up := this.lb this.sc.numpad5 this.syntax.up this.rb
-    static numpad5down := this.lb this.sc.numpad5 this.syntax.down this.rb
+    static numpad5 := '{' this.sc.numpad5 '}'
+    static numpad5up := '{' this.sc.numpad5 ' up}'
+    static numpad5down := '{' this.sc.numpad5 ' down}'
 
-    static numpad6 := this.lb this.sc.numpad6 this.rb
-    static numpad6up := this.lb this.sc.numpad6 this.syntax.up this.rb
-    static numpad6down := this.lb this.sc.numpad6 this.syntax.down this.rb
+    static numpad6 := '{' this.sc.numpad6 '}'
+    static numpad6up := '{' this.sc.numpad6 ' up}'
+    static numpad6down := '{' this.sc.numpad6 ' down}'
 
-    static numpadPlus := this.lb this.sc.numpadPlus this.rb
-    static numpadPlusup := this.lb this.sc.numpadPlus this.syntax.up this.rb
-    static numpadPlusdown := this.lb this.sc.numpadPlus this.syntax.down this.rb
+    static numpadPlus := '{' this.sc.numpadPlus '}'
+    static numpadPlusup := '{' this.sc.numpadPlus ' up}'
+    static numpadPlusdown := '{' this.sc.numpadPlus ' down}'
 
-    static numpad1 := this.lb this.sc.numpad1 this.rb
-    static numpad1up := this.lb this.sc.numpad1 this.syntax.up this.rb
-    static numpad1down := this.lb this.sc.numpad1 this.syntax.down this.rb
+    static numpad1 := '{' this.sc.numpad1 '}'
+    static numpad1up := '{' this.sc.numpad1 ' up}'
+    static numpad1down := '{' this.sc.numpad1 ' down}'
 
-    static numpad2 := this.lb this.sc.numpad2 this.rb
-    static numpad2up := this.lb this.sc.numpad2 this.syntax.up this.rb
-    static numpad2down := this.lb this.sc.numpad2 this.syntax.down this.rb
+    static numpad2 := '{' this.sc.numpad2 '}'
+    static numpad2up := '{' this.sc.numpad2 ' up}'
+    static numpad2down := '{' this.sc.numpad2 ' down}'
 
-    static numpad3 := this.lb this.sc.numpad3 this.rb
-    static numpad3up := this.lb this.sc.numpad3 this.syntax.up this.rb
-    static numpad3down := this.lb this.sc.numpad3 this.syntax.down this.rb
+    static numpad3 := '{' this.sc.numpad3 '}'
+    static numpad3up := '{' this.sc.numpad3 ' up}'
+    static numpad3down := '{' this.sc.numpad3 ' down}'
 
-    static numpad0 := this.lb this.sc.numpad0 this.rb
-    static numpad0up := this.lb this.sc.numpad0 this.syntax.up this.rb
-    static numpad0down := this.lb this.sc.numpad0 this.syntax.down this.rb
+    static numpad0 := '{' this.sc.numpad0 '}'
+    static numpad0up := '{' this.sc.numpad0 ' up}'
+    static numpad0down := '{' this.sc.numpad0 ' down}'
 
-    static numpadDot := this.lb this.sc.numpadDot this.rb
-    static numpadDotup := this.lb this.sc.numpadDot this.syntax.up this.rb
-    static numpadDotdown := this.lb this.sc.numpadDot this.syntax.down this.rb
+    static numpadDot := '{' this.sc.numpadDot '}'
+    static numpadDotup := '{' this.sc.numpadDot ' up}'
+    static numpadDotdown := '{' this.sc.numpadDot ' down}'
 
-    static f11 := this.lb this.sc.f11 this.rb
-    static f11up := this.lb this.sc.f11 this.syntax.up this.rb
-    static f11down := this.lb this.sc.f11 this.syntax.down this.rb
+    static f11 := '{' this.sc.f11 '}'
+    static f11up := '{' this.sc.f11 ' up}'
+    static f11down := '{' this.sc.f11 ' down}'
 
-    static f12 := this.lb this.sc.f12 this.rb
-    static f12up := this.lb this.sc.f12 this.syntax.up this.rb
-    static f12down := this.lb this.sc.f12 this.syntax.down this.rb
+    static f12 := '{' this.sc.f12 '}'
+    static f12up := '{' this.sc.f12 ' up}'
+    static f12down := '{' this.sc.f12 ' down}'
 
-    static numpadDiv := this.lb this.sc.numpadDiv this.rb
-    static numpadDivup := this.lb this.sc.numpadDiv this.syntax.up this.rb
-    static numpadDivdown := this.lb this.sc.numpadDiv this.syntax.down this.rb
+    static numpadDiv := '{' this.sc.numpadDiv '}'
+    static numpadDivup := '{' this.sc.numpadDiv ' up}'
+    static numpadDivdown := '{' this.sc.numpadDiv ' down}'
 
-    static printscreen := this.lb this.sc.printscreen this.rb
-    static printscreenup := this.lb this.sc.printscreen this.syntax.up this.rb
-    static printscreendown := this.lb this.sc.printscreen this.syntax.down this.rb
+    static printscreen := '{' this.sc.printscreen '}'
+    static printscreenup := '{' this.sc.printscreen ' up}'
+    static printscreendown := '{' this.sc.printscreen ' down}'
 
-    static pause := this.lb this.sc.pause this.rb
-    static pauseup := this.lb this.sc.pause this.syntax.up this.rb
-    static pausedown := this.lb this.sc.pause this.syntax.down this.rb
+    static pause := '{' this.sc.pause '}'
+    static pauseup := '{' this.sc.pause ' up}'
+    static pausedown := '{' this.sc.pause ' down}'
 
-    static home := this.lb this.sc.home this.rb
-    static homeup := this.lb this.sc.home this.syntax.up this.rb
-    static homedown := this.lb this.sc.home this.syntax.down this.rb
+    static home := '{' this.sc.home '}'
+    static homeup := '{' this.sc.home ' up}'
+    static homedown := '{' this.sc.home ' down}'
 
-    ; static scUp := this.lb this.sc.scup this.rb
-    ; static scupup := this.lb this.sc.scup this.syntax.up this.rb
-    ; static scupdown := this.lb this.sc.scup this.syntax.down this.rb
+    ; static scUp := '{' this.sc.scup '}'
+    ; static scupup := '{' this.sc.scup ' up}'
+    ; static scupdown := '{' this.sc.scup ' down}'
 
-    static pageup := this.lb this.sc.pageup this.rb
-    static pageupup := this.lb this.sc.pageup this.syntax.up this.rb
-    static pageupdown := this.lb this.sc.pageup this.syntax.down this.rb
+    static pageup := '{' this.sc.pageup '}'
+    static pageupup := '{' this.sc.pageup ' up}'
+    static pageupdown := '{' this.sc.pageup ' down}'
 
-    static left := this.lb this.sc.left this.rb
-    static leftup := this.lb this.sc.left this.syntax.up this.rb
-    static leftdown := this.lb this.sc.left this.syntax.down this.rb
+    static left := '{' this.sc.left '}'
+    static leftup := '{' this.sc.left ' up}'
+    static leftdown := '{' this.sc.left ' down}'
 
-    static right := this.lb this.sc.right this.rb
-    static rightup := this.lb this.sc.right this.syntax.up this.rb
-    static rightdown := this.lb this.sc.right this.syntax.down this.rb
+    static right := '{' this.sc.right '}'
+    static rightup := '{' this.sc.right ' up}'
+    static rightdown := '{' this.sc.right ' down}'
 
-    static end := this.lb this.sc.end this.rb
-    static endup := this.lb this.sc.end this.syntax.up this.rb
-    static enddown := this.lb this.sc.end this.syntax.down this.rb
+    static end := '{' this.sc.end '}'
+    static endup := '{' this.sc.end ' up}'
+    static enddown := '{' this.sc.end ' down}'
 
-    ; static scdown := this.lb this.sc.scdown this.rb
-    ; static scdownup := this.lb this.sc.scdown this.syntax.up this.rb
-    ; static scdropdown := this.lb this.sc.scdown this.syntax.down this.rb
+    ; static scdown := '{' this.sc.scdown '}'
+    ; static scdownup := '{' this.sc.scdown ' up}'
+    ; static scdropdown := '{' this.sc.scdown ' down}'
 
-    static pagedown := this.lb this.sc.pagedown this.rb
-    static pagedownup := this.lb this.sc.pagedown this.syntax.up this.rb
-    static pagedowndown := this.lb this.sc.pagedown this.syntax.down this.rb
+    static pagedown := '{' this.sc.pagedown '}'
+    static pagedownup := '{' this.sc.pagedown ' up}'
+    static pagedowndown := '{' this.sc.pagedown ' down}'
 
-    static insert := this.lb this.sc.insert this.rb
-    static insertup := this.lb this.sc.insert this.syntax.up this.rb
-    static insertdown := this.lb this.sc.insert this.syntax.down this.rb
+    static insert := '{' this.sc.insert '}'
+    static insertup := '{' this.sc.insert ' up}'
+    static insertdown := '{' this.sc.insert ' down}'
 
-    static delete := this.lb this.sc.delete this.rb
-    static deleteup := this.lb this.sc.delete this.syntax.up this.rb
-    static deletedown := this.lb this.sc.delete this.syntax.down this.rb
+    static delete := '{' this.sc.delete '}'
+    static deleteup := '{' this.sc.delete ' up}'
+    static deletedown := '{' this.sc.delete ' down}'
 
-    static appskey := this.lb this.sc.appskey this.rb
-    static appskeyup := this.lb this.sc.appskey this.syntax.up this.rb
-    static appskeydown := this.lb this.sc.appskey this.syntax.down this.rb
+    static appskey := '{' this.sc.appskey '}'
+    static appskeyup := '{' this.sc.appskey ' up}'
+    static appskeydown := '{' this.sc.appskey ' down}'
 
-    static menu := this.lb this.sc.menu this.rb
-    static menuup := this.lb this.sc.menu this.syntax.up this.rb
-    static menudown := this.lb this.sc.menu this.syntax.down this.rb
+    static menu := '{' this.sc.menu '}'
+    static menuup := '{' this.sc.menu ' up}'
+    static menudown := '{' this.sc.menu ' down}'
 
     static hznsave := this.altdown this.f this.s this.altup
+    static hznOpenRTF := this.ctrldown this.shiftdown this.c this.shiftup this.ctrlup
     
 	static find := this.ctrldown this.f this.ctrlup
 	static replace := this.ctrldown this.h this.ctrlup
@@ -1431,459 +1433,459 @@ class key {
     ;     ; prop := value := ''
     ;     ; for prop, value in this.sc.OwnProps(){
     ;     ;     this.DefineProp(prop, {
-    ;     ;         Set: (*) => prop := this.lb value this.lb,
+    ;     ;         Set: (*) => prop := '{' value '{',
     ;     ;         Get: (*) => prop
     ;     ;     })
     ;     ;     this.DefineProp(prop "down", {
-    ;     ;         Set: (*) => prop := this.lb value this.syntax.down this.rb,
+    ;     ;         Set: (*) => prop := '{' value ' down}',
     ;     ;         Get: (*) => prop
     ;     ;     })
     ;     ;     this.DefineProp(prop "up", {
-    ;     ;         Set: (*) => prop := this.lb . value . this.syntax.up . this.rb,
+    ;     ;         Set: (*) => prop := '{' . value . this.syntax.up . '}',
     ;     ;         Get: (*) => prop
     ;     ;     })
     ;     ; }
     ;     ;     this.DefineProp(prop . "down", {
-    ;     ;         Get: (*) => this.lb . value . this.syntax.down . this.rb,
+    ;     ;         Get: (*) => '{' . value . this.syntax.down . '}',
     ;     ;     })
     ;     ;     this.DefineProp(prop . "up", {
-    ;     ;         Get: (*) => this.lb . value . this.syntax.up . this.rb,
+    ;     ;         Get: (*) => '{' . value . this.syntax.up . '}',
     ;     ;     })
     ;     ; }
     ;     */
     ;     ; /*
     ;     ; Define individual key properties for all keys in sc class
-    ;     this.esc := this.lb this.sc.esc this.rb
-    ;     this.escup := this.lb this.sc.esc this.syntax.up this.rb
-    ;     this.escdown := this.lb this.sc.esc this.syntax.down this.rb
-
-    ;     this.1 := this.lb this.sc.1 this.rb
-    ;     this.1up := this.lb this.sc.1 this.syntax.up this.rb
-    ;     this.1down := this.lb this.sc.1 this.syntax.down this.rb
-
-    ;     this.2 := this.lb this.sc.2 this.rb
-    ;     this.2up := this.lb this.sc.2 this.syntax.up this.rb
-    ;     this.2down := this.lb this.sc.2 this.syntax.down this.rb
-
-    ;     this.3 := this.lb this.sc.3 this.rb
-    ;     this.3up := this.lb this.sc.3 this.syntax.up this.rb
-    ;     this.3down := this.lb this.sc.3 this.syntax.down this.rb
-
-    ;     this.4 := this.lb this.sc.4 this.rb
-    ;     this.4up := this.lb this.sc.4 this.syntax.up this.rb
-    ;     this.4down := this.lb this.sc.4 this.syntax.down this.rb
-
-    ;     this.5 := this.lb this.sc.5 this.rb
-    ;     this.5up := this.lb this.sc.5 this.syntax.up this.rb
-    ;     this.5down := this.lb this.sc.5 this.syntax.down this.rb
-
-    ;     this.6 := this.lb this.sc.6 this.rb
-    ;     this.6up := this.lb this.sc.6 this.syntax.up this.rb
-    ;     this.6down := this.lb this.sc.6 this.syntax.down this.rb
-
-    ;     this.7 := this.lb this.sc.7 this.rb
-    ;     this.7up := this.lb this.sc.7 this.syntax.up this.rb
-    ;     this.7down := this.lb this.sc.7 this.syntax.down this.rb
-
-    ;     this.8 := this.lb this.sc.8 this.rb
-    ;     this.8up := this.lb this.sc.8 this.syntax.up this.rb
-    ;     this.8down := this.lb this.sc.8 this.syntax.down this.rb
-
-    ;     this.9 := this.lb this.sc.9 this.rb
-    ;     this.9up := this.lb this.sc.9 this.syntax.up this.rb
-    ;     this.9down := this.lb this.sc.9 this.syntax.down this.rb
-
-    ;     this.0 := this.lb this.sc.0 this.rb
-    ;     this.0up := this.lb this.sc.0 this.syntax.up this.rb
-    ;     this.0down := this.lb this.sc.0 this.syntax.down this.rb
-
-    ;     this.minus := this.lb this.sc.minus this.rb
-    ;     this.minusup := this.lb this.sc.minus this.syntax.up this.rb
-    ;     this.minusdown := this.lb this.sc.minus this.syntax.down this.rb
-
-    ;     this.equal := this.lb this.sc.equal this.rb
-    ;     this.equalup := this.lb this.sc.equal this.syntax.up this.rb
-    ;     this.equaldown := this.lb this.sc.equal this.syntax.down this.rb
-
-    ;     this.backspace := this.lb this.sc.backspace this.rb
-    ;     this.backspaceup := this.lb this.sc.backspace this.syntax.up this.rb
-    ;     this.backspacedown := this.lb this.sc.backspace this.syntax.down this.rb
-
-    ;     this.tab := this.lb this.sc.tab this.rb
-    ;     this.tabup := this.lb this.sc.tab this.syntax.up this.rb
-    ;     this.tabdown := this.lb this.sc.tab this.syntax.down this.rb
-
-    ;     this.q := this.lb this.sc.q this.rb
-    ;     this.qup := this.lb this.sc.q this.syntax.up this.rb
-    ;     this.qdown := this.lb this.sc.q this.syntax.down this.rb
-
-    ;     this.w := this.lb this.sc.w this.rb
-    ;     this.wup := this.lb this.sc.w this.syntax.up this.rb
-    ;     this.wdown := this.lb this.sc.w this.syntax.down this.rb
-
-    ;     this.e := this.lb this.sc.e this.rb
-    ;     this.eup := this.lb this.sc.e this.syntax.up this.rb
-    ;     this.edown := this.lb this.sc.e this.syntax.down this.rb
-
-    ;     this.r := this.lb this.sc.r this.rb
-    ;     this.rup := this.lb this.sc.r this.syntax.up this.rb
-    ;     this.rdown := this.lb this.sc.r this.syntax.down this.rb
-
-    ;     this.t := this.lb this.sc.t this.rb
-    ;     this.tup := this.lb this.sc.t this.syntax.up this.rb
-    ;     this.tdown := this.lb this.sc.t this.syntax.down this.rb
-
-    ;     this.y := this.lb this.sc.y this.rb
-    ;     this.yup := this.lb this.sc.y this.syntax.up this.rb
-    ;     this.ydown := this.lb this.sc.y this.syntax.down this.rb
-
-    ;     this.u := this.lb this.sc.u this.rb
-    ;     this.uup := this.lb this.sc.u this.syntax.up this.rb
-    ;     this.udown := this.lb this.sc.u this.syntax.down this.rb
-
-    ;     this.i := this.lb this.sc.i this.rb
-    ;     this.iup := this.lb this.sc.i this.syntax.up this.rb
-    ;     this.idown := this.lb this.sc.i this.syntax.down this.rb
-
-    ;     this.o := this.lb this.sc.o this.rb
-    ;     this.oup := this.lb this.sc.o this.syntax.up this.rb
-    ;     this.odown := this.lb this.sc.o this.syntax.down this.rb
-
-    ;     this.p := this.lb this.sc.p this.rb
-    ;     this.pup := this.lb this.sc.p this.syntax.up this.rb
-    ;     this.pdown := this.lb this.sc.p this.syntax.down this.rb
-
-    ;     this.lbracket := this.lb this.sc.lbracket this.rb
-    ;     this.lbracketup := this.lb this.sc.lbracket this.syntax.up this.rb
-    ;     this.lbracketdown := this.lb this.sc.lbracket this.syntax.down this.rb
-
-    ;     this.rbracket := this.lb this.sc.rbracket this.rb
-    ;     this.rbracketup := this.lb this.sc.rbracket this.syntax.up this.rb
-    ;     this.rbracketdown := this.lb this.sc.rbracket this.syntax.down this.rb
-
-    ;     this.enter := this.lb this.sc.enter this.rb
-    ;     this.enterup := this.lb this.sc.enter this.syntax.up this.rb
-    ;     this.enterdown := this.lb this.sc.enter this.syntax.down this.rb
-
-    ;     this.ctrl := this.lb this.sc.ctrl this.rb
-    ;     this.ctrlup := this.lb this.sc.ctrl this.syntax.up this.rb
-    ;     this.ctrldown := this.lb this.sc.ctrl this.syntax.down this.rb
-
-    ;     this.lctrl := this.lb this.sc.lctrl this.rb
-    ;     this.lctrlup := this.lb this.sc.lctrl this.syntax.up this.rb
-    ;     this.lctrldown := this.lb this.sc.lctrl this.syntax.down this.rb
-
-    ;     this.a := this.lb this.sc.a this.rb
-    ;     this.aup := this.lb this.sc.a this.syntax.up this.rb
-    ;     this.adown := this.lb this.sc.a this.syntax.down this.rb
-
-    ;     this.s := this.lb this.sc.s this.rb
-    ;     this.sup := this.lb this.sc.s this.syntax.up this.rb
-    ;     this.sdown := this.lb this.sc.s this.syntax.down this.rb
-
-    ;     this.d := this.lb this.sc.d this.rb
-    ;     this.dup := this.lb this.sc.d this.syntax.up this.rb
-    ;     this.ddown := this.lb this.sc.d this.syntax.down this.rb
-
-    ;     this.f := this.lb this.sc.f this.rb
-    ;     this.fup := this.lb this.sc.f this.syntax.up this.rb
-    ;     this.fdown := this.lb this.sc.f this.syntax.down this.rb
-
-    ;     this.g := this.lb this.sc.g this.rb
-    ;     this.gup := this.lb this.sc.g this.syntax.up this.rb
-    ;     this.gdown := this.lb this.sc.g this.syntax.down this.rb
-
-    ;     this.h := this.lb this.sc.h this.rb
-    ;     this.hup := this.lb this.sc.h this.syntax.up this.rb
-    ;     this.hdown := this.lb this.sc.h this.syntax.down this.rb
-
-    ;     this.j := this.lb this.sc.j this.rb
-    ;     this.jup := this.lb this.sc.j this.syntax.up this.rb
-    ;     this.jdown := this.lb this.sc.j this.syntax.down this.rb
-
-    ;     this.k := this.lb this.sc.k this.rb
-    ;     this.kup := this.lb this.sc.k this.syntax.up this.rb
-    ;     this.kdown := this.lb this.sc.k this.syntax.down this.rb
-
-    ;     this.l := this.lb this.sc.l this.rb
-    ;     this.lup := this.lb this.sc.l this.syntax.up this.rb
-    ;     this.ldown := this.lb this.sc.l this.syntax.down this.rb
-
-    ;     this.semicolon := this.lb this.sc.semicolon this.rb
-    ;     this.semicolonup := this.lb this.sc.semicolon this.syntax.up this.rb
-    ;     this.semicolondown := this.lb this.sc.semicolon this.syntax.down this.rb
-
-    ;     this.quote := this.lb this.sc.quote this.rb
-    ;     this.quoteup := this.lb this.sc.quote this.syntax.up this.rb
-    ;     this.quotedown := this.lb this.sc.quote this.syntax.down this.rb
-
-    ;     this.backtick := this.lb this.sc.backtick this.rb
-    ;     this.backtickup := this.lb this.sc.backtick this.syntax.up this.rb
-    ;     this.backtickdown := this.lb this.sc.backtick this.syntax.down this.rb
-
-    ;     this.shift := this.lb this.sc.shift this.rb
-    ;     this.shiftup := this.lb this.sc.shift this.syntax.up this.rb
-    ;     this.shiftdown := this.lb this.sc.shift this.syntax.down this.rb
-
-    ;     this.lshift := this.lb this.sc.lshift this.rb
-    ;     this.lshiftup := this.lb this.sc.lshift this.syntax.up this.rb
-    ;     this.lshiftdown := this.lb this.sc.lshift this.syntax.down this.rb
-
-    ;     this.backslash := this.lb this.sc.backslash this.rb
-    ;     this.backslashup := this.lb this.sc.backslash this.syntax.up this.rb
-    ;     this.backslashdown := this.lb this.sc.backslash this.syntax.down this.rb
-
-    ;     this.z := this.lb this.sc.z this.rb
-    ;     this.zup := this.lb this.sc.z this.syntax.up this.rb
-    ;     this.zdown := this.lb this.sc.z this.syntax.down this.rb
-
-    ;     this.x := this.lb this.sc.x this.rb
-    ;     this.xup := this.lb this.sc.x this.syntax.up this.rb
-    ;     this.xdown := this.lb this.sc.x this.syntax.down this.rb
-
-    ;     this.c := this.lb this.sc.c this.rb
-    ;     this.cup := this.lb this.sc.c this.syntax.up this.rb
-    ;     this.cdown := this.lb this.sc.c this.syntax.down this.rb
-
-    ;     this.v := this.lb this.sc.v this.rb
-    ;     this.vup := this.lb this.sc.v this.syntax.up this.rb
-    ;     this.vdown := this.lb this.sc.v this.syntax.down this.rb
-
-    ;     this.b := this.lb this.sc.b this.rb
-    ;     this.bup := this.lb this.sc.b this.syntax.up this.rb
-    ;     this.bdown := this.lb this.sc.b this.syntax.down this.rb
-
-    ;     this.n := this.lb this.sc.n this.rb
-    ;     this.nup := this.lb this.sc.n this.syntax.up this.rb
-    ;     this.ndown := this.lb this.sc.n this.syntax.down this.rb
-
-    ;     this.m := this.lb this.sc.m this.rb
-    ;     this.mup := this.lb this.sc.m this.syntax.up this.rb
-    ;     this.mdown := this.lb this.sc.m this.syntax.down this.rb
-
-    ;     this.comma := this.lb this.sc.comma this.rb
-    ;     this.commaup := this.lb this.sc.comma this.syntax.up this.rb
-    ;     this.commadown := this.lb this.sc.comma this.syntax.down this.rb
-
-    ;     this.period := this.lb this.sc.period this.rb
-    ;     this.periodup := this.lb this.sc.period this.syntax.up this.rb
-    ;     this.perioddown := this.lb this.sc.period this.syntax.down this.rb
-
-    ;     this.slash := this.lb this.sc.slash this.rb
-    ;     this.slashup := this.lb this.sc.slash this.syntax.up this.rb
-    ;     this.slashdown := this.lb this.sc.slash this.syntax.down this.rb
-
-    ;     this.rshift := this.lb this.sc.rshift this.rb
-    ;     this.rshiftup := this.lb this.sc.rshift this.syntax.up this.rb
-    ;     this.rshiftdown := this.lb this.sc.rshift this.syntax.down this.rb
-
-    ;     this.numpadMult := this.lb this.sc.numpadMult this.rb
-    ;     this.numpadMultup := this.lb this.sc.numpadMult this.syntax.up this.rb
-    ;     this.numpadMultdown := this.lb this.sc.numpadMult this.syntax.down this.rb
-
-    ;     this.alt := this.lb this.sc.alt this.rb
-    ;     this.altup := this.lb this.sc.alt this.syntax.up this.rb
-    ;     this.altdown := this.lb this.sc.alt this.syntax.down this.rb
-
-    ;     this.lalt := this.lb this.sc.lalt this.rb
-    ;     this.laltup := this.lb this.sc.lalt this.syntax.up this.rb
-    ;     this.laltdown := this.lb this.sc.lalt this.syntax.down this.rb
-
-    ;     this.space := this.lb this.sc.space this.rb
-    ;     this.spaceup := this.lb this.sc.space this.syntax.up this.rb
-    ;     this.spacedown := this.lb this.sc.space this.syntax.down this.rb
-
-    ;     this.capslock := this.lb this.sc.capslock this.rb
-    ;     this.capslockup := this.lb this.sc.capslock this.syntax.up this.rb
-    ;     this.capslockdown := this.lb this.sc.capslock this.syntax.down this.rb
-
-    ;     this.f1 := this.lb this.sc.f1 this.rb
-    ;     this.f1up := this.lb this.sc.f1 this.syntax.up this.rb
-    ;     this.f1down := this.lb this.sc.f1 this.syntax.down this.rb
-
-    ;     this.f2 := this.lb this.sc.f2 this.rb
-    ;     this.f2up := this.lb this.sc.f2 this.syntax.up this.rb
-    ;     this.f2down := this.lb this.sc.f2 this.syntax.down this.rb
-
-    ;     this.f3 := this.lb this.sc.f3 this.rb
-    ;     this.f3up := this.lb this.sc.f3 this.syntax.up this.rb
-    ;     this.f3down := this.lb this.sc.f3 this.syntax.down this.rb
-
-    ;     this.f4 := this.lb this.sc.f4 this.rb
-    ;     this.f4up := this.lb this.sc.f4 this.syntax.up this.rb
-    ;     this.f4down := this.lb this.sc.f4 this.syntax.down this.rb
-
-    ;     this.f5 := this.lb this.sc.f5 this.rb
-    ;     this.f5up := this.lb this.sc.f5 this.syntax.up this.rb
-    ;     this.f5down := this.lb this.sc.f5 this.syntax.down this.rb
-
-    ;     this.f6 := this.lb this.sc.f6 this.rb
-    ;     this.f6up := this.lb this.sc.f6 this.syntax.up this.rb
-    ;     this.f6down := this.lb this.sc.f6 this.syntax.down this.rb
-
-    ;     this.f7 := this.lb this.sc.f7 this.rb
-    ;     this.f7up := this.lb this.sc.f7 this.syntax.up this.rb
-    ;     this.f7down := this.lb this.sc.f7 this.syntax.down this.rb
-
-    ;     this.f8 := this.lb this.sc.f8 this.rb
-    ;     this.f8up := this.lb this.sc.f8 this.syntax.up this.rb
-    ;     this.f8down := this.lb this.sc.f8 this.syntax.down this.rb
-
-    ;     this.f9 := this.lb this.sc.f9 this.rb
-    ;     this.f9up := this.lb this.sc.f9 this.syntax.up this.rb
-    ;     this.f9down := this.lb this.sc.f9 this.syntax.down this.rb
-
-    ;     this.f10 := this.lb this.sc.f10 this.rb
-    ;     this.f10up := this.lb this.sc.f10 this.syntax.up this.rb
-    ;     this.f10down := this.lb this.sc.f10 this.syntax.down this.rb
-
-    ;     this.numlock := this.lb this.sc.numlock this.rb
-    ;     this.numlockup := this.lb this.sc.numlock this.syntax.up this.rb
-    ;     this.numlockdown := this.lb this.sc.numlock this.syntax.down this.rb
-
-    ;     this.scrolllock := this.lb this.sc.scrolllock this.rb
-    ;     this.scrolllockup := this.lb this.sc.scrolllock this.syntax.up this.rb
-    ;     this.scrolllockdown := this.lb this.sc.scrolllock this.syntax.down this.rb
-
-    ;     this.numpad7 := this.lb this.sc.numpad7 this.rb
-    ;     this.numpad7up := this.lb this.sc.numpad7 this.syntax.up this.rb
-    ;     this.numpad7down := this.lb this.sc.numpad7 this.syntax.down this.rb
-
-    ;     this.numpad8 := this.lb this.sc.numpad8 this.rb
-    ;     this.numpad8up := this.lb this.sc.numpad8 this.syntax.up this.rb
-    ;     this.numpad8down := this.lb this.sc.numpad8 this.syntax.down this.rb
-
-    ;     this.numpad9 := this.lb this.sc.numpad9 this.rb
-    ;     this.numpad9up := this.lb this.sc.numpad9 this.syntax.up this.rb
-    ;     this.numpad9down := this.lb this.sc.numpad9 this.syntax.down this.rb
-
-    ;     this.numpadMinus := this.lb this.sc.numpadMinus this.rb
-    ;     this.numpadMinusup := this.lb this.sc.numpadMinus this.syntax.up this.rb
-    ;     this.numpadMinusdown := this.lb this.sc.numpadMinus this.syntax.down this.rb
-
-    ;     this.numpad4 := this.lb this.sc.numpad4 this.rb
-    ;     this.numpad4up := this.lb this.sc.numpad4 this.syntax.up this.rb
-    ;     this.numpad4down := this.lb this.sc.numpad4 this.syntax.down this.rb
-
-    ;     this.numpad5 := this.lb this.sc.numpad5 this.rb
-    ;     this.numpad5up := this.lb this.sc.numpad5 this.syntax.up this.rb
-    ;     this.numpad5down := this.lb this.sc.numpad5 this.syntax.down this.rb
-
-    ;     this.numpad6 := this.lb this.sc.numpad6 this.rb
-    ;     this.numpad6up := this.lb this.sc.numpad6 this.syntax.up this.rb
-    ;     this.numpad6down := this.lb this.sc.numpad6 this.syntax.down this.rb
-
-    ;     this.numpadPlus := this.lb this.sc.numpadPlus this.rb
-    ;     this.numpadPlusup := this.lb this.sc.numpadPlus this.syntax.up this.rb
-    ;     this.numpadPlusdown := this.lb this.sc.numpadPlus this.syntax.down this.rb
-
-    ;     this.numpad1 := this.lb this.sc.numpad1 this.rb
-    ;     this.numpad1up := this.lb this.sc.numpad1 this.syntax.up this.rb
-    ;     this.numpad1down := this.lb this.sc.numpad1 this.syntax.down this.rb
-
-    ;     this.numpad2 := this.lb this.sc.numpad2 this.rb
-    ;     this.numpad2up := this.lb this.sc.numpad2 this.syntax.up this.rb
-    ;     this.numpad2down := this.lb this.sc.numpad2 this.syntax.down this.rb
-
-    ;     this.numpad3 := this.lb this.sc.numpad3 this.rb
-    ;     this.numpad3up := this.lb this.sc.numpad3 this.syntax.up this.rb
-    ;     this.numpad3down := this.lb this.sc.numpad3 this.syntax.down this.rb
-
-    ;     this.numpad0 := this.lb this.sc.numpad0 this.rb
-    ;     this.numpad0up := this.lb this.sc.numpad0 this.syntax.up this.rb
-    ;     this.numpad0down := this.lb this.sc.numpad0 this.syntax.down this.rb
-
-    ;     this.numpadDot := this.lb this.sc.numpadDot this.rb
-    ;     this.numpadDotup := this.lb this.sc.numpadDot this.syntax.up this.rb
-    ;     this.numpadDotdown := this.lb this.sc.numpadDot this.syntax.down this.rb
-
-    ;     this.f11 := this.lb this.sc.f11 this.rb
-    ;     this.f11up := this.lb this.sc.f11 this.syntax.up this.rb
-    ;     this.f11down := this.lb this.sc.f11 this.syntax.down this.rb
-
-    ;     this.f12 := this.lb this.sc.f12 this.rb
-    ;     this.f12up := this.lb this.sc.f12 this.syntax.up this.rb
-    ;     this.f12down := this.lb this.sc.f12 this.syntax.down this.rb
-
-    ;     this.rctrl := this.lb this.sc.rctrl this.rb
-    ;     this.rctrlup := this.lb this.sc.rctrl this.syntax.up this.rb
-    ;     this.rctrldown := this.lb this.sc.rctrl this.syntax.down this.rb
-
-    ;     this.numpadDiv := this.lb this.sc.numpadDiv this.rb
-    ;     this.numpadDivup := this.lb this.sc.numpadDiv this.syntax.up this.rb
-    ;     this.numpadDivdown := this.lb this.sc.numpadDiv this.syntax.down this.rb
-
-    ;     this.printscreen := this.lb this.sc.printscreen this.rb
-    ;     this.printscreenup := this.lb this.sc.printscreen this.syntax.up this.rb
-    ;     this.printscreendown := this.lb this.sc.printscreen this.syntax.down this.rb
-
-    ;     this.ralt := this.lb this.sc.ralt this.rb
-    ;     this.raltup := this.lb this.sc.ralt this.syntax.up this.rb
-    ;     this.raltdown := this.lb this.sc.ralt this.syntax.down this.rb
-
-    ;     this.pause := this.lb this.sc.pause this.rb
-    ;     this.pauseup := this.lb this.sc.pause this.syntax.up this.rb
-    ;     this.pausedown := this.lb this.sc.pause this.syntax.down this.rb
-
-    ;     this.home := this.lb this.sc.home this.rb
-    ;     this.homeup := this.lb this.sc.home this.syntax.up this.rb
-    ;     this.homedown := this.lb this.sc.home this.syntax.down this.rb
+    ;     this.esc := '{' this.sc.esc '}'
+    ;     this.escup := '{' this.sc.esc ' up}'
+    ;     this.escdown := '{' this.sc.esc ' down}'
+
+    ;     this.1 := '{' this.sc.1 '}'
+    ;     this.1up := '{' this.sc.1 ' up}'
+    ;     this.1down := '{' this.sc.1 ' down}'
+
+    ;     this.2 := '{' this.sc.2 '}'
+    ;     this.2up := '{' this.sc.2 ' up}'
+    ;     this.2down := '{' this.sc.2 ' down}'
+
+    ;     this.3 := '{' this.sc.3 '}'
+    ;     this.3up := '{' this.sc.3 ' up}'
+    ;     this.3down := '{' this.sc.3 ' down}'
+
+    ;     this.4 := '{' this.sc.4 '}'
+    ;     this.4up := '{' this.sc.4 ' up}'
+    ;     this.4down := '{' this.sc.4 ' down}'
+
+    ;     this.5 := '{' this.sc.5 '}'
+    ;     this.5up := '{' this.sc.5 ' up}'
+    ;     this.5down := '{' this.sc.5 ' down}'
+
+    ;     this.6 := '{' this.sc.6 '}'
+    ;     this.6up := '{' this.sc.6 ' up}'
+    ;     this.6down := '{' this.sc.6 ' down}'
+
+    ;     this.7 := '{' this.sc.7 '}'
+    ;     this.7up := '{' this.sc.7 ' up}'
+    ;     this.7down := '{' this.sc.7 ' down}'
+
+    ;     this.8 := '{' this.sc.8 '}'
+    ;     this.8up := '{' this.sc.8 ' up}'
+    ;     this.8down := '{' this.sc.8 ' down}'
+
+    ;     this.9 := '{' this.sc.9 '}'
+    ;     this.9up := '{' this.sc.9 ' up}'
+    ;     this.9down := '{' this.sc.9 ' down}'
+
+    ;     this.0 := '{' this.sc.0 '}'
+    ;     this.0up := '{' this.sc.0 ' up}'
+    ;     this.0down := '{' this.sc.0 ' down}'
+
+    ;     this.minus := '{' this.sc.minus '}'
+    ;     this.minusup := '{' this.sc.minus ' up}'
+    ;     this.minusdown := '{' this.sc.minus ' down}'
+
+    ;     this.equal := '{' this.sc.equal '}'
+    ;     this.equalup := '{' this.sc.equal ' up}'
+    ;     this.equaldown := '{' this.sc.equal ' down}'
+
+    ;     this.backspace := '{' this.sc.backspace '}'
+    ;     this.backspaceup := '{' this.sc.backspace ' up}'
+    ;     this.backspacedown := '{' this.sc.backspace ' down}'
+
+    ;     this.tab := '{' this.sc.tab '}'
+    ;     this.tabup := '{' this.sc.tab ' up}'
+    ;     this.tabdown := '{' this.sc.tab ' down}'
+
+    ;     this.q := '{' this.sc.q '}'
+    ;     this.qup := '{' this.sc.q ' up}'
+    ;     this.qdown := '{' this.sc.q ' down}'
+
+    ;     this.w := '{' this.sc.w '}'
+    ;     this.wup := '{' this.sc.w ' up}'
+    ;     this.wdown := '{' this.sc.w ' down}'
+
+    ;     this.e := '{' this.sc.e '}'
+    ;     this.eup := '{' this.sc.e ' up}'
+    ;     this.edown := '{' this.sc.e ' down}'
+
+    ;     this.r := '{' this.sc.r '}'
+    ;     this.rup := '{' this.sc.r ' up}'
+    ;     this.rdown := '{' this.sc.r ' down}'
+
+    ;     this.t := '{' this.sc.t '}'
+    ;     this.tup := '{' this.sc.t ' up}'
+    ;     this.tdown := '{' this.sc.t ' down}'
+
+    ;     this.y := '{' this.sc.y '}'
+    ;     this.yup := '{' this.sc.y ' up}'
+    ;     this.ydown := '{' this.sc.y ' down}'
+
+    ;     this.u := '{' this.sc.u '}'
+    ;     this.uup := '{' this.sc.u ' up}'
+    ;     this.udown := '{' this.sc.u ' down}'
+
+    ;     this.i := '{' this.sc.i '}'
+    ;     this.iup := '{' this.sc.i ' up}'
+    ;     this.idown := '{' this.sc.i ' down}'
+
+    ;     this.o := '{' this.sc.o '}'
+    ;     this.oup := '{' this.sc.o ' up}'
+    ;     this.odown := '{' this.sc.o ' down}'
+
+    ;     this.p := '{' this.sc.p '}'
+    ;     this.pup := '{' this.sc.p ' up}'
+    ;     this.pdown := '{' this.sc.p ' down}'
+
+    ;     '{'racket := '{' this.sc.lbracket '}'
+    ;     '{'racketup := '{' this.sc.lbracket ' up}'
+    ;     '{'racketdown := '{' this.sc.lbracket ' down}'
+
+    ;     '}'racket := '{' this.sc.rbracket '}'
+    ;     '}'racketup := '{' this.sc.rbracket ' up}'
+    ;     '}'racketdown := '{' this.sc.rbracket ' down}'
+
+    ;     this.enter := '{' this.sc.enter '}'
+    ;     this.enterup := '{' this.sc.enter ' up}'
+    ;     this.enterdown := '{' this.sc.enter ' down}'
+
+    ;     this.ctrl := '{' this.sc.ctrl '}'
+    ;     this.ctrlup := '{' this.sc.ctrl ' up}'
+    ;     this.ctrldown := '{' this.sc.ctrl ' down}'
+
+    ;     this.lctrl := '{' this.sc.lctrl '}'
+    ;     this.lctrlup := '{' this.sc.lctrl ' up}'
+    ;     this.lctrldown := '{' this.sc.lctrl ' down}'
+
+    ;     this.a := '{' this.sc.a '}'
+    ;     this.aup := '{' this.sc.a ' up}'
+    ;     this.adown := '{' this.sc.a ' down}'
+
+    ;     this.s := '{' this.sc.s '}'
+    ;     this.sup := '{' this.sc.s ' up}'
+    ;     this.sdown := '{' this.sc.s ' down}'
+
+    ;     this.d := '{' this.sc.d '}'
+    ;     this.dup := '{' this.sc.d ' up}'
+    ;     this.ddown := '{' this.sc.d ' down}'
+
+    ;     this.f := '{' this.sc.f '}'
+    ;     this.fup := '{' this.sc.f ' up}'
+    ;     this.fdown := '{' this.sc.f ' down}'
+
+    ;     this.g := '{' this.sc.g '}'
+    ;     this.gup := '{' this.sc.g ' up}'
+    ;     this.gdown := '{' this.sc.g ' down}'
+
+    ;     this.h := '{' this.sc.h '}'
+    ;     this.hup := '{' this.sc.h ' up}'
+    ;     this.hdown := '{' this.sc.h ' down}'
+
+    ;     this.j := '{' this.sc.j '}'
+    ;     this.jup := '{' this.sc.j ' up}'
+    ;     this.jdown := '{' this.sc.j ' down}'
+
+    ;     this.k := '{' this.sc.k '}'
+    ;     this.kup := '{' this.sc.k ' up}'
+    ;     this.kdown := '{' this.sc.k ' down}'
+
+    ;     this.l := '{' this.sc.l '}'
+    ;     this.lup := '{' this.sc.l ' up}'
+    ;     this.ldown := '{' this.sc.l ' down}'
+
+    ;     this.semicolon := '{' this.sc.semicolon '}'
+    ;     this.semicolonup := '{' this.sc.semicolon ' up}'
+    ;     this.semicolondown := '{' this.sc.semicolon ' down}'
+
+    ;     this.quote := '{' this.sc.quote '}'
+    ;     this.quoteup := '{' this.sc.quote ' up}'
+    ;     this.quotedown := '{' this.sc.quote ' down}'
+
+    ;     this.backtick := '{' this.sc.backtick '}'
+    ;     this.backtickup := '{' this.sc.backtick ' up}'
+    ;     this.backtickdown := '{' this.sc.backtick ' down}'
+
+    ;     this.shift := '{' this.sc.shift '}'
+    ;     this.shiftup := '{' this.sc.shift ' up}'
+    ;     this.shiftdown := '{' this.sc.shift ' down}'
+
+    ;     this.lshift := '{' this.sc.lshift '}'
+    ;     this.lshiftup := '{' this.sc.lshift ' up}'
+    ;     this.lshiftdown := '{' this.sc.lshift ' down}'
+
+    ;     this.backslash := '{' this.sc.backslash '}'
+    ;     this.backslashup := '{' this.sc.backslash ' up}'
+    ;     this.backslashdown := '{' this.sc.backslash ' down}'
+
+    ;     this.z := '{' this.sc.z '}'
+    ;     this.zup := '{' this.sc.z ' up}'
+    ;     this.zdown := '{' this.sc.z ' down}'
+
+    ;     this.x := '{' this.sc.x '}'
+    ;     this.xup := '{' this.sc.x ' up}'
+    ;     this.xdown := '{' this.sc.x ' down}'
+
+    ;     this.c := '{' this.sc.c '}'
+    ;     this.cup := '{' this.sc.c ' up}'
+    ;     this.cdown := '{' this.sc.c ' down}'
+
+    ;     this.v := '{' this.sc.v '}'
+    ;     this.vup := '{' this.sc.v ' up}'
+    ;     this.vdown := '{' this.sc.v ' down}'
+
+    ;     this.b := '{' this.sc.b '}'
+    ;     this.bup := '{' this.sc.b ' up}'
+    ;     this.bdown := '{' this.sc.b ' down}'
+
+    ;     this.n := '{' this.sc.n '}'
+    ;     this.nup := '{' this.sc.n ' up}'
+    ;     this.ndown := '{' this.sc.n ' down}'
+
+    ;     this.m := '{' this.sc.m '}'
+    ;     this.mup := '{' this.sc.m ' up}'
+    ;     this.mdown := '{' this.sc.m ' down}'
+
+    ;     this.comma := '{' this.sc.comma '}'
+    ;     this.commaup := '{' this.sc.comma ' up}'
+    ;     this.commadown := '{' this.sc.comma ' down}'
+
+    ;     this.period := '{' this.sc.period '}'
+    ;     this.periodup := '{' this.sc.period ' up}'
+    ;     this.perioddown := '{' this.sc.period ' down}'
+
+    ;     this.slash := '{' this.sc.slash '}'
+    ;     this.slashup := '{' this.sc.slash ' up}'
+    ;     this.slashdown := '{' this.sc.slash ' down}'
+
+    ;     this.rshift := '{' this.sc.rshift '}'
+    ;     this.rshiftup := '{' this.sc.rshift ' up}'
+    ;     this.rshiftdown := '{' this.sc.rshift ' down}'
+
+    ;     this.numpadMult := '{' this.sc.numpadMult '}'
+    ;     this.numpadMultup := '{' this.sc.numpadMult ' up}'
+    ;     this.numpadMultdown := '{' this.sc.numpadMult ' down}'
+
+    ;     this.alt := '{' this.sc.alt '}'
+    ;     this.altup := '{' this.sc.alt ' up}'
+    ;     this.altdown := '{' this.sc.alt ' down}'
+
+    ;     this.lalt := '{' this.sc.lalt '}'
+    ;     this.laltup := '{' this.sc.lalt ' up}'
+    ;     this.laltdown := '{' this.sc.lalt ' down}'
+
+    ;     this.space := '{' this.sc.space '}'
+    ;     this.spaceup := '{' this.sc.space ' up}'
+    ;     this.spacedown := '{' this.sc.space ' down}'
+
+    ;     this.capslock := '{' this.sc.capslock '}'
+    ;     this.capslockup := '{' this.sc.capslock ' up}'
+    ;     this.capslockdown := '{' this.sc.capslock ' down}'
+
+    ;     this.f1 := '{' this.sc.f1 '}'
+    ;     this.f1up := '{' this.sc.f1 ' up}'
+    ;     this.f1down := '{' this.sc.f1 ' down}'
+
+    ;     this.f2 := '{' this.sc.f2 '}'
+    ;     this.f2up := '{' this.sc.f2 ' up}'
+    ;     this.f2down := '{' this.sc.f2 ' down}'
+
+    ;     this.f3 := '{' this.sc.f3 '}'
+    ;     this.f3up := '{' this.sc.f3 ' up}'
+    ;     this.f3down := '{' this.sc.f3 ' down}'
+
+    ;     this.f4 := '{' this.sc.f4 '}'
+    ;     this.f4up := '{' this.sc.f4 ' up}'
+    ;     this.f4down := '{' this.sc.f4 ' down}'
+
+    ;     this.f5 := '{' this.sc.f5 '}'
+    ;     this.f5up := '{' this.sc.f5 ' up}'
+    ;     this.f5down := '{' this.sc.f5 ' down}'
+
+    ;     this.f6 := '{' this.sc.f6 '}'
+    ;     this.f6up := '{' this.sc.f6 ' up}'
+    ;     this.f6down := '{' this.sc.f6 ' down}'
+
+    ;     this.f7 := '{' this.sc.f7 '}'
+    ;     this.f7up := '{' this.sc.f7 ' up}'
+    ;     this.f7down := '{' this.sc.f7 ' down}'
+
+    ;     this.f8 := '{' this.sc.f8 '}'
+    ;     this.f8up := '{' this.sc.f8 ' up}'
+    ;     this.f8down := '{' this.sc.f8 ' down}'
+
+    ;     this.f9 := '{' this.sc.f9 '}'
+    ;     this.f9up := '{' this.sc.f9 ' up}'
+    ;     this.f9down := '{' this.sc.f9 ' down}'
+
+    ;     this.f10 := '{' this.sc.f10 '}'
+    ;     this.f10up := '{' this.sc.f10 ' up}'
+    ;     this.f10down := '{' this.sc.f10 ' down}'
+
+    ;     this.numlock := '{' this.sc.numlock '}'
+    ;     this.numlockup := '{' this.sc.numlock ' up}'
+    ;     this.numlockdown := '{' this.sc.numlock ' down}'
+
+    ;     this.scrolllock := '{' this.sc.scrolllock '}'
+    ;     this.scrolllockup := '{' this.sc.scrolllock ' up}'
+    ;     this.scrolllockdown := '{' this.sc.scrolllock ' down}'
+
+    ;     this.numpad7 := '{' this.sc.numpad7 '}'
+    ;     this.numpad7up := '{' this.sc.numpad7 ' up}'
+    ;     this.numpad7down := '{' this.sc.numpad7 ' down}'
+
+    ;     this.numpad8 := '{' this.sc.numpad8 '}'
+    ;     this.numpad8up := '{' this.sc.numpad8 ' up}'
+    ;     this.numpad8down := '{' this.sc.numpad8 ' down}'
+
+    ;     this.numpad9 := '{' this.sc.numpad9 '}'
+    ;     this.numpad9up := '{' this.sc.numpad9 ' up}'
+    ;     this.numpad9down := '{' this.sc.numpad9 ' down}'
+
+    ;     this.numpadMinus := '{' this.sc.numpadMinus '}'
+    ;     this.numpadMinusup := '{' this.sc.numpadMinus ' up}'
+    ;     this.numpadMinusdown := '{' this.sc.numpadMinus ' down}'
+
+    ;     this.numpad4 := '{' this.sc.numpad4 '}'
+    ;     this.numpad4up := '{' this.sc.numpad4 ' up}'
+    ;     this.numpad4down := '{' this.sc.numpad4 ' down}'
+
+    ;     this.numpad5 := '{' this.sc.numpad5 '}'
+    ;     this.numpad5up := '{' this.sc.numpad5 ' up}'
+    ;     this.numpad5down := '{' this.sc.numpad5 ' down}'
+
+    ;     this.numpad6 := '{' this.sc.numpad6 '}'
+    ;     this.numpad6up := '{' this.sc.numpad6 ' up}'
+    ;     this.numpad6down := '{' this.sc.numpad6 ' down}'
+
+    ;     this.numpadPlus := '{' this.sc.numpadPlus '}'
+    ;     this.numpadPlusup := '{' this.sc.numpadPlus ' up}'
+    ;     this.numpadPlusdown := '{' this.sc.numpadPlus ' down}'
+
+    ;     this.numpad1 := '{' this.sc.numpad1 '}'
+    ;     this.numpad1up := '{' this.sc.numpad1 ' up}'
+    ;     this.numpad1down := '{' this.sc.numpad1 ' down}'
+
+    ;     this.numpad2 := '{' this.sc.numpad2 '}'
+    ;     this.numpad2up := '{' this.sc.numpad2 ' up}'
+    ;     this.numpad2down := '{' this.sc.numpad2 ' down}'
+
+    ;     this.numpad3 := '{' this.sc.numpad3 '}'
+    ;     this.numpad3up := '{' this.sc.numpad3 ' up}'
+    ;     this.numpad3down := '{' this.sc.numpad3 ' down}'
+
+    ;     this.numpad0 := '{' this.sc.numpad0 '}'
+    ;     this.numpad0up := '{' this.sc.numpad0 ' up}'
+    ;     this.numpad0down := '{' this.sc.numpad0 ' down}'
+
+    ;     this.numpadDot := '{' this.sc.numpadDot '}'
+    ;     this.numpadDotup := '{' this.sc.numpadDot ' up}'
+    ;     this.numpadDotdown := '{' this.sc.numpadDot ' down}'
+
+    ;     this.f11 := '{' this.sc.f11 '}'
+    ;     this.f11up := '{' this.sc.f11 ' up}'
+    ;     this.f11down := '{' this.sc.f11 ' down}'
+
+    ;     this.f12 := '{' this.sc.f12 '}'
+    ;     this.f12up := '{' this.sc.f12 ' up}'
+    ;     this.f12down := '{' this.sc.f12 ' down}'
+
+    ;     this.rctrl := '{' this.sc.rctrl '}'
+    ;     this.rctrlup := '{' this.sc.rctrl ' up}'
+    ;     this.rctrldown := '{' this.sc.rctrl ' down}'
+
+    ;     this.numpadDiv := '{' this.sc.numpadDiv '}'
+    ;     this.numpadDivup := '{' this.sc.numpadDiv ' up}'
+    ;     this.numpadDivdown := '{' this.sc.numpadDiv ' down}'
+
+    ;     this.printscreen := '{' this.sc.printscreen '}'
+    ;     this.printscreenup := '{' this.sc.printscreen ' up}'
+    ;     this.printscreendown := '{' this.sc.printscreen ' down}'
+
+    ;     this.ralt := '{' this.sc.ralt '}'
+    ;     this.raltup := '{' this.sc.ralt ' up}'
+    ;     this.raltdown := '{' this.sc.ralt ' down}'
+
+    ;     this.pause := '{' this.sc.pause '}'
+    ;     this.pauseup := '{' this.sc.pause ' up}'
+    ;     this.pausedown := '{' this.sc.pause ' down}'
+
+    ;     this.home := '{' this.sc.home '}'
+    ;     this.homeup := '{' this.sc.home ' up}'
+    ;     this.homedown := '{' this.sc.home ' down}'
     ;     /*
-    ;     ; this.up := this.lb this.sc.up this.rb
-    ;     ; this.upup := this.lb this.sc.up this.syntax.up this.rb
-    ;     ; this.updown := this.lb this.sc.up this.syntax.down this.rb
+    ;     ; this.up := '{' this.sc.up '}'
+    ;     ; this.upup := '{' this.sc.up ' up}'
+    ;     ; this.updown := '{' this.sc.up ' down}'
     ;     */
-    ;     this.pageup := this.lb this.sc.pageup this.rb
-    ;     this.pageupup := this.lb this.sc.pageup this.syntax.up this.rb
-    ;     this.pageupdown := this.lb this.sc.pageup this.syntax.down this.rb
+    ;     this.pageup := '{' this.sc.pageup '}'
+    ;     this.pageupup := '{' this.sc.pageup ' up}'
+    ;     this.pageupdown := '{' this.sc.pageup ' down}'
 
-    ;     this.left := this.lb this.sc.left this.rb
-    ;     this.leftup := this.lb this.sc.left this.syntax.up this.rb
-    ;     this.leftdown := this.lb this.sc.left this.syntax.down this.rb
+    ;     this.left := '{' this.sc.left '}'
+    ;     this.leftup := '{' this.sc.left ' up}'
+    ;     this.leftdown := '{' this.sc.left ' down}'
 
-    ;     this.right := this.lb this.sc.right this.rb
-    ;     this.rightup := this.lb this.sc.right this.syntax.up this.rb
-    ;     this.rightdown := this.lb this.sc.right this.syntax.down this.rb
+    ;     this.right := '{' this.sc.right '}'
+    ;     this.rightup := '{' this.sc.right ' up}'
+    ;     this.rightdown := '{' this.sc.right ' down}'
 
-    ;     this.end := this.lb this.sc.end this.rb
-    ;     this.endup := this.lb this.sc.end this.syntax.up this.rb
-    ;     this.enddown := this.lb this.sc.end this.syntax.down this.rb
+    ;     this.end := '{' this.sc.end '}'
+    ;     this.endup := '{' this.sc.end ' up}'
+    ;     this.enddown := '{' this.sc.end ' down}'
     ;     /*
-    ;     ; this.down := this.lb this.sc.down this.rb
-    ;     ; this.downup := this.lb this.sc.down this.syntax.up this.rb
-    ;     ; this.dropdown := this.lb this.sc.down this.syntax.down this.rb
+    ;     ; this.down := '{' this.sc.down '}'
+    ;     ; this.downup := '{' this.sc.down ' up}'
+    ;     ; this.dropdown := '{' this.sc.down ' down}'
     ;     */
-    ;     this.pagedown := this.lb this.sc.pagedown this.rb
-    ;     this.pagedownup := this.lb this.sc.pagedown this.syntax.up this.rb
-    ;     this.pagedowndown := this.lb this.sc.pagedown this.syntax.down this.rb
+    ;     this.pagedown := '{' this.sc.pagedown '}'
+    ;     this.pagedownup := '{' this.sc.pagedown ' up}'
+    ;     this.pagedowndown := '{' this.sc.pagedown ' down}'
 
-    ;     this.insert := this.lb this.sc.insert this.rb
-    ;     this.insertup := this.lb this.sc.insert this.syntax.up this.rb
-    ;     this.insertdown := this.lb this.sc.insert this.syntax.down this.rb
+    ;     this.insert := '{' this.sc.insert '}'
+    ;     this.insertup := '{' this.sc.insert ' up}'
+    ;     this.insertdown := '{' this.sc.insert ' down}'
 
-    ;     this.delete := this.lb this.sc.delete this.rb
-    ;     this.deleteup := this.lb this.sc.delete this.syntax.up this.rb
-    ;     this.deletedown := this.lb this.sc.delete this.syntax.down this.rb
+    ;     this.delete := '{' this.sc.delete '}'
+    ;     this.deleteup := '{' this.sc.delete ' up}'
+    ;     this.deletedown := '{' this.sc.delete ' down}'
 
-    ;     this.win := this.lb this.sc.win this.rb
-    ;     this.winup := this.lb this.sc.win this.syntax.up this.rb
-    ;     this.windown := this.lb this.sc.win this.syntax.down this.rb
+    ;     this.win := '{' this.sc.win '}'
+    ;     this.winup := '{' this.sc.win ' up}'
+    ;     this.windown := '{' this.sc.win ' down}'
 
-    ;     this.lwin := this.lb this.sc.lwin this.rb
-    ;     this.lwinup := this.lb this.sc.lwin this.syntax.up this.rb
-    ;     this.lwindown := this.lb this.sc.lwin this.syntax.down this.rb
+    ;     this.lwin := '{' this.sc.lwin '}'
+    ;     this.lwinup := '{' this.sc.lwin ' up}'
+    ;     this.lwindown := '{' this.sc.lwin ' down}'
 
-    ;     this.rwin := this.lb this.sc.rwin this.rb
-    ;     this.rwinup := this.lb this.sc.rwin this.syntax.up this.rb
-    ;     this.rwindown := this.lb this.sc.rwin this.syntax.down this.rb
+    ;     this.rwin := '{' this.sc.rwin '}'
+    ;     this.rwinup := '{' this.sc.rwin ' up}'
+    ;     this.rwindown := '{' this.sc.rwin ' down}'
 
-    ;     this.appskey := this.lb this.sc.appskey this.rb
-    ;     this.appskeyup := this.lb this.sc.appskey this.syntax.up this.rb
-    ;     this.appskeydown := this.lb this.sc.appskey this.syntax.down this.rb
+    ;     this.appskey := '{' this.sc.appskey '}'
+    ;     this.appskeyup := '{' this.sc.appskey ' up}'
+    ;     this.appskeydown := '{' this.sc.appskey ' down}'
 
-    ;     this.menu := this.lb this.sc.menu this.rb
-    ;     this.menuup := this.lb this.sc.menu this.syntax.up this.rb
-    ;     this.menudown := this.lb this.sc.menu this.syntax.down this.rb
+    ;     this.menu := '{' this.sc.menu '}'
+    ;     this.menuup := '{' this.sc.menu ' up}'
+    ;     this.menudown := '{' this.sc.menu ' down}'
     ;     ; */
 
     ;     ; this.find := this.ctrldown this.f this.ctrlup

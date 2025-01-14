@@ -911,9 +911,13 @@ class key {
 		ControlSend(vkString, control, title)
 	}
 
+	/**
+	 * @return scString
+	 */
 	static SendSC(keys) {
 		scString := this.translateToSC(keys)
 		Send(scString)
+		return scString
 	}
 
 	static SendVKSC(keys) {

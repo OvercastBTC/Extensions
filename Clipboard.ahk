@@ -3,9 +3,9 @@
 #Include <Includes\ObjectTypeExtensions>
 
 class Clip {
-    static defaultEndChar := ''
-    static defaultIsClipReverted := true
-    static defaultUntilRevert := 500
+	static defaultEndChar := ''
+	static defaultIsClipReverted := true
+	static defaultUntilRevert := 500
 
 	/************************************************************************
 	* @description Get the handle of the focused control
@@ -123,100 +123,64 @@ class Clip {
 		; Set clipboard data and close
 		DllCall("SetClipboardData", "UInt", CF_RTF, "Ptr", hGlobal)
 		DllCall("CloseClipboard")
-		this.Sleep()
+		Sleep(this.delayTime)
 	}
-	
-	/**
-	 * Sends text as RTF format to the clipboard
-	 * @param {String} rtfText The RTF formatted text to send
-	 * @param {String} endChar The ending character(s) to append
-	 * @param {Boolean} isClipReverted Whether to revert the clipboard
-	 * @param {Integer} untilRevert Time in ms before reverting clipboard
-	 * @returns {String} The sent content
-	 */
-	static SendRTF(rtfText?, endChar := '', isClipReverted := true, untilRevert := 500) {
-		prevClip := ''
-		
-		if (!IsSet(rtfText)) {
-			rtfText := this
-		}
 
-		isClipReverted ? prevClip := ClipboardAll() : ''
-		
-		this.ClearClipboard()
-		this._SetClipboardRTF(rtfText . endChar)
-		
-		Send('{sc2A Down}{sc152}{sc2A Up}') 		;! {Shift}{Insert}
-		; Send('{sc1D Down}{sc2F}{sc1D Up}') 			;! {Control}{v}
-		
-		if (isClipReverted) {
-			SetTimer((*) => A_Clipboard := prevClip, -untilRevert)
+	static delayTime => this.getdelayTime()
+
+	static getdelayTime(*){
+		counterAfter := counterBefore := freq := 0
+		DllCall('QueryPerformanceFrequency', 'Int*', &freq := 0)
+		DllCall('QueryPerformanceCounter', 'Int*', &counterBefore := 0)
+		loop 1000 {
+			num := A_Index
 		}
+		DllCall('QueryPerformanceCounter', 'Int*', &counterAfter := 0)
+
+		delayTime := ((counterAfter - CounterBefore) / freq)
+		delayTime := delayTime  * 1000000 ;? Convert to milliseconds
 		
-		return rtfText
+		delaytime := Round(delayTime)
+
+		; Infos(delayTime)
+
+		return delayTime
 	}
 
 	static DefaultFormat := "rtf"  ; Can be "rtf", "html", "markdown", or "text"
-    
-    ; static Send(text, format := "") {
-    ;     if (format == "")
-    ;         format := this.DefaultFormat
-            
-    ;     ; Detect format if not specified
-    ;     detectedFormat := this.DetectFormat(text)
-        
-    ;     ; Convert if needed
-    ;     if (detectedFormat != format) {
-    ;         text := this.ConvertFormat(text, detectedFormat, format)
-    ;     }
-        
-    ;     ; Send to clipboard with appropriate method
-    ;     switch format {
-    ;         case "rtf":
-    ;             this.SendRTF(text)
-    ;         case "html":
-    ;             this.SendHTML(text)
-    ;         case "markdown":
-    ;             this.SendMarkdown(text)
-    ;         case "json":
-    ;             this.SendJSON(text)
-    ;         default:
-    ;             A_Clipboard := text
-    ;     }
-    ; }
-    
-    static DetectFormat(text) {
-        if RegExMatch(text, "^{\rtf1")
-            return "rtf"
-        if RegExMatch(text, "^<!DOCTYPE html|^<html")
-            return "html"
-        if RegExMatch(text, "^#|^\*\*|^- ")
-            return "markdown"
-        if RegExMatch(text, '^{[\s\n]*""')
-            return "json"
-        return "text"
-    }
-    
-    static ConvertFormat(text, fromFormat, toFormat) {
-        if (fromFormat == toFormat)
-            return text
-            
-        switch fromFormat {
-            case "text":
-                return text.rtf()
-            case "html":
-                return FormatConverter.HTMLToRTF(text)
-            case "markdown":
-                return FormatConverter.MarkdownToRTF(text)
-            case "json":
-                ; Placeholder for JSON formatting
-                return text
-        }
-        return text
-    }
+	
+	static DetectFormat(text) {
+		if RegExMatch(text, "^{\rtf1")
+			return "rtf"
+		if RegExMatch(text, "^<!DOCTYPE html|^<html")
+			return "html"
+		if RegExMatch(text, "^#|^\*\*|^- ")
+			return "markdown"
+		if RegExMatch(text, '^{[\s\n]*""')
+			return "json"
+		return text
+	}
+	
+	static ConvertFormat(text, fromFormat, toFormat) {
+		if (fromFormat == toFormat)
+			return text
+			
+		switch fromFormat {
+			case "text":
+				return text.rtf()
+			case "html":
+				return FormatConverter.HTMLToRTF(text)
+			case "markdown":
+				return FormatConverter.MarkdownToRTF(text)
+			case "json":
+				; Placeholder for JSON formatting
+				return text
+		}
+		return text
+	}
 
 	/**
-	 * Enhanced Send method with RTF detection
+	 * Universal send method handling both RTF and regular content
 	 * @param {String|Array|Map|Object|Class} input The content to send
 	 * @param {String} endChar The ending character(s) to append
 	 * @param {Boolean} isClipReverted Whether to revert the clipboard
@@ -224,97 +188,137 @@ class Clip {
 	 * @returns {String} The sent content
 	 */
 	static Send(input?, endChar := '', isClipReverted := true, untilRevert := 500) {
-		if (!IsSet(input)) {
+		if (!IsSet(input))
 			input := this
-		}
 
-		; Check if content is RTF
-		if (this._IsRTFContent(input)) {
-			return this.SendRTF(input, endChar, isClipReverted, untilRevert)
-		}
-
-		; Original Send implementation for non-RTF content
-		content := this.ConvertToString(input)
+		; Handle backup first
 		prevClip := ''
-		
-		isClipReverted ? prevClip := ClipboardAll() : ''
-		
-		; this.Sleep()
-		this.ClearClipboard()
-		; this.Sleep()
+		if (isClipReverted){
+			prevClip := this.BackupAndClearClipboard()
+		}
 
-		A_Clipboard := content . endChar
-		this.Sleep(100)
+		; Process input based on type
+		content := input
+		if (this._IsRTFContent(input)) {
+			; RTF handling
+			verifiedRTF := FormatConverter.IsRTF(input, true)
+			this.ClearClipboard()
+			; Infos(verifiedRTF endChar)
+			this._SetClipboardRTF(verifiedRTF endChar)
+		}
+		else {
+			; Regular content handling
+			; content := this.ConvertToString(input)
+			this.ClearClipboard()
+			A_Clipboard := content . endChar
+		}
 		
+		; Wait for clipboard and send
+		this.Sleep(this.delayTime*10)
 		Send('{sc2A Down}{sc152}{sc2A Up}') 		;! {Shift}{Insert}
 		; Send('{sc1D Down}{sc2F}{sc1D Up}') 			;! {Control}{v}
+		Sleep(this.delayTime * 5)
 
+		; Restore clipboard if needed
 		if (isClipReverted) {
-			SetTimer((*) => A_Clipboard := prevClip, -untilRevert)
+			this.ClearClipboard()
+			A_Clipboard := prevClip
 		}
 		
 		return content
 	}
 
 	/**
+	 * Alias for Send with RTF content
+	 * @param {String} rtfText The RTF formatted text to send
+	 * @returns {String} The sent content
+	 */
+	static SendRTF(rtfText?, endChar := '', isClipReverted := true, untilRevert := 500) {
+		return this.Send(rtfText, endChar, isClipReverted, untilRevert)
+	}
+	
+		/**
+	 * Sends text as RTF format to the clipboard
+	 * @param {String} rtfText The RTF formatted text to send
+	 * @param {String} endChar The ending character(s) to append
+	 * @param {Boolean} isClipReverted Whether to revert the clipboard
+	 * @param {Integer} untilRevert Time in ms before reverting clipboard
+	 * @returns {String} The sent content
+	 */
+	; static SendRTF(rtfText?, endChar := '', isClipReverted := true, untilRevert := 500) {
+	; 	prevClip := ''
+		
+	; 	if (!IsSet(rtfText)) {
+	; 		rtfText := this
+	; 	}
+
+	; 	; Use FormatConverter to handle RTF verification and standardization
+	; 	verifiedRTF := FormatConverter.IsRTF(rtfText, true)
+
+	; 	; isClipReverted ? prevClip := ClipboardAll() : ''
+	; 	isClipReverted ? prevClip := this.BackupAndClearClipboard() : ''
+		
+	; 	this.ClearClipboard()
+	; 	this._SetClipboardRTF(rtfText . endChar)
+		
+	; 	this.Sleep(this.delayTime)
+
+	; 	Send('{sc2A Down}{sc152}{sc2A Up}') 		;! {Shift}{Insert}
+	; 	; Send('{sc1D Down}{sc2F}{sc1D Up}') 			;! {Control}{v}
+
+	; 	Sleep(this.delayTime*5)
+
+	; 	if (isClipReverted) {
+	; 		this.ClearClipboard()
+	; 		A_Clipboard := prevClip
+	; 	}
+		
+	; 	return rtfText
+	; }
+
+	/**
 	 * Checks if content appears to be RTF formatted
 	 * @param {String} content The content to check
 	 * @returns {Boolean} True if content appears to be RTF
 	 */
-	static _IsRTFContent(content) {
-		if (Type(content) != "String")
-			return false
+	; static _IsRTFContent(content) {
+	; 	if (Type(content) != "String")
+	; 		return false
 			
-		; Basic RTF detection - checks for common RTF header
-		return RegExMatch(content, "i)^{\s*\\rtf1\b") ? true : false
+	; 	; Basic RTF detection - checks for common RTF header
+	; 	return RegExMatch(content, "i)^{\s*\\rtf1\b") ? true : false
+	; }
+	static _IsRTFContent(content) {
+		return FormatConverter.VerifyRTF(content).isRTF
 	}
 
-    /**
-     * @param {Any} input The input to convert to string
-     * @returns {String} The converted string
-     */
-    static ConvertToString(input) {
-        switch Type(input) {
-            case 'String':
-                return input
-            case 'Array':
-                return input.Join('')
-            case 'Map':
-                return input.ToString()
-            case 'Object':
-                return jsongo.Stringify(input)
+	/**
+	 * @param {Any} input The input to convert to string
+	 * @returns {String} The converted string
+	 */
+	static ConvertToString(input) {
+		switch Type(input) {
+			case 'String':
+				return input
+			case 'Array':
+				return input.Join('')
+			case 'Map':
+				return input.ToString()
+			case 'Object':
+				return jsongo.Stringify(input)
 			case 'Initializable':
 				return jsongo.Stringify(input)
-            default:
+			default:
 				return input
-        }
-    }
+		}
+	}
 
 	static SendMsgPaste() => (*) => SendMessage(0x0302, 0, 0, ControlGetFocus('A'), 'A')
 	
 	/************************************************************************
-	* @description Sleep while clipboard is in use
-	* @example _Clipboard_Sleep(10)
-	***********************************************************************/
-	; static _Clipboard_Sleep(n := 10) {
-	;     loop n {
-	;         Sleep(n)
-	;     } Until (!this.GetOpenClipboardWindow() || (A_Index = 50))
-	; }
-
-	/************************************************************************
 	* @description Wait for the clipboard to be available
 	* @example WaitForClipboard()
 	***********************************************************************/
-	; static WaitForClipboard(timeout := 1000) {
-	; 	startTime := A_TickCount
-	; 	while (this.IsClipboardBusy()) {
-	; 		if (A_TickCount - startTime > timeout) {
-	; 			throw Error('Clipboard timeout')
-	; 		}
-	; 		Sleep(10)
-	; 	}
-	; }
 	static WaitForClipboard(timeout := 1000) {
 		clipboardReady := false
 		startTime := A_TickCount
@@ -363,10 +367,11 @@ class Clip {
 	***********************************************************************/
 	static BackupAndClearClipboard(&backup?) {
 		; backup := DllCall('OleGetClipboard', 'Ptr', 0, 'Ptr')
-		backup := DllCall('ole32\OleGetClipboard', 'Ptr', 0, 'Ptr')
-		DllCall('OpenClipboard')
-		DllCall('EmptyClipboard')
-		DllCall('CloseClipboard')
+		; backup := DllCall('ole32\OleGetClipboard', 'Ptr', 0, 'Ptr')
+		backup := ClipboardAll()
+		this.OpenClipboard()
+		this.EmptyClipboard()
+		this.CloseClipboard()
 		return backup
 	}
 
@@ -397,7 +402,7 @@ class Clip {
 	* @example if IsClipboardBusy()
 	***********************************************************************/
 	static IsClipboardBusy() {
-		return DllCall('GetOpenClipboardWindow', 'Ptr') ;!= 0
+		return DllCall('GetOpenClipboardWindow', 'Ptr')
 	}
 
 	/************************************************************************
@@ -433,12 +438,20 @@ class Clip {
 
 		return text
 	}
-	/************************************************************************
-	* @description Empty the clipboard
-	* @example this.EmptyClipboard()
-	***********************************************************************/
+	static OpenClipboard() => DllCall('User32.dll\OpenClipboard', 'Ptr')
 	static EmptyClipboard() => DllCall('User32.dll\EmptyClipboard', 'Int')
+	static CloseClipboard() => DllCall('User32.dll\CloseClipboard', 'Int')
 	static ClearClipboard() {
+		
+		; Open and clear clipboard
+		this.OpenClipboard()
+		this.EmptyClipboard()
+		
+		this.CloseClipboard()
+		DllCall('Kernel32.dll\GlobalUnlock', 'Ptr')
+		this.Sleep()
+	}
+	static testClearClipboard() {
 		arrError := []
 		hWndGetClipOpen  	:= this.GetOpenClipboardWindow()
 		errhWndClipOpen		:= 'errhWndClipOpen: ' A_LastError
@@ -498,12 +511,6 @@ class Clip {
 	}
 
 	/************************************************************************
-	* @description Close the clipboard
-	* @example CloseClipboard()
-	***********************************************************************/
-	static CloseClipboard() => DllCall('User32.dll\CloseClipboard', 'Int')
-
-	/************************************************************************
 	* @description Get the handle of the window with an open clipboard
 	* @example GetOpenClipboardWindow()
 	***********************************************************************/
@@ -555,21 +562,21 @@ class Clip {
 	static cRestore(cBak) => this._Clipboard_Restore(cBak)
 	static Restore(cBak) => this._Clipboard_Restore(cBak)
 
-    static ToCSV() {
-        ; This method remains unchanged as it doesn't use JSON
-        clipText := A_Clipboard
-        lines := StrSplit(clipText, "`n", "`r")
-        csvText := ""
-        for index, line in lines {
-            fields := StrSplit(line, "`t")
-            csvLine := ""
-            for _, field in fields {
-                csvLine .= '"' . StrReplace(field, '"', '""') . '",'
-            }
-            csvText .= RTrim(csvLine, ",") . "`n"
-        }
-        return RTrim(csvText, "`n")
-    }
+	static ToCSV() {
+		; This method remains unchanged as it doesn't use JSON
+		clipText := A_Clipboard
+		lines := StrSplit(clipText, "`n", "`r")
+		csvText := ""
+		for index, line in lines {
+			fields := StrSplit(line, "`t")
+			csvLine := ""
+			for _, field in fields {
+				csvLine .= '"' . StrReplace(field, '"', '""') . '",'
+			}
+			csvText .= RTrim(csvLine, ",") . "`n"
+		}
+		return RTrim(csvText, "`n")
+	}
 
 	static ToJSON() {
 		clipText := A_Clipboard
@@ -637,28 +644,28 @@ class Clip {
 
 ^!c:: ; Ctrl+Alt+C to convert to CSV
 {
-    csvData := Clip.ToCSV()
-    A_Clipboard := csvData
-    MsgBox("Clipboard converted to CSV format")
+	csvData := Clip.ToCSV()
+	A_Clipboard := csvData
+	MsgBox("Clipboard converted to CSV format")
 }
 
 ^!j:: ; Ctrl+Alt+J to convert to JSON
 {
-    jsonData := Clip.ToJSON()
-    A_Clipboard := jsonData
-    MsgBox("Clipboard converted to JSON format")
+	jsonData := Clip.ToJSON()
+	A_Clipboard := jsonData
+	MsgBox("Clipboard converted to JSON format")
 }
 
 ^!k:: ; Ctrl+Alt+K to convert to Key-Value JSON
 {
-    jsonData := Clip.ToKeyValueJSON()
-    A_Clipboard := jsonData
-    MsgBox("Clipboard converted to Key-Value JSON format")
+	jsonData := Clip.ToKeyValueJSON()
+	A_Clipboard := jsonData
+	MsgBox("Clipboard converted to Key-Value JSON format")
 }
 
 ^!#v:: ; Ctrl+Alt+V to convert CSV to JSON
 {
-    jsonData := Clip.CSVToJSON()
-    A_Clipboard := jsonData
-    MsgBox("CSV data converted to JSON format")
+	jsonData := Clip.CSVToJSON()
+	A_Clipboard := jsonData
+	MsgBox("CSV data converted to JSON format")
 }

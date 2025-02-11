@@ -2,6 +2,8 @@
 ; #Include <Directives\__AE.v2>
 #Include <Includes\ObjectTypeExtensions>
 
+global A_Delay := Clip.delayTime
+
 class Clip {
 	static defaultEndChar := ''
 	static defaultIsClipReverted := true
@@ -13,10 +15,14 @@ class Clip {
 	* @example this.hfCtl(&fCtl)
 	***********************************************************************/
 	static hfCtl(&fCtl?) {
-		return fCtl := ControlGetFocus('A')
+		fCtl := ControlGetFocus()
+		return fCtl
 	}
 
-	static fCtl(&hCtl?) => hCtl := ControlGetFocus('A')
+	static fCtl(&hCtl?) {
+		hCtl := ControlGetFocus('A')
+		return hCtl
+	}
 
 	/************************************************************************
 	* @description Initialize the class with default settings
@@ -25,6 +31,7 @@ class Clip {
 	static __New() {
 		this.DH(1)
 		this.SetDelays(-1)
+		this.SM()
 	}
 
 	/************************************************************************
@@ -56,6 +63,16 @@ class Clip {
 		return SendModeObj
 	}
 	static SM(&SendModeObj?) => this._SendMode(&SendModeObj?)
+
+	/************************************************************************
+	* @description Restore SendMode and SetKeyDelay
+	* @example Clip.rSM(RestoreObject)
+	***********************************************************************/
+	static _RestoreSendMode(RestoreObject) {
+		SetKeyDelay(RestoreObject.d, RestoreObject.p)
+		SendMode(RestoreObject.s)
+	}
+	static rSM(RestoreObject) => this._RestoreSendMode(RestoreObject)
 		/************************************************************************
 	* @description Set BlockInput and SendLevel
 	* @example AE.BISL(1)
@@ -138,12 +155,12 @@ class Clip {
 		DllCall('QueryPerformanceCounter', 'Int*', &counterAfter := 0)
 
 		delayTime := ((counterAfter - CounterBefore) / freq)
-		; delayTime := delayTime  * 1000000 ;? Convert to milliseconds
-		delayTime := delayTime  * 10000000 ;? Convert to milliseconds
+		delayTime := delayTime  * 1000000 ;? Convert to milliseconds
+		; delayTime := delayTime  * 10000000 ;? Convert to milliseconds
 		
 		delaytime := Round(delayTime)
 
-		Infos(delayTime ' (' Round(delayTime*10) ')', Round(delayTime*10))
+		; Infos(delayTime ' (' Round(delayTime*10) ')', Round(delayTime*10))
 
 		return delayTime
 	}

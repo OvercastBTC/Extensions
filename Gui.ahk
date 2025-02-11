@@ -10,11 +10,12 @@ class Gui2 {
 	static WS_EX_COMPOSITED 	:= '0x02000000L'
 	static WS_EX_CLIENTEDGE 	:= '0x00000200L'
 	static WS_EX_APPWINDOW 		:= '0x00040000L'
-	static NOACTIVATE 			:= this.WS_EX_NOACTIVATE
-	static TRANSPARENT 			:= this.WS_EX_TRANSPARENT
-	static COMPOSITED 			:= this.WS_EX_COMPOSITED
-	static CLIENTEDGE 			:= this.WS_EX_CLIENTEDGE
-	static APPWINDOW 			:= this.WS_EX_APPWINDOW
+	static WS_EX_LAYERED      	:= '0x00080000L'  ; Layered window for transparency
+	static WS_EX_TOOLWINDOW   	:= '0x00000080L'  ; Creates a tool window (no taskbar button)
+	static WS_EX_TOPMOST      	:= '0x00000008L'  ; Always on top
+	static WS_EX_ACCEPTFILES  	:= '0x00000010L'  ; Accepts drag-drop files
+	static WS_EX_CONTEXTHELP  	:= '0x00000400L'  ; Has '?' button in titlebar
+
 
 	static __New() {
 		; Add all Gui2 methods to Gui prototype
@@ -34,291 +35,585 @@ class Gui2 {
 		}
 	}
 
-	/**
-	 * Add a RichEdit control to a GUI
-	 * @param {Gui} guiObj The GUI object to add the control to
-	 * @param {String} options Control options string
-	 * @param {String} text Initial text content
-	 * @returns {RichEdit} The created RichEdit control
-	 */
-	; static AddRichEdit(guiObj?, options := "", text := "") {
-	; 	if !IsSet(guiObj) {
-	; 		guiObj := this
-	; 	}
-	; 	; Default options if none provided
-	; 	if (options = "") {
-	; 		options := "w400 h300"  ; Default size
-	; 	}
+	static Layered() => this.MakeLayered()
+	static ToolWindow() => this.MakeToolWindow()
+	static AlwaysOnTop() => this.SetAlwaysOnTop()
+	static AppWindow() => this.ForceTaskbarButton()
+	static Transparent() => this.MakeClickThrough()
+	static NoActivate() => this.PreventActivation()
+	static NeverFocusWindow() => this.NoActivate()
 
-	; 	; Create RichEdit control
-	; 	reObj := RichEdit(guiObj, options)
-		
-	; 	; Set initial text if provided
-	; 	if (text != "") {
-	; 		reObj.SetText(text)
+	; static DarkMode(guiObj := this, BackgroundColor := '') {
+	; static DarkMode(BackgroundColor := '') {
+	; 	guiObj := this
+	; 	if (guiObj is Gui) {
+	; 		if (BackgroundColor = '') {
+	; 			guiObj.BackColor := '0xA2AAAD'
+	; 		} else {
+	; 			guiObj.BackColor := BackgroundColor
+	; 		}
 	; 	}
-		
-	; 	; Configure default settings
-	; 	reObj.SetOptions(["SELECTIONBAR"])  ; Enable selection bar
-	; 	reObj.AutoURL(true)                 ; Enable URL detection
-	; 	reObj.SetEventMask([
-	; 		"SELCHANGE",                    ; Selection change events
-	; 		"LINK",                         ; Link click events
-	; 		"PROTECTED"                     ; Protected text events
-	; 	])
-		
-	; 	return reObj
+	; 	return this
 	; }
+	static DarkMode(params*) {
+		
+		; Default background color
+		; static backgroundColor := '0xA2AAAD'
+		static backgroundColor := unset
+		; guiObj := this
+		static hexNeedle := '\b[0-9A-Fa-f]+\b'
+		
+		; Parse params array
+		for param in params {
+
+			if (param is Gui){
+				guiObj := param
+			}
+			else if IsObject(param){
+				continue    ; Skip other object types
+			}
+			else {
+				; backgroundColor := param
+				if !IsSet(backgroundColor) {
+					if param ~= hexNeedle {
+						backgroundColor := param
+					}
+					else {
+						backgroundColor := '0xA2AAAD'
+					}
+				}
+			}
+		}
+		
+		if !IsSet(guiObj) {
+			guiObj := this
+		}
+		if !IsSet(backgroundColor) {
+			backgroundColor := '0xA2AAAD'
+		}
+		; Apply background color 
+		if (guiObj is Gui){
+			guiObj.BackColor := backgroundColor
+		}
+
+		; infos(backgroundColor)
+
+		return guiObj
+	}
 
 	/**
+	 * @description Improves font settings with reasonable defaults and parameter parsing
+	 * @param {String} options Optional font settings string containing:
+	 *                        - Font size: "s12" or just "12"
+	 *                        - Quality: "Q5" (0-5)
+	 *                        - Color: "cFF0000" or "c0xFF0000"
+	 * @param {String} nFont Optional font name (default: "Consolas")
+	 * @returns {Gui} The Gui object for method chaining
+	 * @example
+	 * ; Using defaults (s12 Q5 c1eff00 Consolas)
+	 * gui.MakeFontNicer()
 	 * 
-	 * @param guiObj 
-	 * @param options 
-	 * @param text 
+	 * ; Setting just size
+	 * gui.MakeFontNicer("14")             
+	 * 
+	 * ; Size and quality
+	 * gui.MakeFontNicer("s16 Q4")         
+	 * 
+	 * ; Full specification
+	 * gui.MakeFontNicer("s12 Q5 cFF0000") 
+	 * 
+	 * ; Different font
+	 * gui.MakeFontNicer("s10", "Arial")   
 	 */
-	static AddRichEdit(options := '', text := "", toolbar := true, showScrollBars := false) {
-        ; 'this' refers to the Gui instance here
-        guiObj := this
-        ; Create RichEdit control with default size if none specified
-        if !IsSet(options) {
-            options := "w400 r10"  ; Default size
-        }
+	; static MakeFontNicer(options := "12 Q5", nFont := "Consolas") {
+	; 	guiObj := this
+	; 	; Default settings
+	; 	size := 12
+	; 	quality := 5
+	; 	color := "1eff00"    ; Default color
 		
-		; Create RichEdit control
-		reObj := RichEdit(this, options)
-        ; Calculate positions
-		; Set sizing properties
-		reObj.WidthP := 1.0   ; Take full width
-		reObj.HeightP := 1.0  ; Take full height after toolbar
-		reObj.MinWidth := 200
-		reObj.MinHeight := 100
-		reObj.AnchorIn := true
-
-		; Initialize GuiReSizer for the parent GUI
-		guiObj.Init := 2  ; Force initial resize
-
-		; Ensure parent GUI resizes properly
-		guiObj.OnEvent("Size", GuiReSizer)
-        btnW := 18, btnH := 15, margin := 1
-        
-        ; If toolbar enabled, add it before the RichEdit
-        if (toolbar) {
-			toolbarH := btnH + margin*2
-			x := margin
-			y := margin
+	; 	; Parse options if provided
+	; 	if (options) {
+	; 		; Check for font size (s## or just ##)
+	; 		if (RegExMatch(options, "i)s?(\d+)", &match))
+	; 			size := match[1]
 			
-			; Bold
-			boldBtn := guiObj.AddButton(Format("x{1} y{2} w{3} h{4}", x, y, btnW, btnH), "B")
-			x += btnW + margin
-			
-			; Italic
-			italicBtn := guiObj.AddButton(Format("x{1} y{2} w{3} h{4}", x, y, btnW, btnH), "I")
-			x += btnW + margin
-			
-			; Underline 
-			underBtn := guiObj.AddButton(Format("x{1} y{2} w{3} h{4}", x, y, btnW, btnH), "U")
-			x += btnW + margin
-			
-			; Strikethrough
-			strikeBtn := guiObj.AddButton(Format("x{1} y{2} w{3} h{4}", x, y, btnW, btnH), "S")
-			
-			; Position RichEdit below toolbar
-			options := "x" margin " y" (y + btnH + margin) " " options
-        }
-
-        ; ; Create RichEdit control with default size if none specified
-        ; if !IsSet(options) {
-        ;     options := "w400 r10"  ; Default size
-        ; }
+	; 		; Check for quality setting (Q#)
+	; 		if (RegExMatch(options, "i)Q(\d+)", &match))
+	; 			quality := match[1]
+				
+	; 		; Check for color (###### or 0x######)
+	; 		if (RegExMatch(options, "i)c([0-9a-f]{6}|0x[0-9a-f]{6})", &match))
+	; 			color := match[1]
+	; 	}
 		
-		; ; Create RichEdit control
-		; reObj := RichEdit(this, options)
-		reObj.SetFont({Name: "Times New Roman", Size: 11})
-		; Add GuiReSizer properties after creating RichEdit
-		reObj.GetPos(&xPos, &yPos, &wGui, &hGui)
-
-		; Add resizing properties for GUI
-		if (toolbar) {
-			; Account for toolbar space if present
-			reObj.X := margin
-			reObj.Y := btnH + margin*2
-		} else {
-			reObj.X := margin
-			reObj.Y := margin
-		}
+	; 	; Build font string
+	; 	fontString := Format("s{1} q{2} c{3}", size, quality, color)
 		
-		; Configure scrollbar visibility
-		if (!showScrollBars) {
-			reObj.SetOptions([
-				"SELECTIONBAR",
-				; "MULTILEVEL",
-				"AUTOWORDSEL",
-				; "-HSCROLL",  ; Disable horizontal scrollbar
-				; "-VSCROLL"   ; Disable vertical scrollbar
-				; "-AUTOVSCROLL",  ; Show vertical scrollbar when needed
-				; "-AUTOHSCROLL"   ; Show horizontal scrollbar when needed
-			])
-		} else {
-			reObj.SetOptions([
-				"SELECTIONBAR",
-				"MULTILEVEL",
-				"AUTOWORDSEL",
-				"AUTOVSCROLL",  ; Show vertical scrollbar when needed
-				"AUTOHSCROLL"   ; Show horizontal scrollbar when needed
-			])
-		}
+	; 	; Set the font
+	; 		if (guiObj is Gui) {
+	; 		guiObj.SetFont(fontString, nFont)
+	; 	}
 		
-		; Enable features
-		reObj.AutoURL(true)                 ; Enable URL detection
-		reObj.SetEventMask([
-			"SELCHANGE",                    ; Selection change events
-			"LINK",                         ; Link click events
-			"PROTECTED",                    ; Protected text events
-			"CHANGE"                        ; Text change events
-		])
-	
-		; Add GuiReSizer properties for automatic sizing
-		reObj.WidthP := 1.0      ; Take up full width
-		reObj.HeightP := 1.0     ; Take up full height
-		reObj.MinWidth := 200    ; Minimum dimensions
-		reObj.MinHeight := 100
-		reObj.AnchorIn := true   ; Stay within parent bounds
-	
-		; Add basic keyboard shortcuts
-		HotIfWinactive("ahk_id " reObj.Hwnd)
-		Hotkey("^b", (*) => reObj.ToggleFontStyle("B"))
-		Hotkey("^i", (*) => reObj.ToggleFontStyle("I"))
-		Hotkey("^u", (*) => reObj.ToggleFontStyle("U"))
-		Hotkey("^+s", (*) => reObj.ToggleFontStyle("S"))
-		Hotkey("^z", (*) => reObj.Undo())
-		Hotkey("^y", (*) => reObj.Redo())
-		HotIf()
-	
-		; Set initial text if provided
-		if IsSet(text) {
-			reObj.SetText(text)
-		}
-		
-		; Define button callbacks
-		BoldText(*) {
-			reObj.ToggleFontStyle("B")
-			reObj.Focus()
-		}
-		
-		ItalicText(*) {
-			reObj.ToggleFontStyle("I")
-			reObj.Focus()
-		}
-		
-		UnderlineText(*) {
-			reObj.ToggleFontStyle("U")
-			reObj.Focus()
-		}
-		
-		StrikeText(*) {
-			reObj.ToggleFontStyle("S")
-			reObj.Focus()
-		}
-
-		return reObj
-	}
-	
-	/**
-	 * Extension method for Gui class
-	 * @param {String} options Control options
-	 * @param {String} text Initial text
-	 * @returns {RichEdit} The created RichEdit control
-	 */
-	static AddRTE(options := "", text := "") {
-		return this.AddRichEdit(this, options, text)
-	}
-
-	; static AddRichTextEdit(options := "", text := ""){
-	; 	return this.AddRichEdit(this, options, text)
+	; 	return this
 	; }
-	/**
-	 * Extension method for Gui class
-	 * @param {String} options Control options
-	 * @param {String} text Initial text
-	 * @returns {RichEdit} The created RichEdit control
-	 */
-	static AddRichTextEdit(options := "", text := "") => this.AddRichEdit(this, options, text)
-	/**
-	 * Extension method for Gui class
-	 * @param {String} options Control options
-	 * @param {String} text Initial text
-	 * @returns {RichEdit} The created RichEdit control
-	 */
-	static AddRichText(options := "", text := "") => this.AddRichEdit(this, options, text)
+	; static MakeFontNicer(options := '20', nFont := 'Consolas') {
+	; 	guiObj := this
+	; 	try RegExReplace(options, 's([\d\s]+)', '$1')
+	; 	if (guiObj is Gui) {
+	; 		guiObj.SetFont('s' options ' Q5', nFont)
+	; 	}
+	; 	return this
+	; }
 
-	static SetDefaultFont(guiObj := this, fontObj := '') {
-		if (guiObj is Gui) {
+	; static MakeFontNicer(params*) {
+	
+	; 	; Define font characteristics as UnSet to allow setting defaults after parsing the params
+	; 	static fontName := color := quality := size := unset
+	; 	static hexNeedle := '\b[0-9A-Fa-f]+\b'
+		
+	; 	if params is Gui {
+	; 		; Infos('Beginning: ' Type(this) ' or True(1)| False(0):' (Type(this) = Gui), 10000)
+	; 		guiObj := params
+	; 	}
 
-			if (IsObject(fontObj)) {
-				; Use the provided font object
-				size := fontObj.HasProp('Size') ? 's' . fontObj.Size : 's9'
-				weight := fontObj.HasProp('Weight') ? ' w' . fontObj.Weight : ''
-				italic := fontObj.HasProp('Italic') && fontObj.Italic ? ' Italic' : ''
-				underline := fontObj.HasProp('Underline') && fontObj.Underline ? ' Underline' : ''
-				strikeout := fontObj.HasProp('Strikeout') && fontObj.Strikeout ? ' Strike' : ''
-				name := fontObj.HasProp('Name') ? fontObj.Name : 'Segoe UI'
+	; 	paramsParser(parameter) {
+	; 		if (parameter is Gui){
+	; 			guiObj := parameter
+	; 		}
+	; 		if parameter ~= 'i)^s[\d]+' {
+	; 			size := SubStr(parameter, 2)  ; Remove 's' prefix
+	; 			try guiObj.setfont('s' size)
+	; 		}
+	; 		else if parameter ~= '([^q])[\d]+' {
+	; 			size := parameter
+	; 			try guiObj.setfont('s' size)
+	; 		}
+	; 		else if parameter ~= '([q])[\d]+' {
+	; 			quality := parameter
+	; 			try guiObj.setfont(quality)
+	; 		}
+	; 		else if parameter ~= 'i)^c[\w\d]+' || parameter ~= hexNeedle {
+	; 			color := parameter
+	; 			try guiObj.setfont(color)
+	; 		}
+	; 		else if !parameter ~= '([q])[\d]+' && parameter ~= 'i)[\w]+'{
+	; 			Infos('Paramter: Font Name: ' parameter)
+	; 			fontName := parameter
+	; 			try guiObj.setfont(, fontName)
+	; 		}
+	; 	}
 
-				options := size . weight . italic . underline . strikeout
-				guiObj.SetFont(options, name)
-			} else if !guiObj.HasProp('Font') {
-				; Use default settings if no font object is provided
-				guiObj.SetFont('s9', 'Segoe UI')
+	; 	; Parse params
+	; 	for param in params {
+	; 		if param is Array {
+	; 			aParams := param.Clone()
+	; 			for cParam in aParams {
+	; 				paramsParser(cParam)
+	; 			}
+	; 		}
+	; 		if param is String {
+	; 			paramsParser(param)
+	; 		}
+	; 	}
+	
+	; 	if !IsSet(guiObj) {
+	; 		Infos('Not Set: guiObj')
+	; 		guiObj := this
+	; 		Infos('Set: guiObj = ' Type(guiObj) ' guiObj = Gui? ' (guiObj = gui))
+	; 	}
+
+	; 	if !IsSet(size) {
+	; 		Infos('Not Set: size')
+	; 		size := 20
+	; 		Infos('Set: size = ' size)
+	; 	}
+
+	; 	if !IsSet(quality) {
+	; 		Infos('Not Set: quality')
+	; 		quality := 'Q5'
+	; 		Infos('Set: quality = ' quality)
+	; 	}
+	; 	if !IsSet(color) {
+	; 		Infos('Not Set: color')
+	; 		color := 'cBlue'
+	; 		Infos('Set: color = ' color)
+	; 	}
+	; 	if !IsSet(fontName) {
+	; 		Infos('Not Set: fontName')
+	; 		fontName := 'Consolas'
+	; 		Infos('Set: fontName = ' fontName)
+	; 	}
+
+	; 	; Build font options string
+	; 	options := 's' size ' ' quality ' ' color
+
+	; 	infos(options)
+	; 	; Apply font
+	; 	if (guiObj is Gui){
+	; 		infos(options)
+	; 		super.SetFont(options, fontName)
+	; 	}
+		
+	; 	Infos('Final: Type(guiObj): ' Type(guiObj))
+	; 	return guiObj
+	; }
+
+	static MakeFontNicer(params*) {
+		; Define font characteristics as UnSet to allow setting defaults after parsing the params
+		static fontName := color := quality := size := unset
+		static hexNeedle := '\b[0-9A-Fa-f]+\b'
+		
+		; Default background color
+		static backgroundColor := unset
+		
+		if params is Gui {
+			guiObj := params
+		}
+	
+		paramsParser(parameter) {
+			
+			if (parameter is Gui) {
+				guiObj := parameter
+				return
+			}
+			infos('parameter:' parameter)
+			; Font size with 's' prefix
+			if parameter ~= 'i)^s[\d]+' {
+				size := SubStr(parameter, 2)  ; Remove 's' prefix
+				try guiObj.SetFont('s' size)
+				return
+			}
+			; Font size without prefix
+			if parameter ~= 'i)([^q])[\d]+' {
+				size := parameter
+				try guiObj.SetFont('s' size)
+				return
+			}
+			; Quality setting
+			if parameter ~= 'i)([q])[\d]+' {
+				quality := parameter
+				try guiObj.SetFont(quality)
+				return
+			}
+			; Color handling - support both named colors and hex
+			if parameter ~= 'i)^c[\w\d]+' {
+				color := parameter  ; Direct color format (e.g., cBlue)
+				try guiObj.SetFont(color)
+				return
+			}
+			if parameter ~= hexNeedle {
+				color := 'c' parameter  ; Add 'c' prefix for hex colors
+				try guiObj.SetFont(color)
+				return
+			}
+			; Font name - anything that starts with letter and contains word chars or spaces
+			if parameter ~= '^[a-zA-Z][\w\s-]*$' {
+				fontName := parameter
+				try guiObj.SetFont(, fontName)
 			}
 		}
-		return this
-	}
 
-	static DarkMode(guiObj := this, BackgroundColor := '') {
-		if (guiObj is Gui) {
-			if (BackgroundColor = '') {
-				guiObj.BackColor := '0xA2AAAD'
-			} else {
-				guiObj.BackColor := BackgroundColor
+		if !IsSet(guiObj) {
+			guiObj := this
+		}
+
+		; Parse params
+		for param in params {
+			if param is Array {
+				aParams := param.Clone()
+				for cParam in aParams {
+					paramsParser(cParam)
+				}
+				continue
+			}
+			if param is String {
+				paramsParser(param)
 			}
 		}
-		return this
+		
+		; Set defaults for unset parameters
+		; if !IsSet(guiObj) {
+		; 	guiObj := this
+		; }
+		if !IsSet(size) {
+			size := 20
+		}
+		if !IsSet(quality) {
+			quality := 'Q5'
+		}
+		if !IsSet(color) {
+			color := 'cBlue'
+		}
+		if !IsSet(fontName) {
+			fontName := 'Consolas'
+		}
+	
+		; Build font options string
+		options := 's' size ' ' quality ' ' color
+		Infos('options: ' options)
+		; Apply font settings based on context
+		if (guiObj is Gui) {
+			Infos('I am a Gui')
+			guiObj.SetFont(options, fontName)
+		}
+		else if Type(guiObj) = "Class" {
+			Infos('I am a Class')
+			guiObj.SetFont(options, fontName)
+		}
+		
+		return guiObj
 	}
 
-	static MakeFontNicer(guiObj := this, options := '20 Q5', nFont := 'Consolas') {
-		try RegExReplace(options, 's([\d\s]+)', '$1')
-		if (guiObj is Gui) {
-			guiObj.SetFont('s' options, nFont)
-		}
+	
+	/**
+	 * @description Prevents window from receiving focus or being activated
+	 * @returns {Gui} The Gui object for method chaining
+	 * @example
+	 * gui.NoActivate()
+	*/
+	static PreventActivation() {
+		WinSetExStyle('+' this.WS_EX_NOACTIVATE, this)
 		return this
 	}
 
 	; static NeverFocusWindow(guiObj := this) {
-	static NeverFocusWindow() {
-		; guiObj := guiObj ? guiObj : this
-		; WinSetExStyle('+' this.NOACTIVATE, guiObj)
-		WinSetExStyle('+' this.NOACTIVATE, this)
-		; WinSetExStyle('+' . this.TRANSPARENT, guiObj)
-		; WinSetExStyle('+' . this.COMPOSITED, guiObj)
-		; WinSetExStyle('+' . this.CLIENTEDGE, guiObj)
-		; WinSetExStyle('+' . this.APPWINDOW, guiObj)
-		; return guiObj
+	; static NeverFocusWindow() {
+	; 	; guiObj := guiObj ? guiObj : this
+	; 	; WinSetExStyle('+' this.NOACTIVATE, guiObj)
+	; 	WinSetExStyle('+' this.WS_EX_NOACTIVATE, this)
+	; 	; WinSetExStyle('+' . this.TRANSPARENT, guiObj)
+	; 	; WinSetExStyle('+' . this.COMPOSITED, guiObj)
+	; 	; WinSetExStyle('+' . this.CLIENTEDGE, guiObj)
+	; 	; WinSetExStyle('+' . this.APPWINDOW, guiObj)
+	; 	; return guiObj
+	; 	return this
+	; }
+
+	/**
+	 * @description Makes window click-through (input passes to windows beneath)
+	 * @returns {Gui} The Gui object for method chaining
+	 * @example
+	 * gui.MakeClickThrough()
+	 */
+	static MakeClickThrough() {
+		WinSetExStyle('+' this.WS_EX_TRANSPARENT, this)
 		return this
 	}
 
-	static MakeClickThrough(guiObj := this) {
-		if (guiObj is Gui){
-			; WinSetTransparent(255, guiObj)
-			WinSetTransparent(255, this)
-			guiObj.Opt('+E0x20')
+	; static MakeClickThrough(guiObj := this) {
+	; 	if (guiObj is Gui){
+	; 		; WinSetTransparent(255, guiObj)
+	; 		WinSetTransparent(255, this)
+	; 		guiObj.Opt('+E0x20')
+	; 	}
+	; 	return this
+	; }
+
+	/**
+	 * @description Enables double-buffered composited window rendering
+	 * @returns {Gui} The Gui object for method chaining
+	 * @example
+	 * gui.EnableComposited()
+	 */
+	static EnableComposited() {
+		WinSetExStyle('+' this.WS_EX_COMPOSITED, this)
+		return this
+	}
+
+	/**
+	 * @description Adds 3D sunken edge border to window
+	 * @returns {Gui} The Gui object for method chaining
+	 * @example
+	 * gui.AddClientEdge()
+	 */
+	static AddClientEdge() {
+		WinSetExStyle('+' this.WS_EX_CLIENTEDGE, this)
+		return this
+	}
+
+	/**
+	 * @description Forces window to have a taskbar button
+	 * @returns {Gui} The Gui object for method chaining
+	 * @example
+	 * gui.ForceTaskbarButton()
+	 */
+	static ForceTaskbarButton() {
+		WinSetExStyle('+' this.WS_EX_APPWINDOW, this)
+		return this
+	}
+
+	/**
+	 * @description Makes window layered for transparency effects
+	 * @returns {Gui} The Gui object for method chaining
+	 * @example
+	 * gui.MakeLayered()
+	 */
+	static MakeLayered() {
+		WinSetExStyle('+' this.WS_EX_LAYERED, this)
+		return this
+	}
+
+	/**
+	 * @description Creates a tool window with no taskbar button
+	 * @returns {Gui} The Gui object for method chaining
+	 * @example
+	 * gui.MakeToolWindow()
+	 */
+	static MakeToolWindow() {
+		WinSetExStyle('+' this.WS_EX_TOOLWINDOW, this)
+		return this
+	}
+
+	/**
+	 * @description Sets window to always stay on top
+	 * @returns {Gui} The Gui object for method chaining
+	 * @example
+	 * gui.SetAlwaysOnTop()
+	 */
+	static SetAlwaysOnTop() {
+		WinSetExStyle('+' this.WS_EX_TOPMOST, this)
+		return this
+	}
+
+	/**
+	 * @description Enables drag and drop file acceptance
+	 * @returns {Gui} The Gui object for method chaining
+	 * @example
+	 * gui.EnableDragDrop()
+	 */
+	static EnableDragDrop() {
+		WinSetExStyle('+' this.WS_EX_ACCEPTFILES, this)
+		return this
+	}
+
+	/**
+	 * @description Adds help button (?) to titlebar
+	 * @returns {Gui} The Gui object for method chaining
+	 * @example
+	 * gui.AddHelpButton()
+	 */
+	static AddHelpButton() {
+		WinSetExStyle('+' this.WS_EX_CONTEXTHELP, this)
+		return this
+	}
+
+	/**
+	 * @description Sets window transparency level
+	 * @param {Integer} level Transparency level (0-255, where 0 is invisible and 255 is opaque)
+	 * @returns {Gui} The Gui object for method chaining
+	 * @example
+	 * gui.SetTransparency(180)  ; Set to 70% opacity
+	 */
+	static SetTransparency(level := 255) {
+		if (level < 0 || level > 255)
+			throw ValueError("Transparency level must be between 0 and 255")
+		
+		this.MakeLayered()  ; Window must be layered for transparency
+		WinSetTransparent(level, this)
+		return this
+	}
+
+	; static SetButtonWidth(input, bMargin := 1.5) {
+	; 	return GuiButtonProperties.SetButtonWidth(input, bMargin)
+	; }
+
+	/**
+	 * @description Creates an overlay window combining multiple styles
+	 * @param {Object} options Window style options
+	 * @returns {Gui} The Gui object for method chaining
+	 * @example
+	 * gui.CreateOverlay({
+	*    transparency: 200,
+	*    clickThrough: true,
+	*    alwaysOnTop: true
+	* })
+	*/
+	static CreateOverlay(options := {}) {
+
+		this.NoActivate()
+
+		if (options.HasProp("transparency")){
+			this.SetTransparency(options.transparency)
 		}
+		if (options.Get("clickThrough", false)){
+			this.MakeClickThrough()
+		}
+		if (options.Get("alwaysOnTop", true)){
+			this.SetAlwaysOnTop()
+		}
+		if (options.Get("composited", true)){
+			this.EnableComposited()
+		}
+
 		return this
 	}
 
-	static SetButtonWidth(input, bMargin := 1.5) {
+	/**
+	 * @description Creates a floating toolbar window
+	 * @param {Object} options Window style options
+	 * @returns {Gui} The Gui object for method chaining
+	 * @example
+	 * gui.CreateToolbar({
+	*    alwaysOnTop: true,
+	*    dropShadow: true
+	* })
+	*/
+	static CreateToolbar(options := {}) {
+		
+		this.MakeToolWindow()
+		
+		if (options.Get("alwaysOnTop", true)){
+			this.SetAlwaysOnTop()
+		}
+		if (options.Get("acceptFiles", false)){
+			this.EnableDragDrop()
+		}
+		if (options.Get("dropShadow", true)){
+			this.AddClientEdge()
+		}
+
+		return this
+	}
+
+	static SetButtonWidth(params*) {
+		input := bMargin := ''
+		
+		; Parse parameters
+		for i, param in params {
+			if (i = 1) {
+				input := param
+			}
+			else if (i = 2) {
+				bMargin := param
+			}
+		}
+		
+		; Set default margin if not provided
+		bMargin := bMargin ? bMargin : 1.5
+		
 		return GuiButtonProperties.SetButtonWidth(input, bMargin)
 	}
 
-	static SetButtonHeight(rows := 1, vMargin := 1.2) {
+	; static SetButtonHeight(rows := 1, vMargin := 1.2) {
+	; 	return GuiButtonProperties.SetButtonHeight(rows, vMargin)
+	; }
+
+	static SetButtonHeight(params*) {
+		rows := vMargin := ''
+		
+		; Parse parameters
+		for i, param in params {
+			if (i = 1)
+				rows := param
+			else if (i = 2)
+				vMargin := param
+		}
+		
+		; Set defaults if not provided
+		rows := rows ? rows : 1
+		vMargin := vMargin ? vMargin : 1.2
+		
 		return GuiButtonProperties.SetButtonHeight(rows, vMargin)
 	}
 
@@ -330,7 +625,7 @@ class Gui2 {
 		return GuiButtonProperties.GetOptimalButtonLayout(totalButtons, containerWidth, containerHeight)
 	}
 
-	static AddButtonGroup(guiObj, buttonOptions, labelObj, groupOptions := '', columns := 1) {
+	static _AddButtonGroup(guiObj, buttonOptions, labelObj, groupOptions := '', columns := 1) {
 		buttons := Map()
 		
 		if (Type(labelObj) = 'String') {
@@ -356,8 +651,8 @@ class Gui2 {
 			groupBox := guiObj.AddGroupBox(groupPos . ' ' . groupSize, 'Button Group')
 			groupBox.GetPos(&groupX, &groupY, &groupW, &groupH)
 			
-			btnWidth := Gui2.SetButtonWidth(labelObj)
-			btnHeight := Gui2.SetButtonHeight()
+			btnWidth := this.SetButtonWidth(labelObj)
+			btnHeight := this.SetButtonHeight()
 			
 			xMargin := 10
 			yMargin := 25
@@ -391,7 +686,34 @@ class Gui2 {
 		
 		return buttons
 	}
-	
+
+	static AddButtonGroup(params*) {
+		; Initialize default values
+		config := {
+			guiObj: '',
+			buttonOptions: '',
+			labelObj: '',
+			groupOptions: '',
+			columns: 1
+		}
+		
+		; Parse parameters
+		for i, param in params {
+			if (param is Gui)
+				config.guiObj := param
+			else if (i = 2)
+				config.buttonOptions := param
+			else if (Type(param) = "String" && InStr(param, "x") || InStr(param, "y"))
+				config.groupOptions := param
+			else if (Type(param) = "Array" || Type(param) = "String")
+				config.labelObj := param
+			else if (Type(param) = "Integer")
+				config.columns := param
+		}
+		
+		; Call original implementation with parsed parameters
+		return this._AddButtonGroup(config.guiObj, config.buttonOptions, config.labelObj, config.groupOptions, config.columns)
+	}
 
 	static OriginalPositions := Map()
 
@@ -579,7 +901,839 @@ class Gui2 {
 		GuiObj.LoadSettings()
 		return this
 	}
+
+	class Color {
+		
+		; Use existing color map
+		static mColors := GuiColors.mColors
+
+		/**
+		 * Converts color from various formats to RGB
+		 * @param {*} params color [, options]
+		 * @returns {Object} {r, g, b} color components
+		 */
+		static ToRGB(params*) {
+			color := params[1]
+			
+			if color is Integer
+				return {r: (color >> 16) & 0xFF, 
+					g: (color >> 8) & 0xFF, 
+					b: color & 0xFF}
+				
+			if IsObject(color)
+				return color
+
+			if this.mColors.Has(StrLower(color))
+				color := this.mColors[StrLower(color)]
+				
+			if RegExMatch(color, "i)^#?([A-F0-9]{6})$", &match)
+				color := match[1]
+				
+			return {r: Integer("0x" SubStr(color, 1, 2)),
+					g: Integer("0x" SubStr(color, 3, 2)),
+					b: Integer("0x" SubStr(color, 5, 2))}
+		}
+
+		/**
+		 * Converts color to BGR format
+		 * @param {*} params color [, options]
+		 * @returns {Integer} BGR color value
+		 */
+		static ToBGR(params*) {
+			rgb := this.ToRGB(params[1])
+			return (rgb.b << 16) | (rgb.g << 8) | rgb.r
+		}
+
+		/**
+		 * Converts color to hex string
+		 * @param {*} params color [, options]
+		 * @returns {String} Hex color string
+		 */
+		static ToHex(params*) {
+			rgb := this.ToRGB(params[1])
+			return Format("{:02X}{:02X}{:02X}", rgb.r, rgb.g, rgb.b)
+		}
+
+		/**
+		 * Adjusts color brightness
+		 * @param {*} params color, amount [, options]
+		 * @returns {String} Hex color
+		 */
+		static Adjust(params*) {
+			if params.Length < 2
+				throw ValueError("Requires color and amount parameters")
+				
+			color := params[1]
+			amount := params[2]
+			rgb := this.ToRGB(color)
+			amount := Min(1.0, Max(-1.0, amount))
+			
+			rgb.r := Min(255, Max(0, Round(rgb.r * (1 + amount))))
+			rgb.g := Min(255, Max(0, Round(rgb.g * (1 + amount))))
+			rgb.b := Min(255, Max(0, Round(rgb.b * (1 + amount))))
+			
+			return this.ToHex(rgb)
+		}
+
+		/**
+		 * Mixes two colors
+		 * @param {*} params color1, color2 [, ratio=0.5] [, options]
+		 * @returns {String} Hex color
+		 */
+		static Mix(params*) {
+			if params.Length < 2
+				throw ValueError("Requires at least two colors")
+				
+			color1 := params[1]
+			color2 := params[2]
+			ratio := params.Length > 2 ? params[3] : 0.5
+			
+			c1 := this.ToRGB(color1)
+			c2 := this.ToRGB(color2)
+			ratio := Min(1, Max(0, ratio))
+			
+			return this.ToHex({
+				r: Round(c1.r * (1 - ratio) + c2.r * ratio),
+				g: Round(c1.g * (1 - ratio) + c2.g * ratio),
+				b: Round(c1.b * (1 - ratio) + c2.b * ratio)
+			})
+		}
+	}
+	
+		/**
+	 * Add a RichEdit control to a GUI
+	 * @param {Gui} guiObj The GUI object to add the control to
+	 * @param {String} options Control options string
+	 * @param {String} text Initial text content
+	 * @returns {RichEdit} The created RichEdit control
+	 */
+
+	; static AddRichEdit(guiObj?, options := "", text := "") {
+	; 	if !IsSet(guiObj) {
+	; 		guiObj := this
+	; 	}
+	; 	; Default options if none provided
+	; 	if (options = "") {
+	; 		options := "w400 h300"  ; Default size
+	; 	}
+
+	; 	; Create RichEdit control
+	; 	reObj := RichEdit(guiObj, options)
+		
+	; 	; Set initial text if provided
+	; 	if (text != "") {
+	; 		reObj.SetText(text)
+	; 	}
+		
+	; 	; Configure default settings
+	; 	reObj.SetOptions(["SELECTIONBAR"])  ; Enable selection bar
+	; 	reObj.AutoURL(true)                 ; Enable URL detection
+	; 	reObj.SetEventMask([
+	; 		"SELCHANGE",                    ; Selection change events
+	; 		"LINK",                         ; Link click events
+	; 		"PROTECTED"                     ; Protected text events
+	; 	])
+		
+	; 	return reObj
+	; }
+
+	/**
+	 * 
+	 * @param guiObj 
+	 * @param options 
+	 * @param text 
+	 */
+	static AddRichEdit(options := '', text := "", toolbar := true, showScrollBars := false) {
+		; 'this' refers to the Gui instance here
+		guiObj := this
+		; Create RichEdit control with default size if none specified
+		if !IsSet(options) {
+			options := "w400 r10"  ; Default size
+		}
+		
+		; Create RichEdit control
+		reObj := RichEdit(this, options)
+		; Calculate positions
+		; Set sizing properties
+		reObj.WidthP := 1.0   ; Take full width
+		reObj.HeightP := 1.0  ; Take full height after toolbar
+		reObj.MinWidth := 200
+		reObj.MinHeight := 100
+		reObj.AnchorIn := true
+
+		; Initialize GuiReSizer for the parent GUI
+		guiObj.Init := 2  ; Force initial resize
+
+		; Ensure parent GUI resizes properly
+		guiObj.OnEvent("Size", GuiReSizer)
+		btnW := 18, btnH := 15, margin := 1
+		
+		; If toolbar enabled, add it before the RichEdit
+		if (toolbar) {
+			toolbarH := btnH + margin*2
+			x := margin
+			y := margin
+			
+			; Bold
+			boldBtn := guiObj.AddButton(Format("x{1} y{2} w{3} h{4}", x, y, btnW, btnH), "B")
+			x += btnW + margin
+			
+			; Italic
+			italicBtn := guiObj.AddButton(Format("x{1} y{2} w{3} h{4}", x, y, btnW, btnH), "I")
+			x += btnW + margin
+			
+			; Underline 
+			underBtn := guiObj.AddButton(Format("x{1} y{2} w{3} h{4}", x, y, btnW, btnH), "U")
+			x += btnW + margin
+			
+			; Strikethrough
+			strikeBtn := guiObj.AddButton(Format("x{1} y{2} w{3} h{4}", x, y, btnW, btnH), "S")
+			
+			; Position RichEdit below toolbar
+			options := "x" margin " y" (y + btnH + margin) " " options
+		}
+
+		; ; Create RichEdit control with default size if none specified
+		; if !IsSet(options) {
+		;     options := "w400 r10"  ; Default size
+		; }
+		
+		; ; Create RichEdit control
+		; reObj := RichEdit(this, options)
+		reObj.SetFont({Name: "Times New Roman", Size: 11})
+		; Add GuiReSizer properties after creating RichEdit
+		reObj.GetPos(&xPos, &yPos, &wGui, &hGui)
+
+		; Add resizing properties for GUI
+		if (toolbar) {
+			; Account for toolbar space if present
+			reObj.X := margin
+			reObj.Y := btnH + margin*2
+		} else {
+			reObj.X := margin
+			reObj.Y := margin
+		}
+		
+		; Configure scrollbar visibility
+		if (!showScrollBars) {
+			reObj.SetOptions([
+				"SELECTIONBAR",
+				; "MULTILEVEL",
+				"AUTOWORDSEL",
+				; "-HSCROLL",  ; Disable horizontal scrollbar
+				; "-VSCROLL"   ; Disable vertical scrollbar
+				; "-AUTOVSCROLL",  ; Show vertical scrollbar when needed
+				; "-AUTOHSCROLL"   ; Show horizontal scrollbar when needed
+			])
+		} else {
+			reObj.SetOptions([
+				"SELECTIONBAR",
+				"MULTILEVEL",
+				"AUTOWORDSEL",
+				"AUTOVSCROLL",  ; Show vertical scrollbar when needed
+				"AUTOHSCROLL"   ; Show horizontal scrollbar when needed
+			])
+		}
+		
+		; Enable features
+		reObj.AutoURL(true)                 ; Enable URL detection
+		reObj.SetEventMask([
+			"SELCHANGE",                    ; Selection change events
+			"LINK",                         ; Link click events
+			"PROTECTED",                    ; Protected text events
+			"CHANGE"                        ; Text change events
+		])
+	
+		; Add GuiReSizer properties for automatic sizing
+		reObj.WidthP := 1.0      ; Take up full width
+		reObj.HeightP := 1.0     ; Take up full height
+		reObj.MinWidth := 200    ; Minimum dimensions
+		reObj.MinHeight := 100
+		reObj.AnchorIn := true   ; Stay within parent bounds
+	
+		; Add basic keyboard shortcuts
+		HotIfWinactive("ahk_id " reObj.Hwnd)
+		Hotkey("^b", (*) => reObj.ToggleFontStyle("B"))
+		Hotkey("^i", (*) => reObj.ToggleFontStyle("I"))
+		Hotkey("^u", (*) => reObj.ToggleFontStyle("U"))
+		Hotkey("^+s", (*) => reObj.ToggleFontStyle("S"))
+		Hotkey("^z", (*) => reObj.Undo())
+		Hotkey("^y", (*) => reObj.Redo())
+		HotIf()
+	
+		; Set initial text if provided
+		if IsSet(text) {
+			reObj.SetText(text)
+		}
+		
+		; Define button callbacks
+		BoldText(*) {
+			reObj.ToggleFontStyle("B")
+			reObj.Focus()
+		}
+		
+		ItalicText(*) {
+			reObj.ToggleFontStyle("I")
+			reObj.Focus()
+		}
+		
+		UnderlineText(*) {
+			reObj.ToggleFontStyle("U")
+			reObj.Focus()
+		}
+		
+		StrikeText(*) {
+			reObj.ToggleFontStyle("S")
+			reObj.Focus()
+		}
+
+		return reObj
+	}
+	
+	/**
+	 * Extension method for Gui class
+	 * @param {String} options Control options
+	 * @param {String} text Initial text
+	 * @returns {RichEdit} The created RichEdit control
+	 */
+	static AddRTE(options := "", text := "") {
+		return this.AddRichEdit(this, options, text)
+	}
+
+	; static AddRichTextEdit(options := "", text := ""){
+	; 	return this.AddRichEdit(this, options, text)
+	; }
+	/**
+	 * Extension method for Gui class
+	 * @param {String} options Control options
+	 * @param {String} text Initial text
+	 * @returns {RichEdit} The created RichEdit control
+	 */
+	static AddRichTextEdit(options := "", text := "") => this.AddRichEdit(this, options, text)
+	/**
+	 * Extension method for Gui class
+	 * @param {String} options Control options
+	 * @param {String} text Initial text
+	 * @returns {RichEdit} The created RichEdit control
+	 */
+	static AddRichText(options := "", text := "") => this.AddRichEdit(this, options, text)
+
+	static SetDefaultFont(guiObj := this, fontObj := '') {
+		if (guiObj is Gui) {
+
+			if (IsObject(fontObj)) {
+				; Use the provided font object
+				size := fontObj.HasProp('Size') ? 's' . fontObj.Size : 's9'
+				weight := fontObj.HasProp('Weight') ? ' w' . fontObj.Weight : ''
+				italic := fontObj.HasProp('Italic') && fontObj.Italic ? ' Italic' : ''
+				underline := fontObj.HasProp('Underline') && fontObj.Underline ? ' Underline' : ''
+				strikeout := fontObj.HasProp('Strikeout') && fontObj.Strikeout ? ' Strike' : ''
+				name := fontObj.HasProp('Name') ? fontObj.Name : 'Segoe UI'
+
+				options := size . weight . italic . underline . strikeout
+				guiObj.SetFont(options, name)
+			} else if !guiObj.HasProp('Font') {
+				; Use default settings if no font object is provided
+				guiObj.SetFont('s9', 'Segoe UI')
+			}
+		}
+		return this
+	}
 }
+
+; class CleanInputBox extends Gui {
+
+; 	; Width     := Round(A_ScreenWidth  / 1920 * 1200)
+; 	Width     := Round(A_ScreenWidth  / 3)
+; 	TopMargin := Round(A_ScreenHeight / 1080 * 800)
+
+; 	; DarkMode(BackgroundColor:='') {
+; 	; 	Gui2.DarkMode(this, BackgroundColor)
+; 	; 	return this
+; 	; }
+
+; 	; ; MakeFontNicer(fontSize := 15) {
+; 	; MakeFontNicer(fontParams*) {
+; 	; 	Gui2.MakeFontNicer(fontParams)
+; 	; 	return this
+; 	; }
+
+; 	__New() {
+; 		cibGui := Gui('AlwaysOnTop -Caption +Border')
+; 		super.__New('AlwaysOnTop -Caption +Border')
+; 		super.DarkMode()
+; 		super.MakeFontNicer('s10', 'q3', 'cRed')
+; 		this.MarginX := 0
+
+; 		this.InputField := this.AddEdit('x0 Center -E0x200 Background' this.BackColor ' w' this.Width)
+
+; 		this.Input := ''
+; 		this.isWaiting := true
+; 		this.RegisterHotkeys()
+; 	}
+
+; 	Show() => (super.Show('y' this.TopMargin ' w' this.Width), this)
+
+; 	/**
+; 	 * Occupy the thread until you type in your input and press
+; 	 * Enter, returns this input
+; 	 * @returns {String}
+; 	 */
+; 	WaitForInput() {
+; 		this.Show()
+; 		while this.isWaiting {
+; 		}
+; 		return this.Input
+; 	}
+
+; 	SetInput() {
+; 		this.Input := this.InputField.Text
+; 		this.isWaiting := false
+; 		this.Finish()
+; 	}
+
+; 	SetCancel() {
+; 		this.isWaiting := false
+; 		this.Finish()
+; 	}
+
+; 	RegisterHotkeys() {
+; 		HotIfWinactive('ahk_id ' this.Hwnd)
+; 		Hotkey('Enter', (*) => this.SetInput(), 'On')
+; 		Hotkey('CapsLock', (*) => this.SetCancel())
+; 		this.OnEvent('Escape', (*) => this.SetCancel())
+; 	}
+
+; 	Finish() {
+; 		HotIfWinactive('ahk_id ' this.Hwnd)
+; 		Hotkey('Enter', 'Off')
+; 		this.Minimize()
+; 		this.Destroy()
+; 	}
+; }
+
+; ---------------------------------------------------------------------------
+
+; class CleanInputBox {
+;     ; Static properties (similar to Infos)
+;     static Width := Round(A_ScreenWidth / 3)
+;     static TopMargin := Round(A_ScreenHeight / 1080 * 800)
+;     static fontSize := 12
+;     static quality := 5
+;     static color := 'Blue'
+
+;     ; Instance properties
+;     gui := ""
+;     InputField := ""
+;     Input := ""
+;     isWaiting := true
+
+;     __New() {
+;         ; Create the GUI without inheritance
+;         this.gui := Gui('+AlwaysOnTop -Caption +Border')
+        
+;         ; Apply styling (similar to Infos pattern)
+;         this.DarkMode()
+;         this.MakeFontNicer()
+        
+;         ; Setup GUI properties
+;         this.gui.MarginX := 0
+
+;         ; Add input field
+;         this.InputField := this.gui.AddEdit('x0 Center -E0x200 Background' this.gui.BackColor ' w' CleanInputBox.Width)
+
+;         ; Setup event handlers
+;         this.RegisterHotkeys()
+;     }
+
+;     /**
+;      * Apply dark mode styling to the GUI
+;      * @returns {CleanInputBox} Instance for chaining
+;      */
+;     DarkMode() {
+;         this.gui.BackColor := '0xA2AAAD'
+;         return this
+;     }
+
+;     /**
+;      * Apply font styling to the GUI
+;      * @returns {CleanInputBox} Instance for chaining
+;      */
+;     MakeFontNicer() {
+;         this.gui.SetFont('s' CleanInputBox.fontSize ' q' CleanInputBox.quality ' c' CleanInputBox.color, 'Consolas')
+;         return this
+;     }
+
+;     /**
+;      * Show the input box GUI
+;      * @returns {CleanInputBox} Instance for chaining
+;      */
+;     Show() {
+;         this.gui.Show('y' CleanInputBox.TopMargin ' w' CleanInputBox.Width)
+;         return this
+;     }
+
+;     /**
+;      * Wait for user input and return the result
+;      * @returns {String} User input or empty string if cancelled
+;      */
+;     WaitForInput() {
+;         this.Show()
+;         while this.isWaiting {
+;             Sleep(10)
+;         }
+;         return this.Input
+;     }
+
+;     /**
+;      * Handle the input submission
+;      */
+;     SetInput() {
+;         this.Input := this.InputField.Text
+;         this.isWaiting := false
+;         this.Finish()
+;     }
+
+;     /**
+;      * Handle cancellation
+;      */
+;     SetCancel() {
+;         this.isWaiting := false
+;         this.Finish()
+;     }
+
+;     /**
+;      * Register hotkeys for the input box
+;      */
+;     RegisterHotkeys() {
+;         HotIfWinactive('ahk_id ' this.gui.Hwnd)
+;         Hotkey('Enter', (*) => this.SetInput(), 'On')
+;         Hotkey('CapsLock', (*) => this.SetCancel())
+;         this.gui.OnEvent('Escape', (*) => this.SetCancel())
+;     }
+
+;     /**
+;      * Clean up and close the input box
+;      */
+;     Finish() {
+;         HotIfWinactive('ahk_id ' this.gui.Hwnd)
+;         Hotkey('Enter', 'Off')
+;         this.gui.Minimize()
+;         this.gui.Destroy()
+;     }
+; }
+
+; ---------------------------------------------------------------------------
+
+class CleanInputBox {
+
+    ; Default settings
+    static Defaults := {
+        fontSize: 12,
+        quality: 5,
+        color: 'Blue',
+        font: 'Consolas',
+        width: Round(A_ScreenWidth / 3),
+        topMargin: Round(A_ScreenHeight / 1080 * 800),
+        backgroundColor: '0xA2AAAD'
+    }
+
+    ; Instance properties
+    gui := ""
+    InputField := ""
+    Input := ""
+    isWaiting := true
+    settings := Map()
+
+    /**
+     * Handle direct calls to the class (e.g., CleanInputBox())
+     * @param {String} name Method name (empty for direct calls)
+     * @param {Array} params Parameters passed to the call
+     * @returns {String} User input or empty string if cancelled
+     */
+    static __Call(name, params) {
+        if (name = "") {  ; Called directly as a function
+            instance := CleanInputBox(params*)
+            return instance.WaitForInput()
+        }
+    }
+
+    __New(p1 := "", p2 := "", p3 := "") {
+        ; Parse parameters into settings
+        this.settings := this.ParseParams(p1, p2, p3)
+        
+        ; Create GUI
+        this.gui := Gui('+AlwaysOnTop -Caption +Border')
+        
+        ; Apply styling using Gui2 methods
+        this.gui.DarkMode(this.settings.Get('backgroundColor', CleanInputBox.Defaults.backgroundColor))
+        
+        ; Set font
+        this.gui.SetFont(
+            's' this.settings.Get('fontSize', CleanInputBox.Defaults.fontSize) 
+            ' q' this.settings.Get('quality', CleanInputBox.Defaults.quality) 
+            ' c' this.settings.Get('color', CleanInputBox.Defaults.color),
+            this.settings.Get('font', CleanInputBox.Defaults.font)
+        )
+        
+        ; Setup GUI properties
+        this.gui.MarginX := 0
+
+        ; Add input field
+        this.InputField := this.gui.AddEdit(
+            'x0 Center -E0x200 Background' this.gui.BackColor 
+            ' w' this.settings.Get('width', CleanInputBox.Defaults.width)
+        )
+
+        ; Setup event handlers
+        this.RegisterHotkeys()
+
+		; this.WaitForInput()
+    }
+
+	static WaitForInput(){
+		return CleanInputBox().WaitForInput()
+	}
+
+    ParseParams(p1 := "", p2 := "", p3 := "") {
+        settings := Map()
+        
+        ; If first parameter is object/map, use as settings
+        if IsObject(p1) {
+            for key, value in (p1 is Map ? p1 : p1.OwnProps()) {
+                settings[key] := value
+            }
+            return settings
+        }
+
+        ; Otherwise only add parameters that were actually provided
+        if (p1 != "")
+            settings['fontSize'] := p1
+        if (p2 != "")
+            settings['color'] := (SubStr(p2, 1, 1) = 'c' ? p2 : 'c' p2)
+        if (p3 != "")
+            settings['quality'] := p3
+            
+        return settings
+    }
+
+    WaitForInput() {
+        this.gui.Show('y' this.settings.Get('topMargin', CleanInputBox.Defaults.topMargin) 
+            ' w' this.settings.Get('width', CleanInputBox.Defaults.width))
+            
+        while this.isWaiting {
+            Sleep(10)
+        }
+        return this.Input
+    }
+
+    RegisterHotkeys() {
+        HotIfWinactive('ahk_id ' this.gui.Hwnd)
+        Hotkey('Enter', (*) => (this.Input := this.InputField.Text, this.isWaiting := false, this.Finish()), 'On')
+        Hotkey('CapsLock', (*) => (this.isWaiting := false, this.Finish()))
+        this.gui.OnEvent('Escape', (*) => (this.isWaiting := false, this.Finish()))
+    }
+
+    Finish() {
+        HotIfWinactive('ahk_id ' this.gui.Hwnd)
+        Hotkey('Enter', 'Off')
+        this.gui.Minimize()
+        this.gui.Destroy()
+    }
+}
+
+class Infos {
+	static fontSize := 8
+	static distance := 4
+	static unit := A_ScreenDPI / 144
+	static guiWidth := Infos.fontSize * Infos.unit * Infos.distance
+	static maximumInfos := Floor(A_ScreenHeight / Infos.guiWidth)
+	static spots := Infos._GeneratePlacesArray()
+	static maxNumberedHotkeys := 12
+	static maxWidthInChars := 110
+
+	__text := ''
+	text {
+		get => this.__text
+		set => this.__text := value
+	}
+
+	__New(text, autoCloseTimeout := 0) {
+		this.gui := Gui('AlwaysOnTop -Caption +ToolWindow')
+		this.autoCloseTimeout := autoCloseTimeout
+		this.text := text
+		this.spaceIndex := 0
+		if !this._GetAvailableSpace() {
+			this._StopDueToNoSpace()
+			return
+		}
+		this._CreateGui()
+		this._SetupHotkeysAndEvents()
+		this._SetupAutoclose()
+		this._Show()
+	}
+
+	_CreateGui() {
+		this.DarkMode()
+		this.MakeFontNicer(Infos.fontSize ' cblue')
+		this.NeverFocusWindow()
+		this.gcText := this.gui.AddText(, this._FormatText())
+		return this
+	}
+
+	DarkMode(BackgroundColor := '') {
+		this.gui.BackColor := BackgroundColor = '' ? '0xA2AAAD' : BackgroundColor
+		return this
+	}
+
+	MakeFontNicer(fontSize := 20) {
+		this.gui.SetFont('s' fontSize ' c0000ff', 'Consolas')
+		return this
+	}
+
+	NeverFocusWindow() {
+		WinSetExStyle('+0x08000000', this.gui)  ; WS_EX_NOACTIVATE
+		return this
+	}
+
+	static DestroyAll(*) {
+		for index, infoObj in Infos.spots {
+			if (infoObj is Infos) {
+				infoObj.Destroy()
+			}
+		}
+	}
+
+	static _GeneratePlacesArray() {
+		availablePlaces := []
+		loop Infos.maximumInfos {
+			availablePlaces.Push(false)
+		}
+		return availablePlaces
+	}
+
+	ReplaceText(newText) {
+		if !this.gui.Hwnd {
+			return Infos(newText, this.autoCloseTimeout)
+		}
+
+		if StrLen(newText) = StrLen(this.gcText.Text) {
+			this.gcText.Text := newText
+			this._SetupAutoclose()
+			return this
+		}
+
+		Infos.spots[this.spaceIndex] := false
+		return Infos(newText, this.autoCloseTimeout)
+	}
+
+	Destroy(*) {
+		if (!this.gui.Hwnd) {
+			return false
+		}
+		this.RemoveHotkeys()
+		this.gui.Destroy()
+		if (this.spaceIndex > 0) {
+			Infos.spots[this.spaceIndex] := false
+		}
+		return true
+	}
+
+	RemoveHotkeys() {
+		hotkeys := ['Escape', '^Escape']
+		if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
+			hotkeys.Push('F' this.spaceIndex)
+		}
+		HotIfWinExist('ahk_id ' this.gui.Hwnd)
+		for hk in hotkeys {
+			try Hotkey(hk, 'Off')
+		}
+		HotIf()
+	}
+
+	_FormatText() {
+		ftext := String(this.text)
+		lines := ftext.Split('`n')
+		; lines := StrSplit(ftext, '`n')
+		if lines.Length > 1 {
+			ftext := this._FormatByLine(lines)
+		}
+		else {
+			ftext := this._LimitWidth(ftext)
+		}
+
+		return String(this.text).Replace('&', '&&')
+		; return StrReplace(ftext,'&', '&&')
+	}
+
+	_FormatByLine(lines) {
+		newLines := []
+		for index, line in lines {
+			newLines.Push(this._LimitWidth(line))
+		}
+		ftext := ''
+		for index, line in newLines {
+			if index = newLines.Length {
+				ftext .= line
+				break
+			}
+			ftext .= line '`n'
+		}
+		return ftext
+	}
+
+	_LimitWidth(ltext) {
+		if StrLen(ltext) < Infos.maxWidthInChars {
+			return ltext
+		}
+		insertions := 0
+		while (insertions + 1) * Infos.maxWidthInChars + insertions < StrLen(ltext) {
+			insertions++
+			ltext := ltext.Insert('`n', insertions * Infos.maxWidthInChars + insertions)
+		}
+		return ltext
+	}
+
+	_GetAvailableSpace() {
+		for index, isOccupied in Infos.spots {
+			if !isOccupied {
+				this.spaceIndex := index
+				Infos.spots[index] := this
+				return true
+			}
+		}
+		return false
+	}
+
+	_CalculateYCoord() => Round(this.spaceIndex * Infos.guiWidth - Infos.guiWidth)
+
+	_StopDueToNoSpace() => this.Destroy()
+
+	_SetupHotkeysAndEvents() {
+		HotIfWinExist('ahk_id ' this.gui.Hwnd)
+		Hotkey('Escape', (*) => this.Destroy(), 'On')
+		Hotkey('^Escape', (*) => Infos.DestroyAll(), 'On')
+		if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
+			Hotkey('F' this.spaceIndex, (*) => this.Destroy(), 'On')
+		}
+		HotIf()
+		this.gcText.OnEvent('Click', (*) => this.Destroy())
+		this.gui.OnEvent('Close', (*) => this.Destroy())
+	}
+
+	_SetupAutoclose() {
+		if this.autoCloseTimeout {
+			SetTimer(() => this.Destroy(), -this.autoCloseTimeout)
+		}
+	}
+
+	_Show() => this.gui.Show('AutoSize NA x0 y' this._CalculateYCoord())
+}
+
+
+
+; Info(text, timeout?) => Infos(text, timeout ?? 2000)
+Info(text, timeout?) => Infos(text, timeout ?? 10000)
 
 class GuiButtonProperties {
 	static SetButtonWidth(input, bMargin := 1) {
@@ -784,270 +1938,6 @@ class FontProperties extends Gui {
 		return FontProperties(control.Gui)
 	}
 }
-
-class CleanInputBox extends Gui {
-
-	Width     := Round(A_ScreenWidth  / 1920 * 1200)
-	TopMargin := Round(A_ScreenHeight / 1080 * 800)
-
-	DarkMode(BackgroundColor := '') {
-		Gui2.DarkMode(this, BackgroundColor)
-		return this
-	}
-
-	MakeFontNicer(fontSize := 15) {
-		Gui2.MakeFontNicer(this, fontSize)
-		return this
-	}
-
-	__New() {
-		super.__New('AlwaysOnTop -Caption +Border')
-		this.DarkMode()
-		this.MakeFontNicer(15)
-		this.MarginX := 0
-
-		this.InputField := this.AddEdit(
-			'x0 Center -E0x200 Background' this.BackColor ' w' this.Width
-		)
-
-		this.Input := ''
-		this.isWaiting := true
-		this.RegisterHotkeys()
-	}
-
-	Show() => (super.Show('y' this.TopMargin ' w' this.Width), this)
-
-	/**
-	 * Occupy the thread until you type in your input and press
-	 * Enter, returns this input
-	 * @returns {String}
-	 */
-	WaitForInput() {
-		this.Show()
-		while this.isWaiting {
-		}
-		return this.Input
-	}
-
-	SetInput() {
-		this.Input := this.InputField.Text
-		this.isWaiting := false
-		this.Finish()
-	}
-
-	SetCancel() {
-		this.isWaiting := false
-		this.Finish()
-	}
-
-	RegisterHotkeys() {
-		HotIfWinactive('ahk_id ' this.Hwnd)
-		Hotkey('Enter', (*) => this.SetInput(), 'On')
-		Hotkey('CapsLock', (*) => this.SetCancel())
-		this.OnEvent('Escape', (*) => this.SetCancel())
-	}
-
-	Finish() {
-		HotIfWinactive('ahk_id ' this.Hwnd)
-		Hotkey('Enter', 'Off')
-		this.Minimize()
-		this.Destroy()
-	}
-}
-
-class Infos {
-	static fontSize := 8
-	static distance := 4
-	static unit := A_ScreenDPI / 144
-	static guiWidth := Infos.fontSize * Infos.unit * Infos.distance
-	static maximumInfos := Floor(A_ScreenHeight / Infos.guiWidth)
-	static spots := Infos._GeneratePlacesArray()
-	static maxNumberedHotkeys := 12
-	static maxWidthInChars := 110
-
-	__text := ''
-	text {
-		get => this.__text
-		set => this.__text := value
-	}
-
-	__New(text, autoCloseTimeout := 0) {
-		this.gui := Gui('AlwaysOnTop -Caption +ToolWindow')
-		this.autoCloseTimeout := autoCloseTimeout
-		this.text := text
-		this.spaceIndex := 0
-		if !this._GetAvailableSpace() {
-			this._StopDueToNoSpace()
-			return
-		}
-		this._CreateGui()
-		this._SetupHotkeysAndEvents()
-		this._SetupAutoclose()
-		this._Show()
-	}
-
-	_CreateGui() {
-		this.DarkMode()
-		this.MakeFontNicer(Infos.fontSize ' cblue')
-		this.NeverFocusWindow()
-		this.gcText := this.gui.AddText(, this._FormatText())
-		return this
-	}
-
-	DarkMode(BackgroundColor := '') {
-		this.gui.BackColor := BackgroundColor = '' ? '0xA2AAAD' : BackgroundColor
-		return this
-	}
-
-	MakeFontNicer(fontSize := 20) {
-		this.gui.SetFont('s' fontSize ' c0000ff', 'Consolas')
-		return this
-	}
-
-	NeverFocusWindow() {
-		WinSetExStyle('+0x08000000', this.gui)  ; WS_EX_NOACTIVATE
-		return this
-	}
-
-	static DestroyAll(*) {
-		for index, infoObj in Infos.spots {
-			if (infoObj is Infos) {
-				infoObj.Destroy()
-			}
-		}
-	}
-
-	static _GeneratePlacesArray() {
-		availablePlaces := []
-		loop Infos.maximumInfos {
-			availablePlaces.Push(false)
-		}
-		return availablePlaces
-	}
-
-	ReplaceText(newText) {
-		if !this.gui.Hwnd {
-			return Infos(newText, this.autoCloseTimeout)
-		}
-
-		if StrLen(newText) = StrLen(this.gcText.Text) {
-			this.gcText.Text := newText
-			this._SetupAutoclose()
-			return this
-		}
-
-		Infos.spots[this.spaceIndex] := false
-		return Infos(newText, this.autoCloseTimeout)
-	}
-
-	Destroy(*) {
-		if (!this.gui.Hwnd) {
-			return false
-		}
-		this.RemoveHotkeys()
-		this.gui.Destroy()
-		if (this.spaceIndex > 0) {
-			Infos.spots[this.spaceIndex] := false
-		}
-		return true
-	}
-
-	RemoveHotkeys() {
-		hotkeys := ['Escape', '^Escape']
-		if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
-			hotkeys.Push('F' this.spaceIndex)
-		}
-		HotIfWinExist('ahk_id ' this.gui.Hwnd)
-		for hk in hotkeys {
-			try Hotkey(hk, 'Off')
-		}
-		HotIf()
-	}
-
-	_FormatText() {
-		ftext := String(this.text)
-		lines := ftext.Split('`n')
-		; lines := StrSplit(ftext, '`n')
-		if lines.Length > 1 {
-			ftext := this._FormatByLine(lines)
-		}
-		else {
-			ftext := this._LimitWidth(ftext)
-		}
-
-		return String(this.text).Replace('&', '&&')
-		; return StrReplace(ftext,'&', '&&')
-	}
-
-	_FormatByLine(lines) {
-		newLines := []
-		for index, line in lines {
-			newLines.Push(this._LimitWidth(line))
-		}
-		ftext := ''
-		for index, line in newLines {
-			if index = newLines.Length {
-				ftext .= line
-				break
-			}
-			ftext .= line '`n'
-		}
-		return ftext
-	}
-
-	_LimitWidth(ltext) {
-		if StrLen(ltext) < Infos.maxWidthInChars {
-			return ltext
-		}
-		insertions := 0
-		while (insertions + 1) * Infos.maxWidthInChars + insertions < StrLen(ltext) {
-			insertions++
-			ltext := ltext.Insert('`n', insertions * Infos.maxWidthInChars + insertions)
-		}
-		return ltext
-	}
-
-	_GetAvailableSpace() {
-		for index, isOccupied in Infos.spots {
-			if !isOccupied {
-				this.spaceIndex := index
-				Infos.spots[index] := this
-				return true
-			}
-		}
-		return false
-	}
-
-	_CalculateYCoord() => Round(this.spaceIndex * Infos.guiWidth - Infos.guiWidth)
-
-	_StopDueToNoSpace() => this.Destroy()
-
-	_SetupHotkeysAndEvents() {
-		HotIfWinExist('ahk_id ' this.gui.Hwnd)
-		Hotkey('Escape', (*) => this.Destroy(), 'On')
-		Hotkey('^Escape', (*) => Infos.DestroyAll(), 'On')
-		if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
-			Hotkey('F' this.spaceIndex, (*) => this.Destroy(), 'On')
-		}
-		HotIf()
-		this.gcText.OnEvent('Click', (*) => this.Destroy())
-		this.gui.OnEvent('Close', (*) => this.Destroy())
-	}
-
-	_SetupAutoclose() {
-		if this.autoCloseTimeout {
-			SetTimer(() => this.Destroy(), -this.autoCloseTimeout)
-		}
-	}
-
-	_Show() => this.gui.Show('AutoSize NA x0 y' this._CalculateYCoord())
-}
-
-
-
-; Info(text, timeout?) => Infos(text, timeout ?? 2000)
-Info(text, timeout?) => Infos(text, timeout ?? 0)
-
 
 class ErrorLogGui {
 	logGui := {}
@@ -2414,4 +3304,152 @@ debug_getCallStack() {
 MsgRTFBox(text, title := "", options := "YesNoCancel", owner := "") {
 	Infos("MsgRTFBox called`n")
 	return RTFMsgBox.Show(text, title, options, owner || A_ScriptHwnd)
+}
+
+class GuiColors {
+	; Common named colors
+	static mColors := Map(
+		"aliceblue", "F0F8FF",
+		"antiquewhite", "FAEBD7",
+		"aqua", "00FFFF",
+		"aquamarine", "7FFFD4",
+		"azure", "F0FFFF",
+		"beige", "F5F5DC",
+		"bisque", "FFE4C4",
+		"black", "000000",
+		"blanchedalmond", "FFEBCD",
+		"blue", "0000FF",
+		"blueviolet", "8A2BE2",
+		"brown", "A52A2A",
+		"burlywood", "DEB887",
+		"cadetblue", "5F9EA0",
+		"chartreuse", "7FFF00",
+		"chocolate", "D2691E",
+		"coral", "FF7F50",
+		"cornflowerblue", "6495ED",
+		"cornsilk", "FFF8DC",
+		"crimson", "DC143C",
+		"cyan", "00FFFF",
+		"darkblue", "00008B",
+		"darkcyan", "008B8B",
+		"darkgoldenrod", "B8860B",
+		"darkgray", "A9A9A9",
+		"darkgreen", "006400",
+		"darkkhaki", "BDB76B",
+		"darkmagenta", "8B008B",
+		"darkolivegreen", "556B2F",
+		"darkorange", "FF8C00",
+		"darkorchid", "9932CC",
+		"darkred", "8B0000",
+		"darksalmon", "E9967A",
+		"darkseagreen", "8FBC8F",
+		"darkslateblue", "483D8B",
+		"darkslategray", "2F4F4F",
+		"darkturquoise", "00CED1",
+		"darkviolet", "9400D3",
+		"deeppink", "FF1493",
+		"deepskyblue", "00BFFF",
+		"dimgray", "696969",
+		"dodgerblue", "1E90FF",
+		"firebrick", "B22222",
+		"floralwhite", "FFFAF0",
+		"forestgreen", "228B22",
+		"fuchsia", "FF00FF",
+		"gainsboro", "DCDCDC",
+		"ghostwhite", "F8F8FF",
+		"gold", "FFD700",
+		"goldenrod", "DAA520",
+		"gray", "808080",
+		"green", "008000",
+		"greenyellow", "ADFF2F",
+		"honeydew", "F0FFF0",
+		"hotpink", "FF69B4",
+		"indianred", "CD5C5C",
+		"indigo", "4B0082",
+		"ivory", "FFFFF0",
+		"khaki", "F0E68C",
+		"lavender", "E6E6FA",
+		"lavenderblush", "FFF0F5",
+		"lawngreen", "7CFC00",
+		"lemonchiffon", "FFFACD",
+		"lightblue", "ADD8E6",
+		"lightcoral", "F08080",
+		"lightcyan", "E0FFFF",
+		"lightgoldenrodyellow", "FAFAD2",
+		"lightgray", "D3D3D3",
+		"lightgreen", "90EE90",
+		"lightpink", "FFB6C1",
+		"lightsalmon", "FFA07A",
+		"lightseagreen", "20B2AA",
+		"lightskyblue", "87CEFA",
+		"lightslategray", "778899",
+		"lightsteelblue", "B0C4DE",
+		"lightyellow", "FFFFE0",
+		"lime", "00FF00",
+		"limegreen", "32CD32",
+		"linen", "FAF0E6",
+		"magenta", "FF00FF",
+		"maroon", "800000",
+		"mediumaquamarine", "66CDAA",
+		"mediumblue", "0000CD",
+		"mediumorchid", "BA55D3",
+		"mediumpurple", "9370DB",
+		"mediumseagreen", "3CB371",
+		"mediumslateblue", "7B68EE",
+		"mediumspringgreen", "00FA9A",
+		"mediumturquoise", "48D1CC",
+		"mediumvioletred", "C71585",
+		"midnightblue", "191970",
+		"mintcream", "F5FFFA",
+		"mistyrose", "FFE4E1",
+		"moccasin", "FFE4B5",
+		"navajowhite", "FFDEAD",
+		"navy", "000080",
+		"oldlace", "FDF5E6",
+		"olive", "808000",
+		"olivedrab", "6B8E23",
+		"orange", "FFA500",
+		"orangered", "FF4500",
+		"orchid", "DA70D6",
+		"palegoldenrod", "EEE8AA",
+		"palegreen", "98FB98",
+		"paleturquoise", "AFEEEE",
+		"palevioletred", "DB7093",
+		"papayawhip", "FFEFD5",
+		"peachpuff", "FFDAB9",
+		"peru", "CD853F",
+		"pink", "FFC0CB",
+		"plum", "DDA0DD",
+		"powderblue", "B0E0E6",
+		"purple", "800080",
+		"rebeccapurple", "663399",
+		"red", "FF0000",
+		"rosybrown", "BC8F8F",
+		"royalblue", "4169E1",
+		"saddlebrown", "8B4513",
+		"salmon", "FA8072",
+		"sandybrown", "F4A460",
+		"seagreen", "2E8B57",
+		"seashell", "FFF5EE",
+		"sienna", "A0522D",
+		"silver", "C0C0C0",
+		"skyblue", "87CEEB",
+		"slateblue", "6A5ACD",
+		"slategray", "708090",
+		"snow", "FFFAFA",
+		"springgreen", "00FF7F",
+		"steelblue", "4682B4",
+		"tan", "D2B48C",
+		"teal", "008080",
+		"thistle", "D8BFD8",
+		"tomato", "FF6347",
+		"turquoise", "40E0D0",
+		"violet", "EE82EE",
+		"wheat", "F5DEB3",
+		"white", "FFFFFF",
+		"whitesmoke", "F5F5F5",
+		"yellow", "FFFF00",
+		"yellowgreen", "9ACD32"
+	)
+
 }

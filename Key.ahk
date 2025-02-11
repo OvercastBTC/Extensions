@@ -1342,9 +1342,9 @@ class key {
     static homeup := '{' this.sc.home ' up}'
     static homedown := '{' this.sc.home ' down}'
 
-    ; static scUp := '{' this.sc.scup '}'
-    ; static scupup := '{' this.sc.scup ' up}'
-    ; static scupdown := '{' this.sc.scup ' down}'
+    static Up := '{' this.sc.scup '}'
+    static Upup := '{' this.sc.scup ' up}'
+    static Updown := '{' this.sc.scup ' down}'
 
     static pageup := '{' this.sc.pageup '}'
     static pageupup := '{' this.sc.pageup ' up}'
@@ -1362,9 +1362,9 @@ class key {
     static endup := '{' this.sc.end ' up}'
     static enddown := '{' this.sc.end ' down}'
 
-    ; static scdown := '{' this.sc.scdown '}'
-    ; static scdownup := '{' this.sc.scdown ' up}'
-    ; static scdropdown := '{' this.sc.scdown ' down}'
+    static scdown := '{' this.sc.scdown '}'
+    static scdownup := '{' this.sc.scdown ' up}'
+    static scdropdown := '{' this.sc.scdown ' down}'
 
     static pagedown := '{' this.sc.pagedown '}'
     static pagedownup := '{' this.sc.pagedown ' up}'
@@ -1407,6 +1407,12 @@ class key {
 	static print := this.ctrldown this.p this.ctrlup
 	static close := this.ctrldown this.w this.ctrlup
 	static quit := this.altdown this.f4 this.altup
+	static selectLine := this.home this.shiftdown this.end this.shiftup
+	static moveupdown := this.selectLine this.cut this.delete
+	static moveup := this.up this.enter this.Up
+	static movedown := this.end this.enter
+	static dupLine := this.selectLine this.copy
+	static duplicateLine := this.selectLine this.copy
 
     ; Navigation and window management
     static nextTab := this.ctrldown this.tab this.ctrlup

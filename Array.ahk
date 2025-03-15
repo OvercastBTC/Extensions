@@ -107,7 +107,7 @@ Class Array2 {
 		}
 
 		; Return the new length
-		return this
+		return this.length
 	}
 
 	/**

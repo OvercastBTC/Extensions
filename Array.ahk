@@ -42,21 +42,21 @@ Array.Prototype.Base := Array2
 Class Array2 {
 
 	static __New() {
-        ; Add all Array2 methods to Array prototype
-        for methodName in Array2.OwnProps() {
-            if methodName != "__New" && HasMethod(Array2, methodName) {
-                ; Check if method already exists
-                if Array.Prototype.HasOwnProp(methodName) {
-                    ; Skip if method exists to avoid overwriting
-                    continue
-                }
-                ; Add the method to Array.Prototype
-                Array.Prototype.DefineProp(methodName, {
-                    Call: Array2.%methodName%
-                })
-            }
-        }
-    }
+		; Add all Array2 methods to Array prototype
+		for methodName in Array2.OwnProps() {
+			if methodName != "__New" && HasMethod(Array2, methodName) {
+				; Check if method already exists
+				if Array.Prototype.HasOwnProp(methodName) {
+					; Skip if method exists to avoid overwriting
+					continue
+				}
+				; Add the method to Array.Prototype
+				Array.Prototype.DefineProp(methodName, {
+					Call: Array2.%methodName%
+				})
+			}
+		}
+	}
 
 	static Length() {
 		arrObj := Array()
@@ -66,6 +66,63 @@ Class Array2 {
 	static Push(v) {
 		arrObj := Array()
 		arrObj.Push(v)
+	}
+
+	/**
+	 * @description Adds one or more elements to the beginning of an array and returns the new length
+	 * @param elements* Elements to add to the beginning of the array
+	 * @returns {Integer} The new length of the array
+	 * @example
+	 * [1,2,3].Unshift(0) ; returns 4, array becomes [0,1,2,3]
+	 * [3,4,5].Unshift(1,2) ; returns 5, array becomes [1,2,3,4,5]
+	 */
+	static Unshift(elements*) {
+		
+		aNew := []
+
+		if (elements.Length == 0){
+			return this.Length
+		}
+
+		; Handle case where this method is called statically with an array as first parameter
+		if (elements.Length > 0 && Type(this) == "Class" && IsObject(elements[1]) && elements[1].HasProp("Length")) {
+			arr := elements[1]
+			elements.RemoveAt(1)
+			return this.Unshift(arr, elements*)
+		}
+		
+		for element in elements{
+			aNew.Push(element)
+		}
+
+		for item in this {
+			aNew.Push(item)
+		}
+
+		; Clear the original array
+		this.Length := 0
+		
+		for item in aNew {
+			this.Push(item)
+		}
+
+		; Return the new length
+		return this
+	}
+
+	/**
+	 * @description Alias for Unshift that can be used statically
+	 * @param arr The array to modify
+	 * @param elements* Elements to add to the beginning of the array 
+	 * @returns {Integer} The new length of the array
+	 * @example
+	 * Array2.Array_Unshift([1,2,3], 0) ; returns 4, array becomes [0,1,2,3]
+	 */
+	static Array_Unshift(arr, elements*) {
+		if (!IsObject(arr) || !arr.HasProp("Length"))
+			throw ValueError("Array_Unshift: First argument must be an array", -1)
+		
+		return arr.Unshift(elements*)
 	}
 
 	/**
@@ -582,41 +639,126 @@ Class Array2 {
         return sortedArrayObj
     }
 
-    /**
-     * Main Sort method with various options
-     * @param optionsOrCallback Optional: callback function or sorting options
-     * @param key Optional: key to sort by for object arrays
-     * @returns {Array}
-     */
-    static Sort(optionsOrCallback := "N", key?) {
-        static sizeofFieldType := 16  ; Same on both 32-bit and 64-bit
+    ; /**
+    ;  * Main Sort method with various options
+    ;  * @param optionsOrCallback Optional: callback function or sorting options
+    ;  * @param key Optional: key to sort by for object arrays
+    ;  * @returns {Array}
+    ;  */
+    ; static Sort(optionsOrCallback := "N", key?) {
+    ;     static sizeofFieldType := 16  ; Same on both 32-bit and 64-bit
         
-        if HasMethod(optionsOrCallback)
-            pCallback := CallbackCreate(this.CustomCompare.Bind(optionsOrCallback), "F Cdecl", 2)
-        else if InStr(optionsOrCallback, "N")
-            pCallback := CallbackCreate(IsSet(key) ? this.NumericCompareKey.Bind(key) : this.NumericCompare, "F CDecl", 2)
-        else if RegExMatch(optionsOrCallback, "i)C(?!0)|C1|COn")
-            pCallback := CallbackCreate(IsSet(key) ? this.StringCompareKey.Bind(key,,True) : this.StringCompare.Bind(,,True), "F CDecl", 2)
-        else if RegExMatch(optionsOrCallback, "i)C0|COff")
-            pCallback := CallbackCreate(IsSet(key) ? this.StringCompareKey.Bind(key) : this.StringCompare, "F CDecl", 2)
-        else if InStr(optionsOrCallback, "Random")
-            pCallback := CallbackCreate(this.RandomCompare, "F CDecl", 2)
-        else
-            throw ValueError("No valid options provided!", -1)
+    ;     if HasMethod(optionsOrCallback)
+    ;         pCallback := CallbackCreate(this.CustomCompare.Bind(optionsOrCallback), "F Cdecl", 2)
+    ;     else if InStr(optionsOrCallback, "N")
+    ;         pCallback := CallbackCreate(IsSet(key) ? this.NumericCompareKey.Bind(key) : this.NumericCompare, "F CDecl", 2)
+    ;     else if RegExMatch(optionsOrCallback, "i)C(?!0)|C1|COn")
+    ;         pCallback := CallbackCreate(IsSet(key) ? this.StringCompareKey.Bind(key,,True) : this.StringCompare.Bind(,,True), "F CDecl", 2)
+    ;     else if RegExMatch(optionsOrCallback, "i)C0|COff")
+    ;         pCallback := CallbackCreate(IsSet(key) ? this.StringCompareKey.Bind(key) : this.StringCompare, "F CDecl", 2)
+    ;     else if InStr(optionsOrCallback, "Random")
+    ;         pCallback := CallbackCreate(this.RandomCompare, "F CDecl", 2)
+    ;     else
+    ;         throw ValueError("No valid options provided!", -1)
         
-        ; Sort using qsort from msvcrt.dll
-        mFields := NumGet(ObjPtr(this) + (8 + (VerCompare(A_AhkVersion, "<2.1-") > 0 ? 3 : 5)*A_PtrSize), "Ptr")
-        DllCall("msvcrt.dll\qsort", "Ptr", mFields, "UInt", this.Length, "UInt", sizeofFieldType, "Ptr", pCallback, "Cdecl")
-        CallbackFree(pCallback)
+    ;     ; Sort using qsort from msvcrt.dll
+    ;     mFields := NumGet(ObjPtr(this) + (8 + (VerCompare(A_AhkVersion, "<2.1-") > 0 ? 3 : 5)*A_PtrSize), "Ptr")
+    ;     DllCall("msvcrt.dll\qsort", "Ptr", mFields, "UInt", this.Length, "UInt", sizeofFieldType, "Ptr", pCallback, "Cdecl")
+    ;     CallbackFree(pCallback)
 
-        ; Handle additional options
-        if RegExMatch(optionsOrCallback, "i)R(?!a)")
-            this.Reverse()
-        if InStr(optionsOrCallback, "U")
-            this := this.Unique()
+    ;     ; Handle additional options
+    ;     if RegExMatch(optionsOrCallback, "i)R(?!a)")
+    ;         this.Reverse()
+    ;     if InStr(optionsOrCallback, "U")
+    ;         this := this.Unique()
         
-        return this
-    }
+    ;     return this
+    ; }
+
+	/**
+	 * Sort method with support for custom comparison functions
+	 * @param {Function|String} optionsOrCallback Optional callback function or sorting options
+	 * @param {String} key Optional key for sorting object arrays
+	 * @returns {Array} The sorted array
+	 */
+		static Sort(optionsOrCallback := "N", key?) {
+			if !this.Length   ; Handle empty array case
+				return this
+
+			; If using a custom comparison function
+			if HasMethod(optionsOrCallback) {
+				return this._CustomSort(optionsOrCallback, key)
+			}
+
+			; For standard sorting options
+			if InStr(optionsOrCallback, "N") {
+				return this._NumericSort(key)
+			} else if RegExMatch(optionsOrCallback, "i)C(?!0)|C1|COn") {
+				return this._CaseSensitiveSort(key)
+			} else if RegExMatch(optionsOrCallback, "i)C0|COff") {
+				return this._CaseInsensitiveSort(key)
+			} else if InStr(optionsOrCallback, "Random") {
+				return this._RandomSort()
+			}
+
+			; Handle reverse option
+			if RegExMatch(optionsOrCallback, "i)R(?!a)") {
+				this.Reverse()
+			}
+
+			; Handle unique option
+			if InStr(optionsOrCallback, "U") {
+				this := this.Unique()
+			}
+
+			return this
+		}
+
+	static _CustomSort(compareFunc, key?) {
+		; Implementation of custom sort using bubble sort
+		n := this.Length
+		for i in Range(n - 1) {
+			for j in Range(n - i - 1) {
+				val1 := key ? this[j + 1][key] : this[j + 1]
+				val2 := key ? this[j + 2][key] : this[j + 2]
+				if (compareFunc(val1, val2) > 0) {
+					; Swap elements
+					temp := this[j + 1]
+					this[j + 1] := this[j + 2]
+					this[j + 2] := temp
+				}
+			}
+		}
+		return this
+	}
+
+	static _NumericSort(key?) {
+		; Implement numeric sort
+		return this._CustomSort((a, b) => (a > b) - (a < b), key)
+	}
+
+	static _CaseSensitiveSort(key?) {
+		; Implement case-sensitive sort
+		return this._CustomSort((a, b) => StrCompare(String(a), String(b)), key)
+	}
+
+	static _CaseInsensitiveSort(key?) {
+		; Implement case-insensitive sort
+		return this._CustomSort((a, b) => StrCompare(String(a), String(b), true), key)
+	}
+
+	static _RandomSort() {
+		; Fisher-Yates shuffle
+		n := this.Length
+		while (n > 1) {
+			k := Random(1, n)
+			n--
+			temp := this[n + 1]
+			this[n + 1] := this[k]
+			this[k] := temp
+		}
+		return this
+	}
 
 	; Helper functions for Sort method
     static CustomCompare(compareFunc, pFieldType1, pFieldType2) {

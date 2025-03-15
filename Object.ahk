@@ -4,11 +4,11 @@
 
 
 ; Modify Object prototype
-Object.Prototype.DefineProp("ToString", {Call: (this) => Object2.ToString(this)})
-Object.Prototype.DefineProp("Has", 		{Call: (this, key) => this.HasOwnProp(key)})
-Object.Prototype.DefineProp("Get", 		{Call: (this, key, default := "") => this.Has(key) ? this.%key% : default})
-Object.Prototype.DefineProp("ToArray", 	{Call: (this) => Object2.ToArray(this)})
-Object.Prototype.DefineProp("ToMap", 	{Call: (this) => Object2.ToMap(this)})
+; Object.Prototype.DefineProp("ToString", {Call: (this) => Object2.ToString(this)})
+; Object.Prototype.DefineProp("Has", 		{Call: (this, key) => this.HasOwnProp(key)})
+; Object.Prototype.DefineProp("Get", 		{Call: (this, key, default := "") => this.Has(key) ? this.%key% : default})
+; Object.Prototype.DefineProp("ToArray", 	{Call: (this) => Object2.ToArray(this)})
+; Object.Prototype.DefineProp("ToMap", 	{Call: (this) => Object2.ToMap(this)})
 
 class Object2 extends Object {
 
@@ -19,10 +19,10 @@ class Object2 extends Object {
 			if methodName != "__New" && HasMethod(Object2, methodName) {
 				; Check if method already exists
 				if Object.Prototype.HasOwnProp(methodName) {
-					; Either skip, warn, or override based on your needs
-					continue  ; Skip if method exists
+					; Skip if method exists
+					continue  
 					; Or override:
-					; Map.Prototype.DeleteProp(methodName)
+					; Object.Prototype.DeleteProp(methodName)
 				}
 				Object.Prototype.DefineProp(methodName, {
 					Call: Object2.%methodName%

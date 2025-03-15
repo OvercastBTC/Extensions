@@ -12,3 +12,9 @@ RecLibs**
 RecLibs
 # coolmultigui-data-manager-updated.ahk
 # coolmultigui-instance-updated.ahk
+(moved to Gui.ahk)_GuiReSizer.ahk.bak
+.String.ahk.swp
+cSend.ahk.bak
+Info.ahk
+Sort.ahk
+String.ahk

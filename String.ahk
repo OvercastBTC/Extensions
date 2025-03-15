@@ -163,6 +163,7 @@ class docProperties {
  * @class RTFHandler
  * @description Core RTF handling functionality with improved structure and error handling
  */
+
 ; class RTFHandler {
 ; 	static Properties := {
 ; 		FontFamily: "Times New Roman",
@@ -536,11 +537,12 @@ class plainText {
 		return DllCall("SendMessage", "Ptr", controlHwnd, "UInt", EM_PASTESPECIAL, "Ptr", format, "Ptr", 0)
 	}
 
-	static __New(text := '') {
-		this.SetPlainText(text)
-		hCtl := ControlGetFocus("A")
+	__New(text := '') {
+		hCtl := ''
+		plainText.SetPlainText(text)
+		try hCtl := ControlGetFocus("A")
 		; return this.wmPaste(hCtl)
-		return this.emPasteSpec(hCtl)
+		return plainText.emPasteSpec(hCtl)
 	}
 }
 
@@ -1027,6 +1029,11 @@ class String2 {
 		__ObjDefineProp(String.Prototype, "Length", {get:(arg)	=>String2.Length(arg)})
 		__ObjDefineProp(String.Prototype, "WLength",{get:(arg)	=>String2.WLength(arg)})
 	}
+
+	; static Send(input?){
+	; 	; (Type(this) == 'String' && IsSet(this) && this != '')
+	; 	Type(this) == 'String'? Clip.Send(this)	: Clip.Send(input)
+	; }
 
 	static MarkdownToRTF(t := this) => FormatConverter.MarkdownToRTF(this)
 	static rtf(text:=''){
@@ -2437,8 +2444,3 @@ class StringConversionTests extends TestSuite {
 ; Obj := str.ToMap(str)
 
 ; Infos(Obj.ToString())
-
-
-
-
-

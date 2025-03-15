@@ -1,7 +1,6 @@
 #Requires AutoHotkey v2+
 #Include <Includes\ObjectTypeExtensions>
 
-
 Gui.Prototype.Base := Gui2
 
 class Gui2 {
@@ -125,141 +124,9 @@ class Gui2 {
 	 * ; Different font
 	 * gui.MakeFontNicer("s10", "Arial")   
 	 */
-	; static MakeFontNicer(options := "12 Q5", nFont := "Consolas") {
-	; 	guiObj := this
-	; 	; Default settings
-	; 	size := 12
-	; 	quality := 5
-	; 	color := "1eff00"    ; Default color
-		
-	; 	; Parse options if provided
-	; 	if (options) {
-	; 		; Check for font size (s## or just ##)
-	; 		if (RegExMatch(options, "i)s?(\d+)", &match))
-	; 			size := match[1]
-			
-	; 		; Check for quality setting (Q#)
-	; 		if (RegExMatch(options, "i)Q(\d+)", &match))
-	; 			quality := match[1]
-				
-	; 		; Check for color (###### or 0x######)
-	; 		if (RegExMatch(options, "i)c([0-9a-f]{6}|0x[0-9a-f]{6})", &match))
-	; 			color := match[1]
-	; 	}
-		
-	; 	; Build font string
-	; 	fontString := Format("s{1} q{2} c{3}", size, quality, color)
-		
-	; 	; Set the font
-	; 		if (guiObj is Gui) {
-	; 		guiObj.SetFont(fontString, nFont)
-	; 	}
-		
-	; 	return this
-	; }
-	; static MakeFontNicer(options := '20', nFont := 'Consolas') {
-	; 	guiObj := this
-	; 	try RegExReplace(options, 's([\d\s]+)', '$1')
-	; 	if (guiObj is Gui) {
-	; 		guiObj.SetFont('s' options ' Q5', nFont)
-	; 	}
-	; 	return this
-	; }
-
-	; static MakeFontNicer(params*) {
-	
-	; 	; Define font characteristics as UnSet to allow setting defaults after parsing the params
-	; 	static fontName := color := quality := size := unset
-	; 	static hexNeedle := '\b[0-9A-Fa-f]+\b'
-		
-	; 	if params is Gui {
-	; 		; Infos('Beginning: ' Type(this) ' or True(1)| False(0):' (Type(this) = Gui), 10000)
-	; 		guiObj := params
-	; 	}
-
-	; 	paramsParser(parameter) {
-	; 		if (parameter is Gui){
-	; 			guiObj := parameter
-	; 		}
-	; 		if parameter ~= 'i)^s[\d]+' {
-	; 			size := SubStr(parameter, 2)  ; Remove 's' prefix
-	; 			try guiObj.setfont('s' size)
-	; 		}
-	; 		else if parameter ~= '([^q])[\d]+' {
-	; 			size := parameter
-	; 			try guiObj.setfont('s' size)
-	; 		}
-	; 		else if parameter ~= '([q])[\d]+' {
-	; 			quality := parameter
-	; 			try guiObj.setfont(quality)
-	; 		}
-	; 		else if parameter ~= 'i)^c[\w\d]+' || parameter ~= hexNeedle {
-	; 			color := parameter
-	; 			try guiObj.setfont(color)
-	; 		}
-	; 		else if !parameter ~= '([q])[\d]+' && parameter ~= 'i)[\w]+'{
-	; 			Infos('Paramter: Font Name: ' parameter)
-	; 			fontName := parameter
-	; 			try guiObj.setfont(, fontName)
-	; 		}
-	; 	}
-
-	; 	; Parse params
-	; 	for param in params {
-	; 		if param is Array {
-	; 			aParams := param.Clone()
-	; 			for cParam in aParams {
-	; 				paramsParser(cParam)
-	; 			}
-	; 		}
-	; 		if param is String {
-	; 			paramsParser(param)
-	; 		}
-	; 	}
-	
-	; 	if !IsSet(guiObj) {
-	; 		Infos('Not Set: guiObj')
-	; 		guiObj := this
-	; 		Infos('Set: guiObj = ' Type(guiObj) ' guiObj = Gui? ' (guiObj = gui))
-	; 	}
-
-	; 	if !IsSet(size) {
-	; 		Infos('Not Set: size')
-	; 		size := 20
-	; 		Infos('Set: size = ' size)
-	; 	}
-
-	; 	if !IsSet(quality) {
-	; 		Infos('Not Set: quality')
-	; 		quality := 'Q5'
-	; 		Infos('Set: quality = ' quality)
-	; 	}
-	; 	if !IsSet(color) {
-	; 		Infos('Not Set: color')
-	; 		color := 'cBlue'
-	; 		Infos('Set: color = ' color)
-	; 	}
-	; 	if !IsSet(fontName) {
-	; 		Infos('Not Set: fontName')
-	; 		fontName := 'Consolas'
-	; 		Infos('Set: fontName = ' fontName)
-	; 	}
-
-	; 	; Build font options string
-	; 	options := 's' size ' ' quality ' ' color
-
-	; 	infos(options)
-	; 	; Apply font
-	; 	if (guiObj is Gui){
-	; 		infos(options)
-	; 		super.SetFont(options, fontName)
-	; 	}
-		
-	; 	Infos('Final: Type(guiObj): ' Type(guiObj))
-	; 	return guiObj
-	; }
 
 	static MakeFontNicer(params*) {
+
 		; Define font characteristics as UnSet to allow setting defaults after parsing the params
 		static fontName := color := quality := size := unset
 		static hexNeedle := '\b[0-9A-Fa-f]+\b'
@@ -271,48 +138,7 @@ class Gui2 {
 			guiObj := params
 		}
 	
-		paramsParser(parameter) {
-			
-			if (parameter is Gui) {
-				guiObj := parameter
-				return
-			}
-			infos('parameter:' parameter)
-			; Font size with 's' prefix
-			if parameter ~= 'i)^s[\d]+' {
-				size := SubStr(parameter, 2)  ; Remove 's' prefix
-				try guiObj.SetFont('s' size)
-				return
-			}
-			; Font size without prefix
-			if parameter ~= 'i)([^q])[\d]+' {
-				size := parameter
-				try guiObj.SetFont('s' size)
-				return
-			}
-			; Quality setting
-			if parameter ~= 'i)([q])[\d]+' {
-				quality := parameter
-				try guiObj.SetFont(quality)
-				return
-			}
-			; Color handling - support both named colors and hex
-			if parameter ~= 'i)^c[\w\d]+' {
-				color := parameter  ; Direct color format (e.g., cBlue)
-				try guiObj.SetFont(color)
-				return
-			}
-			if parameter ~= hexNeedle {
-				color := 'c' parameter  ; Add 'c' prefix for hex colors
-				try guiObj.SetFont(color)
-				return
-			}
-			; Font name - anything that starts with letter and contains word chars or spaces
-			if parameter ~= '^[a-zA-Z][\w\s-]*$' {
-				fontName := parameter
-				try guiObj.SetFont(, fontName)
-			}
-		}
+		
 
 		if !IsSet(guiObj) {
 			guiObj := this
@@ -320,6 +146,7 @@ class Gui2 {
 
 		; Parse params
 		for param in params {
+			par .= param
 			if param is Array {
 				aParams := param.Clone()
 				for cParam in aParams {
@@ -331,11 +158,58 @@ class Gui2 {
 				paramsParser(param)
 			}
 		}
-		
+		; MsgBox(par)
+		paramsParser(parameter) {
+			
+			if (parameter is Gui) {
+				guiObj := parameter
+				return
+			}
+			; infos('parameter:' parameter)
+			; Font size with 's' prefix
+			if parameter ~= 'i)^s[\d]+' {
+				size := SubStr(parameter, 2)  ; Remove 's' prefix
+				try guiObj.SetFont('s' size)
+				; return
+			}
+			; Font size without prefix
+			if parameter ~= 'i)([^q])[\d]+' || parameter ~= '^[\d]+'{
+				size := parameter
+				try guiObj.SetFont('s' size)
+				; return
+			}
+			; Quality setting
+			if parameter ~= 'i)^q[\d]+' {
+				quality := parameter
+				try guiObj.SetFont(quality)
+				; return
+			}
+			; Color handling - support both named colors and hex
+			if parameter ~= 'i)^c[\w\d]+' {
+				color := parameter  ; Direct color format (e.g., cBlue)
+				try guiObj.SetFont(color)
+				; return
+			}
+			if parameter ~= hexNeedle {
+				color := 'c' parameter  ; Add 'c' prefix for hex colors
+				try guiObj.SetFont(color)
+				; return
+			}
+			; Font name - anything that starts with letter and contains word chars or spaces
+			if parameter ~= '^[a-zA-Z][\w\s-]*$' {
+				fontName := parameter
+				try guiObj.SetFont(, fontName)
+			}
+		}
+
 		; Set defaults for unset parameters
 		; if !IsSet(guiObj) {
 		; 	guiObj := this
 		; }
+		; s := q := c := f := ''
+		; IsSet(size)?size:s:='size: unset', IsSet(quality)?quality:q:='quality: unset', IsSet(color)?color:c:='color: unset', IsSet(fontName)?fontName:f:='size: unset'
+		; MsgBox(par '`n' s ' ' q ' ' c ' ' f)
+		
 		if !IsSet(size) {
 			size := 20
 		}
@@ -351,16 +225,17 @@ class Gui2 {
 	
 		; Build font options string
 		options := 's' size ' ' quality ' ' color
-		Infos('options: ' options)
+		; Infos('options: ' options)
 		; Apply font settings based on context
 		if (guiObj is Gui) {
-			Infos('I am a Gui')
+			; Infos('I am a Gui')
+			; ToolTip('I am a ' Type(guiObj))
 			guiObj.SetFont(options, fontName)
 		}
-		else if Type(guiObj) = "Class" {
-			Infos('I am a Class')
-			guiObj.SetFont(options, fontName)
-		}
+		; else if Type(guiObj) = "Class" {
+		; 	; Infos('I am a Class')
+		; 	guiObj.SetFont(options, fontName)
+		; }
 		
 		return guiObj
 	}
@@ -1073,7 +948,7 @@ class Gui2 {
 			toolbarH := btnH + margin*2
 			x := margin
 			y := margin
-			
+
 			; Bold
 			boldBtn := guiObj.AddButton(Format("x{1} y{2} w{3} h{4}", x, y, btnW, btnH), "B")
 			x += btnW + margin
@@ -1081,14 +956,14 @@ class Gui2 {
 			; Italic
 			italicBtn := guiObj.AddButton(Format("x{1} y{2} w{3} h{4}", x, y, btnW, btnH), "I")
 			x += btnW + margin
-			
+
 			; Underline 
 			underBtn := guiObj.AddButton(Format("x{1} y{2} w{3} h{4}", x, y, btnW, btnH), "U")
 			x += btnW + margin
-			
+
 			; Strikethrough
 			strikeBtn := guiObj.AddButton(Format("x{1} y{2} w{3} h{4}", x, y, btnW, btnH), "S")
-			
+
 			; Position RichEdit below toolbar
 			options := "x" margin " y" (y + btnH + margin) " " options
 		}
@@ -1100,7 +975,7 @@ class Gui2 {
 		
 		; ; Create RichEdit control
 		; reObj := RichEdit(this, options)
-		reObj.SetFont({Name: "Times New Roman", Size: 11})
+		reObj.SetFont({Name: "Times New Roman", Size: 9})
 		; Add GuiReSizer properties after creating RichEdit
 		reObj.GetPos(&xPos, &yPos, &wGui, &hGui)
 
@@ -1240,500 +1115,881 @@ class Gui2 {
 		return this
 	}
 }
-
-; class CleanInputBox extends Gui {
-
-; 	; Width     := Round(A_ScreenWidth  / 1920 * 1200)
-; 	Width     := Round(A_ScreenWidth  / 3)
-; 	TopMargin := Round(A_ScreenHeight / 1080 * 800)
-
-; 	; DarkMode(BackgroundColor:='') {
-; 	; 	Gui2.DarkMode(this, BackgroundColor)
-; 	; 	return this
-; 	; }
-
-; 	; ; MakeFontNicer(fontSize := 15) {
-; 	; MakeFontNicer(fontParams*) {
-; 	; 	Gui2.MakeFontNicer(fontParams)
-; 	; 	return this
-; 	; }
-
-; 	__New() {
-; 		cibGui := Gui('AlwaysOnTop -Caption +Border')
-; 		super.__New('AlwaysOnTop -Caption +Border')
-; 		super.DarkMode()
-; 		super.MakeFontNicer('s10', 'q3', 'cRed')
-; 		this.MarginX := 0
-
-; 		this.InputField := this.AddEdit('x0 Center -E0x200 Background' this.BackColor ' w' this.Width)
-
-; 		this.Input := ''
-; 		this.isWaiting := true
-; 		this.RegisterHotkeys()
-; 	}
-
-; 	Show() => (super.Show('y' this.TopMargin ' w' this.Width), this)
-
-; 	/**
-; 	 * Occupy the thread until you type in your input and press
-; 	 * Enter, returns this input
-; 	 * @returns {String}
-; 	 */
-; 	WaitForInput() {
-; 		this.Show()
-; 		while this.isWaiting {
-; 		}
-; 		return this.Input
-; 	}
-
-; 	SetInput() {
-; 		this.Input := this.InputField.Text
-; 		this.isWaiting := false
-; 		this.Finish()
-; 	}
-
-; 	SetCancel() {
-; 		this.isWaiting := false
-; 		this.Finish()
-; 	}
-
-; 	RegisterHotkeys() {
-; 		HotIfWinactive('ahk_id ' this.Hwnd)
-; 		Hotkey('Enter', (*) => this.SetInput(), 'On')
-; 		Hotkey('CapsLock', (*) => this.SetCancel())
-; 		this.OnEvent('Escape', (*) => this.SetCancel())
-; 	}
-
-; 	Finish() {
-; 		HotIfWinactive('ahk_id ' this.Hwnd)
-; 		Hotkey('Enter', 'Off')
-; 		this.Minimize()
-; 		this.Destroy()
-; 	}
-; }
-
 ; ---------------------------------------------------------------------------
+class CheckBoxManager {
+	/************************************************************************
+	* @description Stores found checkboxes and their states
+	***********************************************************************/
+	checkboxes := []
+	currentIndex := 0
 
-; class CleanInputBox {
-;     ; Static properties (similar to Infos)
-;     static Width := Round(A_ScreenWidth / 3)
-;     static TopMargin := Round(A_ScreenHeight / 1080 * 800)
-;     static fontSize := 12
-;     static quality := 5
-;     static color := 'Blue'
-
-;     ; Instance properties
-;     gui := ""
-;     InputField := ""
-;     Input := ""
-;     isWaiting := true
-
-;     __New() {
-;         ; Create the GUI without inheritance
-;         this.gui := Gui('+AlwaysOnTop -Caption +Border')
-        
-;         ; Apply styling (similar to Infos pattern)
-;         this.DarkMode()
-;         this.MakeFontNicer()
-        
-;         ; Setup GUI properties
-;         this.gui.MarginX := 0
-
-;         ; Add input field
-;         this.InputField := this.gui.AddEdit('x0 Center -E0x200 Background' this.gui.BackColor ' w' CleanInputBox.Width)
-
-;         ; Setup event handlers
-;         this.RegisterHotkeys()
-;     }
-
-;     /**
-;      * Apply dark mode styling to the GUI
-;      * @returns {CleanInputBox} Instance for chaining
-;      */
-;     DarkMode() {
-;         this.gui.BackColor := '0xA2AAAD'
-;         return this
-;     }
-
-;     /**
-;      * Apply font styling to the GUI
-;      * @returns {CleanInputBox} Instance for chaining
-;      */
-;     MakeFontNicer() {
-;         this.gui.SetFont('s' CleanInputBox.fontSize ' q' CleanInputBox.quality ' c' CleanInputBox.color, 'Consolas')
-;         return this
-;     }
-
-;     /**
-;      * Show the input box GUI
-;      * @returns {CleanInputBox} Instance for chaining
-;      */
-;     Show() {
-;         this.gui.Show('y' CleanInputBox.TopMargin ' w' CleanInputBox.Width)
-;         return this
-;     }
-
-;     /**
-;      * Wait for user input and return the result
-;      * @returns {String} User input or empty string if cancelled
-;      */
-;     WaitForInput() {
-;         this.Show()
-;         while this.isWaiting {
-;             Sleep(10)
-;         }
-;         return this.Input
-;     }
-
-;     /**
-;      * Handle the input submission
-;      */
-;     SetInput() {
-;         this.Input := this.InputField.Text
-;         this.isWaiting := false
-;         this.Finish()
-;     }
-
-;     /**
-;      * Handle cancellation
-;      */
-;     SetCancel() {
-;         this.isWaiting := false
-;         this.Finish()
-;     }
-
-;     /**
-;      * Register hotkeys for the input box
-;      */
-;     RegisterHotkeys() {
-;         HotIfWinactive('ahk_id ' this.gui.Hwnd)
-;         Hotkey('Enter', (*) => this.SetInput(), 'On')
-;         Hotkey('CapsLock', (*) => this.SetCancel())
-;         this.gui.OnEvent('Escape', (*) => this.SetCancel())
-;     }
-
-;     /**
-;      * Clean up and close the input box
-;      */
-;     Finish() {
-;         HotIfWinactive('ahk_id ' this.gui.Hwnd)
-;         Hotkey('Enter', 'Off')
-;         this.gui.Minimize()
-;         this.gui.Destroy()
-;     }
-; }
-
-; ---------------------------------------------------------------------------
-
-class CleanInputBox {
-
-    ; Default settings
-    static Defaults := {
-        fontSize: 12,
-        quality: 5,
-        color: 'Blue',
-        font: 'Consolas',
-        width: Round(A_ScreenWidth / 3),
-        topMargin: Round(A_ScreenHeight / 1080 * 800),
-        backgroundColor: '0xA2AAAD'
-    }
-
-    ; Instance properties
-    gui := ""
-    InputField := ""
-    Input := ""
-    isWaiting := true
-    settings := Map()
-
-    /**
-     * Handle direct calls to the class (e.g., CleanInputBox())
-     * @param {String} name Method name (empty for direct calls)
-     * @param {Array} params Parameters passed to the call
-     * @returns {String} User input or empty string if cancelled
-     */
-    static __Call(name, params) {
-        if (name = "") {  ; Called directly as a function
-            instance := CleanInputBox(params*)
-            return instance.WaitForInput()
-        }
-    }
-
-    __New(p1 := "", p2 := "", p3 := "") {
-        ; Parse parameters into settings
-        this.settings := this.ParseParams(p1, p2, p3)
-        
-        ; Create GUI
-        this.gui := Gui('+AlwaysOnTop -Caption +Border')
-        
-        ; Apply styling using Gui2 methods
-        this.gui.DarkMode(this.settings.Get('backgroundColor', CleanInputBox.Defaults.backgroundColor))
-        
-        ; Set font
-        this.gui.SetFont(
-            's' this.settings.Get('fontSize', CleanInputBox.Defaults.fontSize) 
-            ' q' this.settings.Get('quality', CleanInputBox.Defaults.quality) 
-            ' c' this.settings.Get('color', CleanInputBox.Defaults.color),
-            this.settings.Get('font', CleanInputBox.Defaults.font)
-        )
-        
-        ; Setup GUI properties
-        this.gui.MarginX := 0
-
-        ; Add input field
-        this.InputField := this.gui.AddEdit(
-            'x0 Center -E0x200 Background' this.gui.BackColor 
-            ' w' this.settings.Get('width', CleanInputBox.Defaults.width)
-        )
-
-        ; Setup event handlers
-        this.RegisterHotkeys()
-
-		; this.WaitForInput()
-    }
-
-	static WaitForInput(){
-		return CleanInputBox().WaitForInput()
-	}
-
-    ParseParams(p1 := "", p2 := "", p3 := "") {
-        settings := Map()
-        
-        ; If first parameter is object/map, use as settings
-        if IsObject(p1) {
-            for key, value in (p1 is Map ? p1 : p1.OwnProps()) {
-                settings[key] := value
-            }
-            return settings
-        }
-
-        ; Otherwise only add parameters that were actually provided
-        if (p1 != "")
-            settings['fontSize'] := p1
-        if (p2 != "")
-            settings['color'] := (SubStr(p2, 1, 1) = 'c' ? p2 : 'c' p2)
-        if (p3 != "")
-            settings['quality'] := p3
-            
-        return settings
-    }
-
-    WaitForInput() {
-        this.gui.Show('y' this.settings.Get('topMargin', CleanInputBox.Defaults.topMargin) 
-            ' w' this.settings.Get('width', CleanInputBox.Defaults.width))
-            
-        while this.isWaiting {
-            Sleep(10)
-        }
-        return this.Input
-    }
-
-    RegisterHotkeys() {
-        HotIfWinactive('ahk_id ' this.gui.Hwnd)
-        Hotkey('Enter', (*) => (this.Input := this.InputField.Text, this.isWaiting := false, this.Finish()), 'On')
-        Hotkey('CapsLock', (*) => (this.isWaiting := false, this.Finish()))
-        this.gui.OnEvent('Escape', (*) => (this.isWaiting := false, this.Finish()))
-    }
-
-    Finish() {
-        HotIfWinactive('ahk_id ' this.gui.Hwnd)
-        Hotkey('Enter', 'Off')
-        this.gui.Minimize()
-        this.gui.Destroy()
-    }
-}
-
-class Infos {
-	static fontSize := 8
-	static distance := 4
-	static unit := A_ScreenDPI / 144
-	static guiWidth := Infos.fontSize * Infos.unit * Infos.distance
-	static maximumInfos := Floor(A_ScreenHeight / Infos.guiWidth)
-	static spots := Infos._GeneratePlacesArray()
-	static maxNumberedHotkeys := 12
-	static maxWidthInChars := 110
-
-	__text := ''
-	text {
-		get => this.__text
-		set => this.__text := value
-	}
-
-	__New(text, autoCloseTimeout := 0) {
-		this.gui := Gui('AlwaysOnTop -Caption +ToolWindow')
-		this.autoCloseTimeout := autoCloseTimeout
-		this.text := text
-		this.spaceIndex := 0
-		if !this._GetAvailableSpace() {
-			this._StopDueToNoSpace()
-			return
+	/************************************************************************
+	* @description Find and cache all checkboxes on the page
+	* @example checkboxManager.FindAllCheckboxes()
+	***********************************************************************/
+	FindAllCheckboxes() {
+		this.checkboxes := []
+		try {
+			expRpt := UIA.ElementFromChromium(' - Google Chrome')
+			if !expRpt
+				throw Error("Chrome window not found")
+			
+			; Find all checkboxes
+			; foundBoxes := expRpt.FindAll({Type: '50002', LocalizedType: "check box"})
+			foundBoxes := expRpt.FindAll({LocalizedType: "check box"})
+			for box in foundBoxes{
+				this.checkboxes.Push(box)
+			}
+			return this.checkboxes.Length
+		} catch Error as e {
+			throw Error("Failed to find checkboxes: " e.Message)
 		}
-		this._CreateGui()
-		this._SetupHotkeysAndEvents()
-		this._SetupAutoclose()
-		this._Show()
 	}
 
-	_CreateGui() {
-		this.DarkMode()
-		this.MakeFontNicer(Infos.fontSize ' cblue')
-		this.NeverFocusWindow()
-		this.gcText := this.gui.AddText(, this._FormatText())
-		return this
-	}
-
-	DarkMode(BackgroundColor := '') {
-		this.gui.BackColor := BackgroundColor = '' ? '0xA2AAAD' : BackgroundColor
-		return this
-	}
-
-	MakeFontNicer(fontSize := 20) {
-		this.gui.SetFont('s' fontSize ' c0000ff', 'Consolas')
-		return this
-	}
-
-	NeverFocusWindow() {
-		WinSetExStyle('+0x08000000', this.gui)  ; WS_EX_NOACTIVATE
-		return this
-	}
-
-	static DestroyAll(*) {
-		for index, infoObj in Infos.spots {
-			if (infoObj is Infos) {
-				infoObj.Destroy()
+	/************************************************************************
+	* @description Process the next unchecked checkbox in the list
+	* @example checkboxManager.ProcessNextCheckbox()
+	***********************************************************************/
+	ProcessNextCheckbox() {
+		if (this.checkboxes.Length = 0)
+			this.FindAllCheckboxes()
+		
+		if (this.checkboxes.Length = 0)
+			throw Error("No checkboxes found")
+		
+		loop this.checkboxes.Length {
+			this.currentIndex++
+			if (this.currentIndex > this.checkboxes.Length)
+				this.currentIndex := 1
+			
+			currentBox := this.checkboxes[this.currentIndex]
+			if (!this.IsCheckboxChecked(currentBox)) {
+				this.FocusAndCheck(currentBox)
+				return true
 			}
 		}
+		
+		return false ; No unchecked boxes found
 	}
 
-	static _GeneratePlacesArray() {
-		availablePlaces := []
-		loop Infos.maximumInfos {
-			availablePlaces.Push(false)
-		}
-		return availablePlaces
-	}
-
-	ReplaceText(newText) {
-		if !this.gui.Hwnd {
-			return Infos(newText, this.autoCloseTimeout)
-		}
-
-		if StrLen(newText) = StrLen(this.gcText.Text) {
-			this.gcText.Text := newText
-			this._SetupAutoclose()
-			return this
-		}
-
-		Infos.spots[this.spaceIndex] := false
-		return Infos(newText, this.autoCloseTimeout)
-	}
-
-	Destroy(*) {
-		if (!this.gui.Hwnd) {
+	/************************************************************************
+	* @description Check if a checkbox is currently checked
+	* @example if !checkboxManager.IsCheckboxChecked(checkbox)
+	***********************************************************************/
+	IsCheckboxChecked(checkbox) {
+		try {
+			return checkbox.GetPropertyValue(UIA.Property.ToggleToggleState)
+		} catch {
 			return false
 		}
-		this.RemoveHotkeys()
-		this.gui.Destroy()
-		if (this.spaceIndex > 0) {
-			Infos.spots[this.spaceIndex] := false
-		}
-		return true
 	}
 
-	RemoveHotkeys() {
-		hotkeys := ['Escape', '^Escape']
-		if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
-			hotkeys.Push('F' this.spaceIndex)
+	/************************************************************************
+	* @description Focus on a checkbox and check it
+	* @example checkboxManager.FocusAndCheck(checkbox)
+	***********************************************************************/
+	FocusAndCheck(checkbox) {
+		try {
+			checkbox.ScrollIntoView()
+			Sleep(100)  ; Give UI time to update
+			checkbox.SetFocus()
+			Sleep(100)
+			
+			if (!this.IsCheckboxChecked(checkbox))
+				checkbox.Click()
+			
+			return true
+		} catch Error as e {
+			throw Error("Failed to check checkbox: " e.Message)
 		}
-		HotIfWinExist('ahk_id ' this.gui.Hwnd)
-		for hk in hotkeys {
-			try Hotkey(hk, 'Off')
-		}
-		HotIf()
 	}
-
-	_FormatText() {
-		ftext := String(this.text)
-		lines := ftext.Split('`n')
-		; lines := StrSplit(ftext, '`n')
-		if lines.Length > 1 {
-			ftext := this._FormatByLine(lines)
-		}
-		else {
-			ftext := this._LimitWidth(ftext)
-		}
-
-		return String(this.text).Replace('&', '&&')
-		; return StrReplace(ftext,'&', '&&')
-	}
-
-	_FormatByLine(lines) {
-		newLines := []
-		for index, line in lines {
-			newLines.Push(this._LimitWidth(line))
-		}
-		ftext := ''
-		for index, line in newLines {
-			if index = newLines.Length {
-				ftext .= line
-				break
+}
+; ---------------------------------------------------------------------------
+/**
+ * @class DisplaySettings
+ * @description Manages display settings for various GUI elements
+ */
+class DisplaySettings {
+	; Store all settings maps
+	static Settings := Map(
+		"Base", {
+			; Common base settings for all displays
+			Font: {
+				Name: "Consolas",
+				Size: 10,
+				Quality: 5,
+				Color: "cBlue"
+			},
+			Colors: {
+				Background: "cBlack",
+				Text: "000000"
+			},
+			Styles: "+AlwaysOnTop -Caption +ToolWindow",
+			Margins: {
+				X: 0,
+				Y: 0
+			},
+			Grid: {
+				Enabled: true,
+				Columns: 3,
+				Rows: 10,
+				Spacing: 10
 			}
-			ftext .= line '`n'
+		},
+		"Infos", {
+			; Infos-specific settings
+			Font: {
+				Size: 8,
+				Quality: 5
+			},
+			Metrics: {
+				Distance: 4,
+				Unit: A_ScreenDPI / 144
+			},
+			Position: {
+				Mode: "Grid",  ; "Grid", "Fixed", "Center"
+				Column: 1,     ; Single column for traditional Infos
+				MaxRows: Floor(A_ScreenHeight / (8 * (A_ScreenDPI / 144) * 4))
+			},
+			Limits: {
+				MaxNumberedHotkeys: 12,
+				MaxWidthInChars: 110
+			}
+		},
+		"CleanInputBox", {
+			; CleanInputBox-specific settings
+			Size: {
+				Width: Round(A_ScreenWidth / 3),
+				MinHeight: 30
+			},
+			Position: {
+				Mode: "Center",
+				TopMargin: Round(A_ScreenHeight / 1080 * 800)
+			},
+			Font: {
+				Size: 12
+			},
+			Input: {
+				MinChars: 2,
+				MaxMatches: 5,
+				ShowMatchList: true
+			}
+		},
+		"InputBox", {
+			; Future InputBox-specific settings
+			Size: {
+				Width: Round(A_ScreenWidth / 4),
+				Height: "Auto"
+			},
+			Position: {
+				Mode: "Fixed",
+				X: 100,
+				Y: 100
+			},
+			Font: {
+				Size: 11
+			}
 		}
-		return ftext
+	)
+
+	/**
+	 * Get settings for a specific display type
+	 * @param {String} type The display type ("Infos", "CleanInputBox", etc)
+	 * @returns {Object} Merged settings
+	 */
+	static GetSettings(type) {
+		; Start with base settings
+		mergedSettings := this.CloneMap(this.Settings["Base"])
+		
+		; Merge with type-specific settings if they exist
+		if (this.Settings.Has(type)) {
+			mergedSettings := this.MergeSettings(mergedSettings, this.Settings[type])
+		}
+
+		return mergedSettings
 	}
 
-	_LimitWidth(ltext) {
-		if StrLen(ltext) < Infos.maxWidthInChars {
-			return ltext
+	/**
+	 * Update settings for a display type
+	 * @param {String} type The display type
+	 * @param {Object} newSettings New settings to apply
+	 */
+	static UpdateSettings(type, newSettings) {
+		if (this.Settings.Has(type)) {
+			this.Settings[type] := this.MergeSettings(this.Settings[type], newSettings)
+		} else {
+			this.Settings[type] := newSettings
 		}
-		insertions := 0
-		while (insertions + 1) * Infos.maxWidthInChars + insertions < StrLen(ltext) {
-			insertions++
-			ltext := ltext.Insert('`n', insertions * Infos.maxWidthInChars + insertions)
-		}
-		return ltext
 	}
 
-	_GetAvailableSpace() {
-		for index, isOccupied in Infos.spots {
-			if !isOccupied {
-				this.spaceIndex := index
-				Infos.spots[index] := this
-				return true
+	/**
+	 * Deep clone a Map or Object
+	 * @param {Map|Object} source Source to clone
+	 * @returns {Map|Object} Cloned copy
+	 */
+	static CloneMap(source) {
+		if (Type(source) = "Map") {
+			result := Map()
+			for key, value in source {
+				result[key] := IsObject(value) ? this.CloneMap(value) : value
+			}
+			return result
+		} else if (IsObject(source)) {
+			result := {}
+			for key, value in source.OwnProps() {
+				result.%key% := IsObject(value) ? this.CloneMap(value) : value
+			}
+			return result
+		}
+		return source
+	}
+
+	/**
+	 * Deep merge settings objects
+	 * @param {Object} target Target object
+	 * @param {Object} source Source object
+	 * @returns {Object} Merged result
+	 */
+	static MergeSettings(target, source) {
+		result := this.CloneMap(target)
+		
+		if (Type(source) = "Map") {
+			for key, value in source {
+				if (Type(value) = "Map" || IsObject(value)) {
+					if (result.Has(key)) {
+						result[key] := this.MergeSettings(result[key], value)
+					} else {
+						result[key] := this.CloneMap(value)
+					}
+				} else {
+					result[key] := value
+				}
+			}
+		} else if (IsObject(source)) {
+			for key, value in source.OwnProps() {
+				if (IsObject(value)) {
+					if (result.HasProp(key)) {
+						result.%key% := this.MergeSettings(result.%key%, value)
+					} else {
+						result.%key% := this.CloneMap(value)
+					}
+				} else {
+					result.%key% := value
+				}
+			}
+		}
+		
+		return result
+	}
+
+	/**
+	 * Calculate derived settings (those that depend on other settings)
+	 * @param {String} type Display type
+	 * @param {Object} settings Base settings object
+	 * @returns {Object} Settings with calculated values
+	 */
+	static CalculateDerivedSettings(type, settings) {
+		derived := this.CloneMap(settings)
+		
+		switch type {
+			case "Infos":
+				; Calculate GUI width based on font metrics
+				derived.guiWidth := derived.Font.Size 
+					* derived.Metrics.Unit 
+					* derived.Metrics.Distance
+				
+				; Calculate maximum instances based on screen height
+				derived.maxInstances := Floor(A_ScreenHeight / derived.guiWidth)
+				
+			case "CleanInputBox":
+				; Calculate centered position
+				derived.Position.X := (A_ScreenWidth - derived.Size.Width) / 2
+				derived.Position.Y := derived.Position.TopMargin
+		}
+		
+		return derived
+	}
+}
+; ---------------------------------------------------------------------------
+/**
+ * @class InfoBox
+ * @description Base class for creating positioned info boxes with grid support
+ */
+
+/**
+ * @class InfoBox
+ * @description Core GUI creation and management functionality
+ */
+class InfoBox {
+	static Instances := Map()
+	static Grid := Map()
+
+	__New(settings) {
+		this.settings := settings
+		; this.InitializeGrid()
+		this.position := this.GetPosition()
+		
+		if (!this.position) {
+			return
+		}
+
+		this.gui := Gui(this.settings.Styles)
+		this.SetupGui()
+		InfoBox.Instances[this.gui.Hwnd] := this
+	}
+
+	InitializeGrid() {
+		if (this.settings.Position.Mode = "Grid") {
+			gridId := this.settings.Grid.ID
+
+			; Initialize grid if not exists
+			if (!InfoBox.Grid.Has(gridId)) {
+				InfoBox.Grid[gridId] := Array(this.settings.Grid.Rows)
+				loop this.settings.Grid.Rows {
+					row := A_Index
+					InfoBox.Grid[gridId][row] := Array(this.settings.Grid.Columns)
+					loop this.settings.Grid.Columns {
+						InfoBox.Grid[gridId][row][A_Index] := false
+					}
+				}
+			}
+		}
+	}
+
+	SetupGui() {
+		; Apply base settings
+		this.gui.MarginX := this.settings.Margins.X
+		this.gui.MarginY := this.settings.Margins.Y
+		this.gui.BackColor := this.settings.Colors.Background
+
+		; Set font
+		this.gui.SetFont(
+			"s" this.settings.Font.Size " q" this.settings.Font.Quality 
+			" " this.settings.Font.Color,
+			this.settings.Font.Name
+		)
+	}
+
+	AddControl(type, options, text := "") {
+		control := this.gui.Add(type, options, text)
+		return control
+	}
+
+	GetPosition() {
+		; if (this.settings.Position.Mode = "Grid") {
+		; 	return this.GetGridPosition()
+		; } else if (this.settings.Position.Mode = "Center") {
+		; 	return this.GetCenteredPosition()
+		; }
+		; return {
+		; 	x: this.settings.Position.X,
+		; 	y: this.settings.Position.Y,
+		; 	row: 0,
+		; 	col: 0
+		; }
+		return this.GetCenteredPosition()
+	}
+
+	GetGridPosition() {
+		gridId := this.settings.Grid.ID
+		grid := InfoBox.Grid[gridId]
+		
+		loop this.settings.Grid.Rows {
+			row := A_Index
+			loop this.settings.Grid.Columns {
+				col := A_Index
+				if (!grid[row][col]) {
+					grid[row][col] := true
+					return {
+						x: (col - 1) * (this.settings.Size.Width + this.settings.Grid.Spacing),
+						y: (row - 1) * (this.settings.Size.Height + this.settings.Grid.Spacing),
+						row: row,
+						col: col
+					}
+				}
 			}
 		}
 		return false
 	}
 
-	_CalculateYCoord() => Round(this.spaceIndex * Infos.guiWidth - Infos.guiWidth)
-
-	_StopDueToNoSpace() => this.Destroy()
-
-	_SetupHotkeysAndEvents() {
-		HotIfWinExist('ahk_id ' this.gui.Hwnd)
-		Hotkey('Escape', (*) => this.Destroy(), 'On')
-		Hotkey('^Escape', (*) => Infos.DestroyAll(), 'On')
-		if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
-			Hotkey('F' this.spaceIndex, (*) => this.Destroy(), 'On')
-		}
-		HotIf()
-		this.gcText.OnEvent('Click', (*) => this.Destroy())
-		this.gui.OnEvent('Close', (*) => this.Destroy())
-	}
-
-	_SetupAutoclose() {
-		if this.autoCloseTimeout {
-			SetTimer(() => this.Destroy(), -this.autoCloseTimeout)
+	GetCenteredPosition() {
+		return {
+			x: (A_ScreenWidth - this.settings.Size.Width) / 2,
+			y: this.settings.Position.HasProp("TopMargin") ? this.settings.Position.TopMargin : (A_ScreenHeight / 3),
+			row: 0,
+			col: 0
 		}
 	}
 
-	_Show() => this.gui.Show('AutoSize NA x0 y' this._CalculateYCoord())
+	Show(options := "") {
+		if (this.position) {
+			showOptions := options ? options 
+				: Format("x{1} y{2} AutoSize", this.position.x, this.position.y)
+			this.gui.Show(showOptions)
+		}
+	}
+
+	Hide() {
+		this.gui.Hide()
+	}
+
+	Destroy() {
+		; Release grid position if using grid
+		if (this.position && this.settings.Position.Mode = "Grid") {
+			gridId := this.settings.Grid.ID
+			InfoBox.Grid[gridId][this.position.row][this.position.col] := false
+		}
+
+		; Remove from instances
+		InfoBox.Instances.Delete(this.gui.Hwnd)
+		
+		; Destroy GUI
+		this.gui.Destroy()
+	}
+
+	static DestroyAll() {
+		for hwnd, instance in InfoBox.Instances.Clone() {
+			instance.Destroy()
+		}
+	}
 }
+; ---------------------------------------------------------------------------
 
+/**
+ * @class Infos
+ * @description Information display box with grid-based positioning
+ */
+; class Infos {
+; 	static __New() {
+; 		; Calculate basic metrics
+; 		unit := A_ScreenDPI / 144
+; 		fontSize := 8
+; 		distance := 4
+; 		width := fontSize * unit * distance
 
+; 		; Initialize settings
+; 		this.Settings := {
+; 			Grid: {
+; 				ID: "Infos",
+; 				Enabled: true,
+; 				Columns: 1,
+; 				Rows: Floor(A_ScreenHeight / (fontSize * 2)),
+; 				Spacing: 5
+; 			},
+; 			Position: {
+; 				; Mode: "Grid",
+; 				X: 0,
+; 				Y: 0
+; 			},
+; 			Size: {
+; 				Width: width,
+; 				Height: fontSize * 2
+; 			},
+; 			Font: {
+; 				Name: "Consolas",
+; 				Size: fontSize,
+; 				Quality: 5,
+; 				Color: "cBlue"
+; 			},
+; 			Colors: {
+; 				Background: "0xA2AAAD",
+; 				Text: "000000"
+; 			},
+; 			Margins: {
+; 				X: 0,
+; 				Y: 0
+; 			},
+; 			Styles: "+AlwaysOnTop -Caption +ToolWindow",
+; 			Limits: {
+; 				MaxNumberedHotkeys: 12,
+; 				MaxWidthInChars: 110
+; 			}
+; 		}
+; 	}
 
+; 	__text := ""
+; 	text {
+; 		get => this.__text
+; 		set => this.__text := value
+; 	}
+
+; 	__New(text, autoCloseTimeout := 0) {
+; 		this.text := text
+; 		this.timeout := autoCloseTimeout
+; 		this.box := InfoBox(Infos.Settings)
+		
+; 		if (this.box) {
+; 			this.CreateContent()
+; 			this.SetupEvents()
+; 			this.Show()
+
+; 			if (this.timeout > 0) {
+; 				SetTimer(() => this.Destroy(), -this.timeout)
+; 			}
+; 		}
+; 	}
+
+; 	CreateContent() {
+; 		this.control := this.box.AddControl("Text", "Center", this._FormatText())
+; 	}
+
+; 	_FormatText() {
+; 		ftext := String(this.text)
+; 		lines := StrSplit(ftext, "`n")
+		
+; 		if (lines.Length > 1) {
+; 			ftext := this._FormatByLine(lines)
+; 		} else {
+; 			ftext := this._LimitWidth(ftext)
+; 		}
+
+; 		return StrReplace(ftext, "&", "&&")
+; 	}
+
+; 	_FormatByLine(lines) {
+; 		newLines := []
+; 		for line in lines {
+; 			newLines.Push(this._LimitWidth(line))
+; 		}
+; 		return newLines.Join("`n")
+; 	}
+
+; 	_LimitWidth(text) {
+; 		if (StrLen(text) < Infos.Settings.Limits.MaxWidthInChars) {
+; 			return text
+; 		}
+		
+; 		insertions := 0
+; 		while ((insertions + 1) * Infos.Settings.Limits.MaxWidthInChars + insertions) < StrLen(text) {
+; 			insertions++
+; 			text := text.Insert("`n", insertions * Infos.Settings.Limits.MaxWidthInChars + insertions)
+; 		}
+; 		return text
+; 	}
+
+; 	SetupEvents() {
+; 		; Click to close
+; 		this.control.OnEvent("Click", (*) => this.Destroy())
+		
+; 		; Function key hotkeys if in range
+; 		if (this.box.position.row > 0 && this.box.position.row <= Infos.Settings.Limits.MaxNumberedHotkeys) {
+; 			HotIfWinActive("ahk_id " this.box.gui.Hwnd)
+; 			Hotkey("F" this.box.position.row, (*) => this.Destroy())
+; 		}
+; 	}
+
+; 	Show() => this.box.Show()
+; 	Destroy() => this.box.Destroy()
+; 	static DestroyAll() => InfoBox.DestroyAll()
+; }
+
+/**
+ * @class CleanInputBox
+ * @description Clean input box with centered positioning
+ */
+/*
+class CleanInputBox {
+	static __New() {
+		; Initialize settings
+		this.Settings := {
+			Grid: {
+				ID: "CleanInputBox",
+				Enabled: false,
+				Columns: 1,
+				Rows: 1,
+				Spacing: 10
+			},
+			Position: {
+				Mode: "Center",
+				TopMargin: Round(A_ScreenHeight / 1080 * 800)
+			},
+			Size: {
+				Width: Round(A_ScreenWidth / 3),
+				Height: 30
+			},
+			Font: {
+				Name: "Consolas",
+				Size: 12,
+				Quality: 5,
+				Color: "cBlue"
+			},
+			Colors: {
+				Background: "0xA2AAAD",
+				Text: "000000"
+			},
+			Margins: {
+				X: 0,
+				Y: 0
+			},
+			Styles: "+AlwaysOnTop -Caption +ToolWindow",
+			Input: {
+				MinChars: 2,
+				MaxMatches: 5,
+				ShowMatchList: true
+			}
+		}
+	}
+
+	Input := ""
+	IsWaiting := true
+
+	__New(suggestions := []) {
+		this.suggestions := suggestions
+		this.box := InfoBox(CleanInputBox.Settings)
+		
+		if (this.box) {
+			this.CreateContent()
+			this.SetupEvents()
+			this.Show()
+		}
+	}
+
+	CreateContent() {
+		this.control := this.box.AddControl("Edit", 
+			"x0 Center -E0x200 w" this.box.settings.Size.Width)
+
+		if (this.suggestions.Length > 0) {
+			AutoComplete.Enhance(this.control, this.suggestions, {
+				MaxMatches: this.box.settings.Input.MaxMatches,
+				MinChars: this.box.settings.Input.MinChars,
+				ShowMatchList: this.box.settings.Input.ShowMatchList
+			})
+		}
+	}
+
+	SetupEvents() {
+		HotIfWinActive("ahk_id " this.box.gui.Hwnd)
+		Hotkey("Enter", (*) => this.SetInput())
+		Hotkey("CapsLock", (*) => this.SetCancel())
+	}
+
+	SetInput() {
+		this.Input := this.control.Text
+		this.IsWaiting := false
+		this.Destroy()
+	}
+
+	SetCancel() {
+		this.IsWaiting := false
+		this.Destroy()
+	}
+
+	Show() => this.box.Show()
+	Destroy() => this.box.Destroy()
+
+	WaitForInput() {
+		while this.IsWaiting {
+			Sleep(10)
+		}
+		return this.Input
+	}
+
+	static WaitForInput() {
+		inputBox := CleanInputBox()
+		return inputBox.WaitForInput()
+	}
+}
+*/
 ; Info(text, timeout?) => Infos(text, timeout ?? 2000)
 Info(text, timeout?) => Infos(text, timeout ?? 10000)
+
+/**
+ * @class UnifiedDisplayManager
+ * @description Manages stacked GUI displays with consistent positioning and styling
+ * @version 1.0.0
+ * @date 2024/02/16
+ */
+class UnifiedDisplayManager {
+	; Static properties for display configuration
+	static Instances := Map()
+	static InstanceCount := 0
+	static DefaultSettings := {
+		Width: Round(A_ScreenWidth / 3),
+		TopMargin: Round(A_ScreenHeight / 2),
+		StackMargin: 30,
+		Styles: "+AlwaysOnTop -Caption +ToolWindow",
+		Font: {
+			Name: "Consolas",
+			Size: 10,
+			Quality: 5
+		},
+		Colors: {
+			Background: "0x161821",
+			Text: "cBlue"
+		}
+	}
+
+	; Instance properties
+	Gui := ""
+	Input := ""
+	IsWaiting := true
+	Settings := Map()
+	Controls := Map()
+
+	/**
+	 * @constructor
+	 * @param {Object} options Configuration options
+	 */
+	__New(options := {}) {
+		this.InitializeSettings(options)
+		this.CreateGui()
+		UnifiedDisplayManager.InstanceCount++
+		UnifiedDisplayManager.Instances[this.Gui.Hwnd] := this
+	}
+
+	InitializeSettings(options) {
+		; Merge provided options with defaults
+		this.Settings := UnifiedDisplayManager.DefaultSettings.Clone()
+		for key, value in options.OwnProps() {
+			if IsObject(this.Settings.%key%) && IsObject(value)
+				this.Settings.%key% := this.MergeObjects(this.Settings.%key%, value)
+			else
+				this.Settings.%key% := value
+		}
+	}
+
+	MergeObjects(target, source) {
+		for key, value in source.OwnProps() {
+			if IsObject(value) && IsObject(target.%key%)
+				target.%key% := this.MergeObjects(target.%key%, value)
+			else
+				target.%key% := value
+		}
+		return target
+	}
+
+	CreateGui() {
+		; Create base GUI with specified styles
+		this.Gui := Gui(this.Settings.Styles)
+		this.Gui.BackColor := this.Settings.Colors.Background
+		this.Gui.SetFont("s" this.Settings.Font.Size " q" this.Settings.Font.Quality,
+						this.Settings.Font.Name)
+
+		; Setup default GUI events
+		this.Gui.OnEvent("Close", (*) => this.Destroy())
+		this.Gui.OnEvent("Escape", (*) => this.Destroy())
+	}
+
+	AddControl(type, options, text := "") {
+		control := this.Gui.Add(type, options, text)
+		this.Controls[control.Hwnd] := control
+		return control
+	}
+
+	AddEdit(options := "", text := "") {
+		return this.AddControl("Edit", "x0 Center -E0x200 Background" this.Settings.Colors.Background 
+			" w" this.Settings.Width " " options, text)
+	}
+
+	AddComboBox(options := "", items := "") {
+		if IsObject(items) {
+			items := this.ProcessItems(items)
+		}
+		return this.AddControl("ComboBox", "x0 Center w" this.Settings.Width " " options, items)
+	}
+
+	ProcessItems(items) {
+		result := []
+		if Type(items) = "Array"
+			result := items
+		else if Type(items) = "Map" || Type(items) = "Object"
+			for key, value in items
+				result.Push(IsObject(value) ? key : value)
+		return result
+	}
+
+	Show(params := "") {
+		defaultPos := "y" this.CalculateYPosition() " w" this.Settings.Width
+		this.Gui.Show(params ? params : defaultPos)
+	}
+
+	CalculateYPosition() {
+		basePos := this.Settings.TopMargin
+		stackOffset := (UnifiedDisplayManager.InstanceCount - 1) * this.Settings.StackMargin
+		return basePos + stackOffset
+	}
+
+	/**
+	 * @method WaitForInput
+	 * @description Blocks until input is received
+	 * @returns {String} The input received
+	 */
+	WaitForInput() {
+		this.Show()
+		while this.IsWaiting {
+			Sleep(10)
+		}
+		return this.Input
+	}
+
+	SetInput(value) {
+		this.Input := value
+		this.IsWaiting := false
+	}
+
+	RegisterHotkey(hotkeyStr, callback) {
+		HotIfWinActive("ahk_id " this.Gui.Hwnd)
+		Hotkey(hotkeyStr, callback)
+	}
+
+	Destroy() {
+		; Clean up hotkeys
+		HotIfWinActive("ahk_id " this.Gui.Hwnd)
+		Hotkey("Enter", "Off")
+		HotIf()
+
+		; Remove from instances
+		UnifiedDisplayManager.Instances.Delete(this.Gui.Hwnd)
+		UnifiedDisplayManager.InstanceCount--
+
+		; Destroy GUI
+		this.Gui.Destroy()
+	}
+
+	/**
+	 * @method EnableAutoComplete
+	 * @description Enables autocomplete functionality for an input control
+	 * @param {Gui.Control} control The control to enable autocomplete for
+	 * @param {Array|Map|Object} source The data source for autocomplete
+	 */
+	EnableAutoComplete(control, source) {
+		; Process source data into a consistent format
+		items := this.ProcessItems(source)
+		
+		; Bind autocomplete handler
+		control.OnEvent("Change", (*) => this.HandleAutoComplete(control, items))
+	}
+
+	HandleAutoComplete(control, items) {
+		static CB_GETEDITSEL := 320, CB_SETEDITSEL := 322
+		
+		if ((GetKeyState("Delete")) || (GetKeyState("Backspace")))
+			return
+
+		currContent := control.Text
+		if (!currContent)
+			return
+
+		; Check for exact match
+		for item in items {
+			if (item = currContent)
+				return
+		}
+
+		; Try to find matching item
+		try {
+			if (ControlChooseString(currContent, control) > 0) {
+				start := StrLen(currContent)
+				end := StrLen(control.Text)
+				PostMessage(CB_SETEDITSEL, 0, this.MakeLong(start, end),, control.Hwnd)
+			}
+		}
+	}
+
+	MakeLong(low, high) => (high << 16) | (low & 0xffff)
+}
+
+; ---------------------------------------------------------------------------
 
 class GuiButtonProperties {
 	static SetButtonWidth(input, bMargin := 1) {
@@ -1791,9 +2047,9 @@ class GuiButtonProperties {
 	static CalculateButtonWidth(textLength, bMargin := 7.5) {
 		; Using default values instead of FontProperties
 		avgCharWidth := 6  ; Approximate average character width
-		fontSize := 9      ; Default font size
+		; fontSize := 9      ; Default font size
+		fontSize := 1      ; Default font size
 		return Round((textLength * avgCharWidth) + (2 * (bMargin * fontSize)))
-		; return Round((textLength * bMargin))
 	}
 
 	static SetButtonHeight(rows := 1, vMargin := 7.5) {
@@ -2092,48 +2348,48 @@ class ErrorLogGui {
 	}
 	
 	UpdateGUI() {
-	if (this.logData.Count == 0) {
-		return
-	}
-	
-	; Get the first log entry to determine the structure
-	firstEntry := this.logData[this.logData.Count]
-	
-	; Clear existing controls
-	this.logGui.Destroy()
-	
-	; Recreate the GUI
-	this.CreateBaseGUI()
-	
-	; Create headers based on the first entry
-	headers := ['Timestamp']
-	for key in firstEntry.OwnProps() {
-		headers.Push(key)
-	}
-	
-	; Create the ListView
-	this.logListView := this.logGui.Add('ListView', 'r20 w600', headers)
-	
-	; Populate the ListView
-	for timestamp, data in this.logData {
-		row := [timestamp]
-		for key, value in data.OwnProps() {
-			row.Push(value)
+		if (this.logData.Count == 0) {
+			return
 		}
-		this.logListView.Add(, row*)
+		
+		; Get the first log entry to determine the structure
+		firstEntry := this.logData[this.logData.Count]
+		
+		; Clear existing controls
+		this.logGui.Destroy()
+		
+		; Recreate the GUI
+		this.CreateBaseGUI()
+		
+		; Create headers based on the first entry
+		headers := ['Timestamp']
+		for key in firstEntry.OwnProps() {
+			headers.Push(key)
+		}
+		
+		; Create the ListView
+		this.logListView := this.logGui.Add('ListView', 'r20 w600', headers)
+		
+		; Populate the ListView
+		for timestamp, data in this.logData {
+			row := [timestamp]
+			for key, value in data.OwnProps() {
+				row.Push(value)
+			}
+			this.logListView.Add(, row*)
+		}
+		
+		this.logListView.ModifyCol()  ; Auto-size columns
+		this.ResizeControls()
 	}
-	
-	this.logListView.ModifyCol()  ; Auto-size columns
-	this.ResizeControls()
-}
 
-CreateBaseGUI() {
-	this.logGui := Gui('+Resize', 'Error Log - ' . this.instanceId)
-	; Gui2.NeverFocusWindow(this.logGui)
-	this.logGui.NeverFocusWindow()
-	this.logGui.OnEvent('Close', (*) => this.logGui.Hide())
-	this.logGui.OnEvent('Size', (*) => this.ResizeControls())
-}
+	CreateBaseGUI() {
+		this.logGui := Gui('+Resize', 'Error Log - ' . this.instanceId)
+		; Gui2.NeverFocusWindow(this.logGui)
+		this.logGui.NeverFocusWindow()
+		this.logGui.OnEvent('Close', (*) => this.logGui.Hide())
+		this.logGui.OnEvent('Size', (*) => this.ResizeControls())
+	}
 
 	DelayedUpdate() {
 		this.UpdateListView()
@@ -2179,7 +2435,16 @@ CreateBaseGUI() {
 ; Static class to manage instances
 class ErrorLogger {
 	static instances := Map()
-	
+	; Define a static property for consistent property order
+	static ErrorOrder := [
+		"Message",
+		"What",
+		"Extra", 
+		"File",
+		"Line",
+		"Stack"
+	]
+
 	static GetInstance(name := 'default') {
 		if (!this.instances.Has(name)) {
 			this.instances.Set(name, ErrorLogGui())
@@ -2189,6 +2454,55 @@ class ErrorLogger {
 	
 	static Log(input, instanceName := 'default', showGui := true) {
 		this.GetInstance(instanceName).Log(input, showGui)
+	}
+
+	/**
+	 * @description Log error properties using OwnProps enumeration in specified order
+	 * @param {Error} e The error object to log
+	 * @returns {String} Formatted error message
+	 */
+	static errorProps(e) {
+		props := ''
+		; Loop through our desired order
+		for propName in this.ErrorOrder {
+			if e.HasProp(propName) && e.%propName% != '' {
+				props .= Format("{1}: {2}`n", propName, e.%propName%)
+			}
+		}
+		; ; Add any additional properties not in our ordered list
+		; for prop in e.OwnProps() {
+		; 	if !this.ErrorOrder.Has(prop) {
+		; 		props .= Format("{1}: {2}`n", prop, e.%prop%)
+		; 	}
+		; }
+		Infos("Error Properties [OwnProps()]:`n" props)
+		return props
+	}
+
+	/**
+	 * @description Log error using predefined property map in specified order
+	 * @param {Error} e The error object to log
+	 * @returns {String} Formatted error message
+	 */
+	static errorMap(e) {
+		errorProps := Map(
+			"Message", e.Message,
+			"What", e.What,
+			"Extra", e.Extra,
+			"File", e.File,
+			"Line", e.Line,
+			"Stack", e.Stack
+		)
+		
+		log := ''
+		; Use the same order as defined in ErrorOrder
+		for propName in this.ErrorOrder {
+			if errorProps.Has(propName) && errorProps[propName] != '' {
+				log .= Format("{1}: {2}`n", propName, errorProps[propName])
+			}
+		}
+		Infos("Error Details [Map()]:`n" log)
+		return log
 	}
 }
 
@@ -2480,8 +2794,8 @@ AnchorIn	 AI		{true/false} controls where the control is restricted to the insid
 
 Methods:
 Now(GuiObj)         will force a manual Call now for {GuiObj}
-Opt({switches})     same as Options method
 Options({switches}) all options are set as a string with each switch separated by a space "x10 yp50 oCM"
+Opt({switches})     same as Options method
 
 	Flags:			Abbreviation 
 	x{number}       X
@@ -2511,26 +2825,32 @@ Init		{Gui}.Init := 1, will cause all controls of the Gui to be redrawn on next 
 			{Gui}.Init := 2, will also reinitialize abbreviations
 ;! ---------------------------------------------------------------------------
 ***********************************************************************/
-Class GuiReSizer
-{
-	;{ Call GuiReSizer
-	Static Call(GuiObj, WindowMinMax, GuiW, GuiH)
-	{
-		; On Initial display of Gui use redraw to cleanup first positioning
-		Try{
+Class GuiReSizer {
+
+	; ---------------------------------------------------------------------------
+	;? Call GuiReSizer
+	; ---------------------------------------------------------------------------
+	Static Call(GuiObj, WindowMinMax, GuiW, GuiH) {
+		; ---------------------------------------------------------------------------
+		;? On Initial display of Gui use redraw to cleanup first positioning
+		; ---------------------------------------------------------------------------
+		Try {
 			(GuiObj.Init)
 		}
-		Catch{
+		Catch {
 			GuiObj.Init := 2 ; Redraw Twice on Initial Call(called on initial Show)
 		}
-		If WindowMinMax = -1{ ; Do nothing if window minimized
+		If WindowMinMax = -1 { ; Do nothing if window minimized
 			Return
 		}
-		;{ Loop through all Controls of Gui
+		; ---------------------------------------------------------------------------
+		;? Loop through all Controls of Gui
+		; ---------------------------------------------------------------------------
 		For Hwnd, CtrlObj in GuiObj {
-			;{ Initializations on First Call
-			If GuiObj.Init = 2
-			{
+			; ---------------------------------------------------------------------------
+			;? Initializations on First Call
+			; ---------------------------------------------------------------------------
+			If GuiObj.Init = 2 {
 				Try CtrlObj.OriginXP	:= CtrlObj.OX
 				Try CtrlObj.OriginXP	:= CtrlObj.OXP
 				Try CtrlObj.OriginY 	:= CtrlObj.OY
@@ -2551,90 +2871,118 @@ Class GuiReSizer
 					CtrlObj.AnchorIn 	:= true
 				}
 			}
-			;}
-			;{ Initialize Current Positions and Sizes
-			
+			; ---------------------------------------------------------------------------
+			;? Initialize Current Positions and Sizes
+			; ---------------------------------------------------------------------------
 			CtrlObj.GetPos(&CtrlX, &CtrlY, &CtrlW, &CtrlH)
 			; DPI.WinGetClientPos(&CtrlX, &CtrlY, &CtrlW, &CtrlH, CtrlObj)
 			; ControlGetPos(&CtrlX, &CtrlY, &CtrlW, &CtrlH, CtrlObj)
 			; DPI.WinGetClientPos(&CtrlX, &CtrlY, &CtrlW, &CtrlH)
 			LimitX := AnchorW := GuiW, LimitY := AnchorH := GuiH, OffsetX := OffsetY := 0
-			;}
-			;{ Check for Anchor
-			If CtrlObj.HasProp("Anchor")
-			{
-				If Type(CtrlObj.Anchor) = "Gui.Tab"
-				{
+			; ---------------------------------------------------------------------------
+			;? Check for Anchor
+			; ---------------------------------------------------------------------------
+			If CtrlObj.HasProp("Anchor") {
+				If Type(CtrlObj.Anchor) = "Gui.Tab" {
 					CtrlObj.Anchor.GetPos(&AnchorX, &AnchorY, &AnchorW, &AnchorH)
 					Offset(CtrlObj, &TabX, &TabY)
 					CtrlX := CtrlX - TabX, CtrlY := CtrlY - TabY
 					AnchorW := AnchorW + AnchorX - TabX, AnchorH := AnchorH + AnchorY - TabY
 				}
-				Else
-				{
+				Else {
 					CtrlObj.Anchor.GetPos(&AnchorX, &AnchorY, &AnchorW, &AnchorH)
-					If CtrlObj.HasProp("X") or CtrlObj.HasProp("XP")
+					If CtrlObj.HasProp("X") or CtrlObj.HasProp("XP"){
 						OffsetX := AnchorX
-					If CtrlObj.HasProp("Y") or CtrlObj.HasProp("YP")
+					}
+					If CtrlObj.HasProp("Y") or CtrlObj.HasProp("YP"){
 						OffsetY := AnchorY
+					}
 				}
-				If CtrlObj.AnchorIn
+				If CtrlObj.AnchorIn{
 					LimitX := AnchorW, LimitY := AnchorH
+				}
 			}
-			;}
-			;{ OriginX
-			If CtrlObj.HasProp("OriginX") and CtrlObj.HasProp("OriginXP")
+			; ---------------------------------------------------------------------------
+			;? OriginX
+			; ---------------------------------------------------------------------------
+			If CtrlObj.HasProp("OriginX") and CtrlObj.HasProp("OriginXP"){
 				OriginX := CtrlObj.OriginX + (CtrlW * CtrlObj.OriginXP)
-			Else If CtrlObj.HasProp("OriginX") and !CtrlObj.HasProp("OriginXP")
+			}
+			Else If CtrlObj.HasProp("OriginX") and !CtrlObj.HasProp("OriginXP"){
 				OriginX := CtrlObj.OriginX
-			Else If !CtrlObj.HasProp("OriginX") and CtrlObj.HasProp("OriginXP")
+			}
+			Else If !CtrlObj.HasProp("OriginX") and CtrlObj.HasProp("OriginXP"){
 				OriginX := CtrlW * CtrlObj.OriginXP
-			Else
+			}
+			Else {
 				OriginX := 0
-			;}
-			;{ OriginY
-			If CtrlObj.HasProp("OriginY") and CtrlObj.HasProp("OriginYP")
+			}
+			; ---------------------------------------------------------------------------
+			;? OriginY
+			; ---------------------------------------------------------------------------
+			If CtrlObj.HasProp("OriginY") and CtrlObj.HasProp("OriginYP") {
 				OriginY := CtrlObj.OriginY + (CtrlH * CtrlObj.OriginYP)
-			Else If CtrlObj.HasProp("OriginY") and !CtrlObj.HasProp("OriginYP")
+			}
+			Else If CtrlObj.HasProp("OriginY") and !CtrlObj.HasProp("OriginYP") {
 				OriginY := CtrlObj.OriginY
-			Else If !CtrlObj.HasProp("OriginY") and CtrlObj.HasProp("OriginYP")
+			}
+			Else If !CtrlObj.HasProp("OriginY") and CtrlObj.HasProp("OriginYP") {
 				OriginY := CtrlH * CtrlObj.OriginYP
-			Else
+			}
+			Else {
 				OriginY := 0
-			;}
-			;{ X
-			If CtrlObj.HasProp("X") and CtrlObj.HasProp("XP")
+			}
+			; ---------------------------------------------------------------------------
+			;? X
+			; ---------------------------------------------------------------------------
+			If CtrlObj.HasProp("X") and CtrlObj.HasProp("XP") {
 				CtrlX := Mod(LimitX + CtrlObj.X + (AnchorW * CtrlObj.XP) - OriginX, LimitX)
-			Else If CtrlObj.HasProp("X") and !CtrlObj.HasProp("XP")
+			}
+			Else If CtrlObj.HasProp("X") and !CtrlObj.HasProp("XP") {
 				CtrlX := Mod(LimitX + CtrlObj.X - OriginX, LimitX)
-			Else If !CtrlObj.HasProp("X") and CtrlObj.HasProp("XP")
+			}
+			Else If !CtrlObj.HasProp("X") and CtrlObj.HasProp("XP") {
 				CtrlX := Mod(LimitX + (AnchorW * CtrlObj.XP) - OriginX, LimitX)
-			;}
-			;{ Y
-			If CtrlObj.HasProp("Y") and CtrlObj.HasProp("YP")
+			}
+			; ---------------------------------------------------------------------------
+			;? Y
+			; ---------------------------------------------------------------------------
+			If CtrlObj.HasProp("Y") and CtrlObj.HasProp("YP") {
 				CtrlY := Mod(LimitY + CtrlObj.Y + (AnchorH * CtrlObj.YP) - OriginY, LimitY)
-			Else If CtrlObj.HasProp("Y") and !CtrlObj.HasProp("YP")
+			}
+			Else If CtrlObj.HasProp("Y") and !CtrlObj.HasProp("YP") {
 				CtrlY := Mod(LimitY + CtrlObj.Y - OriginY, LimitY)
-			Else If !CtrlObj.HasProp("Y") and CtrlObj.HasProp("YP")
+			}
+			Else If !CtrlObj.HasProp("Y") and CtrlObj.HasProp("YP") {
 				CtrlY := Mod(LimitY + AnchorH * CtrlObj.YP - OriginY, LimitY)
-			;}
-			;{ Width
-			If CtrlObj.HasProp("Width") and CtrlObj.HasProp("WidthP")
+			}
+			; ---------------------------------------------------------------------------
+			;? Width
+			; ---------------------------------------------------------------------------
+			If CtrlObj.HasProp("Width") and CtrlObj.HasProp("WidthP") {
 				(CtrlObj.Width > 0 and CtrlObj.WidthP > 0 ? CtrlW := CtrlObj.Width + AnchorW * CtrlObj.WidthP : CtrlW := CtrlObj.Width + AnchorW + AnchorW * CtrlObj.WidthP - CtrlX)
-			Else If CtrlObj.HasProp("Width") and !CtrlObj.HasProp("WidthP")
+			}
+			Else If CtrlObj.HasProp("Width") and !CtrlObj.HasProp("WidthP") {
 				(CtrlObj.Width > 0 ? CtrlW := CtrlObj.Width : CtrlW := AnchorW + CtrlObj.Width - CtrlX)
-			Else If !CtrlObj.HasProp("Width") and CtrlObj.HasProp("WidthP")
+			}
+			Else If !CtrlObj.HasProp("Width") and CtrlObj.HasProp("WidthP") {
 				(CtrlObj.WidthP > 0 ? CtrlW := AnchorW * CtrlObj.WidthP : CtrlW := AnchorW + AnchorW * CtrlObj.WidthP - CtrlX)
-			;}
-			;{ Height
-			If CtrlObj.HasProp("Height") and CtrlObj.HasProp("HeightP")
+			}
+			; ---------------------------------------------------------------------------
+			;? Height
+			; ---------------------------------------------------------------------------
+			If CtrlObj.HasProp("Height") and CtrlObj.HasProp("HeightP") {
 				(CtrlObj.Height > 0 and CtrlObj.HeightP > 0 ? CtrlH := CtrlObj.Height + AnchorH * CtrlObj.HeightP : CtrlH := CtrlObj.Height + AnchorH + AnchorH * CtrlObj.HeightP - CtrlY)
-			Else If CtrlObj.HasProp("Height") and !CtrlObj.HasProp("HeightP")
+			}
+			Else If CtrlObj.HasProp("Height") and !CtrlObj.HasProp("HeightP") {
 				(CtrlObj.Height > 0 ? CtrlH := CtrlObj.Height : CtrlH := AnchorH + CtrlObj.Height - CtrlY)
-			Else If !CtrlObj.HasProp("Height") and CtrlObj.HasProp("HeightP")
+			}
+			Else If !CtrlObj.HasProp("Height") and CtrlObj.HasProp("HeightP") {
 				(CtrlObj.HeightP > 0 ? CtrlH := AnchorH * CtrlObj.HeightP : CtrlH := AnchorH + AnchorH * CtrlObj.HeightP - CtrlY)
-			;}
-			;{ Min Max
+			}
+			; ---------------------------------------------------------------------------
+			;? Min Max
+			; ---------------------------------------------------------------------------
 			(CtrlObj.HasProp("MinX") ? MinX := CtrlObj.MinX : MinX := -999999)
 			(CtrlObj.HasProp("MaxX") ? MaxX := CtrlObj.MaxX : MaxX := 999999)
 			(CtrlObj.HasProp("MinY") ? MinY := CtrlObj.MinY : MinY := -999999)
@@ -2647,31 +2995,36 @@ Class GuiReSizer
 			CtrlY := MinMax(CtrlY, MinY, MaxY)
 			CtrlW := MinMax(CtrlW, MinW, MaxW)
 			CtrlH := MinMax(CtrlH, MinH, MaxH)
-			;}
-			;{ Move and Size
+			; ---------------------------------------------------------------------------
+			;? Move and Size
+			; ---------------------------------------------------------------------------
 			CtrlObj.Move(CtrlX + OffsetX, CtrlY + OffsetY, CtrlW, CtrlH)
-			;}
-			;{ Redraw on Cleanup or GuiObj.Init
-			If GuiObj.Init or (CtrlObj.HasProp("Cleanup") and CtrlObj.Cleanup = true)
+			; ---------------------------------------------------------------------------
+			;? Redraw on Cleanup or GuiObj.Init
+			; ---------------------------------------------------------------------------
+			If GuiObj.Init or (CtrlObj.HasProp("Cleanup") and CtrlObj.Cleanup = true) {
 				CtrlObj.Redraw()
-			;}
-			;{ Custom Function Call
-			If CtrlObj.HasProp("Function")
+			}
+			; ---------------------------------------------------------------------------
+			;? Custom Function Call
+			; ---------------------------------------------------------------------------
+			If CtrlObj.HasProp("Function") {
 				CtrlObj.Function(GuiObj) ; CtrlObj is hidden 'this' first parameter
-			;}
+			}
+			
 		}
-		;}
-		;{ Reduce GuiObj.Init Counter and Check for Call again
-		If (GuiObj.Init := Max(GuiObj.Init - 1, 0))
-		{
+		; ---------------------------------------------------------------------------
+		;? Reduce GuiObj.Init Counter and Check for Call again
+		; ---------------------------------------------------------------------------
+		If (GuiObj.Init := Max(GuiObj.Init - 1, 0)) {
 			GuiObj.GetClientPos(, , &AnchorW, &AnchorH)
 			GuiReSizer(GuiObj, WindowMinMax, AnchorW, AnchorH)
 		}
-		;}
-		;{ Functions: Helpers
+		; ---------------------------------------------------------------------------
+		;? Functions: Helpers
+		; ---------------------------------------------------------------------------
 		MinMax(Num, MinNum, MaxNum) => Min(Max(Num, MinNum), MaxNum)
-		Offset(CtrlObj, &OffsetX, &OffsetY)
-		{
+		Offset(CtrlObj, &OffsetX, &OffsetY) {
 			Hwnd := CtrlObj.Hwnd
 			hParentWnd := DllCall("GetParent", "Ptr", Hwnd, "Ptr")
 			RECT := Buffer(16, 0)
@@ -2679,57 +3032,65 @@ Class GuiReSizer
 			DllCall("MapWindowPoints", "Ptr", 0, "Ptr", DllCall("GetParent", "Ptr", hParentWnd, "Ptr"), "Ptr", RECT, "UInt", 1)
 			OffsetX := NumGet(RECT, 0, "Int"), OffsetY := NumGet(RECT, 4, "Int")
 		}
-		;}
+		
 	}
-	;}
-	;{ Methods:
-	;{ Options
+	
+	; ---------------------------------------------------------------------------
+	;! Methods:
+	; ---------------------------------------------------------------------------
+	;? Options
+	; ---------------------------------------------------------------------------
 	Static Opt(CtrlObj, Options) => GuiReSizer.Options(CtrlObj, Options)
-	Static Options(CtrlObj, Options)
-	{
-		For Option in StrSplit(Options, " ")
-		{
+	
+	Static Options(CtrlObj, Options) {
+		For Option in StrSplit(Options, " ") {
 			For Abbr, Cmd in Map(
 				"xp", "XP", "yp", "YP", "x", "X", "y", "Y",
 				"wp", "WidthP", "hp", "HeightP", "w", "Width", "h", "Height",
 				"minx", "MinX", "maxx", "MaxX", "miny", "MinY", "maxy", "MaxY",
 				"minw", "MinWidth", "maxw", "MaxWidth", "minh", "MinHeight", "maxh", "MaxHeight",
 				"oxp", "OriginXP", "oyp", "OriginYP", "ox", "OriginX", "oy", "OriginY")
-				If RegExMatch(Option, "i)^" Abbr "([\d.-]*$)", &Match)
-				{
+				If RegExMatch(Option, "i)^" Abbr "([\d.-]*$)", &Match) {
 					CtrlObj.%Cmd% := Match.1
 					Break
 				}
-			; Origin letters
-			If SubStr(Option, 1, 1) = "o"
-			{
+			; ---------------------------------------------------------------------------
+			;? Origin letters
+			; ---------------------------------------------------------------------------
+			If SubStr(Option, 1, 1) = "o" {
 				Flags := SubStr(Option, 2)
-				If Flags ~= "i)l"           ; left
+				If Flags ~= "i)l" { 		; left
 					CtrlObj.OriginXP := 0
-				If Flags ~= "i)c"           ; center (left to right)
+				}
+				If Flags ~= "i)c"{ 			; center (left to right)
 					CtrlObj.OriginXP := 0.5
-				If Flags ~= "i)r"           ; right
+				}
+				If Flags ~= "i)r" { 		; right
 					CtrlObj.OriginXP := 1
-				If Flags ~= "i)t"           ; top
+				}
+				If Flags ~= "i)t" {			; top
 					CtrlObj.OriginYP := 0
-				If Flags ~= "i)m"           ; middle (top to bottom)
+				}
+				If Flags ~= "i)m" { 		; middle (top to bottom)
 					CtrlObj.OriginYP := 0.5
-				If Flags ~= "i)b"           ; bottom
+				}
+				If Flags ~= "i)b" { 		; bottom
 					CtrlObj.OriginYP := 1
+				}
 			}
 		}
 	}
-	;}
-	;{ Now
-	Static Now(GuiObj, Redraw := true, Init := 2)
-	{
-		If Redraw
+	; ---------------------------------------------------------------------------
+	;? Now
+	; ---------------------------------------------------------------------------
+	Static Now(GuiObj, Redraw := true, Init := 2) {
+		If Redraw {
 			GuiObj.Init := Init
+		}
 		GuiObj.GetClientPos(, , &Width, &Height)
 		GuiReSizer(GuiObj, WindowMinMax := 1, Width, Height)
 	}
-	;}
-	;}
+
 }
 ;}
 /************************************************************************
@@ -2746,400 +3107,462 @@ Class GuiReSizer
 	* @resource https://www.reddit.com/r/AutoHotkey/s/4InT1j8Mro
 	* @author OvercastBTC (updates to v2 [2.0.11])
 	***********************************************************************/
-
-#Requires AutoHotkey v2.0+
-; #Include <Directives\__AE.v2>
-; #Include <Common\Common_Rec_Texts>
-#Include <Includes/Notes>
-#Include <Includes/ObjectTypeExtensions>
 ; ---------------------------------------------------------------------------
 /** @region AutoComplete() */
 ; ---------------------------------------------------------------------------
-AutoComplete(CtlObj, ListObj, GuiObj?) {
-	static CB_GETEDITSEL := 320, CB_SETEDITSEL := 322, valueFound := false
-	local Start :=0, End := 0,
+; AutoComplete(CtlObj, ListObj, GuiObj?) {
+; 	static CB_GETEDITSEL := 320, CB_SETEDITSEL := 322, valueFound := false
+; 	local Start :=0, End := 0,
 
-	cText := CtlObj.Text
+; 	cText := CtlObj.Text
 
-	currContent := CtlObj.Text
+; 	currContent := CtlObj.Text
 
-	CtlObj.Value := currContent
-	; QSGui['your name'].Value := currContent
-	; QSGui.Add('Text','Section','Text')
-	; QSGui.Show("AutoSize")
-	; QSGui.Show()
-	; if ((GetKeyState("Delete", "P")) || (GetKeyState("Backspace", "P"))){
-	if ((GetKeyState('Delete')) || (GetKeyState('Backspace'))){
-		return
-	}
+; 	CtlObj.Value := currContent
+; 	; QSGui['your name'].Value := currContent
+; 	; QSGui.Add('Text','Section','Text')
+; 	; QSGui.Show("AutoSize")
+; 	; QSGui.Show()
+; 	; if ((GetKeyState("Delete", "P")) || (GetKeyState("Backspace", "P"))){
+; 	if ((GetKeyState('Delete')) || (GetKeyState('Backspace'))){
+; 		return
+; 	}
 
-	valueFound := false
-	; ---------------------------------------------------------------------------
-	/** @i for index, value in entries */
-	; ---------------------------------------------------------------------------
-	/** @i Check if the current value matches the target value */
-	; ---------------------------------------------------------------------------
-	for index, value in ListObj {
-		; ---------------------------------------------------------------------------
-	/** @i Exit the loop if the value is found */
-		; ---------------------------------------------------------------------------
-		if (value = currContent) {
-			valueFound := true
-			break
-		}
-	}
-	; ---------------------------------------------------------------------------
-	/** @i Exit Nested request */
-	; ---------------------------------------------------------------------------
-	if (valueFound){
-		return
-	}
-	; ---------------------------------------------------------------------------
-	/** @i Start := 0, End :=0 */
-	; ---------------------------------------------------------------------------
-	MakeShort(0, &Start, &End)
-	try {
-		if (ControlChooseString(cText, CtlObj) > 0) {
-			Start := StrLen(currContent)
-			End := StrLen(CtlObj.Text)
-			PostMessage(CB_SETEDITSEL, 0, MakeLong(Start, End),,CtlObj.Hwnd)
-		}
-	} Catch as e {
-		ControlSetText(currContent, CtlObj)
-		ControlSetText(cText, CtlObj)
-		PostMessage(CB_SETEDITSEL, 0, MakeLong(StrLen(cText), StrLen(cText)),,CtlObj.Hwnd)
-	}
+; 	valueFound := false
+; 	; ---------------------------------------------------------------------------
+; 	/** @i for index, value in entries */
+; 	; ---------------------------------------------------------------------------
+; 	/** @i Check if the current value matches the target value */
+; 	; ---------------------------------------------------------------------------
+; 	for index, value in ListObj {
+; 		; ---------------------------------------------------------------------------
+; 	/** @i Exit the loop if the value is found */
+; 		; ---------------------------------------------------------------------------
+; 		if (value = currContent) {
+; 			valueFound := true
+; 			break
+; 		}
+; 	}
+; 	; ---------------------------------------------------------------------------
+; 	/** @i Exit Nested request */
+; 	; ---------------------------------------------------------------------------
+; 	if (valueFound){
+; 		return
+; 	}
+; 	; ---------------------------------------------------------------------------
+; 	/** @i Start := 0, End :=0 */
+; 	; ---------------------------------------------------------------------------
+; 	MakeShort(0, &Start, &End)
+; 	try {
+; 		if (ControlChooseString(cText, CtlObj) > 0) {
+; 			Start := StrLen(currContent)
+; 			End := StrLen(CtlObj.Text)
+; 			PostMessage(CB_SETEDITSEL, 0, MakeLong(Start, End),,CtlObj.Hwnd)
+; 		}
+; 	} Catch as e {
+; 		ControlSetText(currContent, CtlObj)
+; 		ControlSetText(cText, CtlObj)
+; 		PostMessage(CB_SETEDITSEL, 0, MakeLong(StrLen(cText), StrLen(cText)),,CtlObj.Hwnd)
+; 	}
 
-	MakeShort(Long, &LoWord, &HiWord) => (LoWord := Long & 0xffff, HiWord := Long >> 16)
+; 	MakeShort(Long, &LoWord, &HiWord) => (LoWord := Long & 0xffff, HiWord := Long >> 16)
 
-	MakeLong(LoWord, HiWord) {
-		return (HiWord << 16) | (LoWord & 0xffff)
-	}
-}
-
-#HotIf WinActive(A_ScriptName)
-#5::testAutoComplete()
-
-testAutoComplete() {
-; SetCapsLockState("Off")
-acInfos := Infos('AutoComplete enabled'
-				'Press "Shift+{Enter}",to activate'
-			)
-; acInfos := Infos('Press "ctrl + a" to activate, or press "Shift+Enter"')
-; Hotkey(" ", (*) => createGUI())
-; Hotkey("^a", (*) => createGUI())
-Hotkey('+Enter', (*) => createGUI() )
-; createGUI()
-createGUI() {
-	initQuery := "Recommendation Library"
-	initQuery := ""
-	; global entriesList := ["Red", "Green", "Blue"]
-	mList := []
-	; mlist := understanding_the_risk
-	mlist := Links_AhkLib
-	; Infos(mlist)
-	; entriesList := [mlist]
-	; entries := []
-	entries := ''
-	entriesList := []
-	m:=''
-	for each, m in mList {
-		entriesList.SafePush(m)
-	}
-	e:=''
-	for each, e in entriesList {
-		; entriesList := ''
-		; entries := ''
-		; entriesList .= value '`n'
-		entries .= e '`n'
-	}
-
-	global QSGui, initQuery, entriesList
-	global width := Round(A_ScreenWidth / 4)
-	QSGui := Gui("AlwaysOnTop +Resize +ToolWindow Caption", "Recommendation Picker")
-	QSGui.SetColor := 0x161821
-	QSGui.BackColor := 0x161821
-	QSGui.SetFont( "s10 q5", "Fira Code")
-	; QSCB := QSGui.AddComboBox("vQSEdit w200", entriesList)
-	QSCB := QSGui.AddComboBox("vQSEdit w" width ' h200' ' Wrap', entriesList)
-	qEdit := QSGui.AddEdit('vqEdit w' width ' h200')
-	; qEdit.OnEvent('Change', (*) => updateEdit(QSCB, entriesList))
-	QSGui_Change(QSCB) => qEdit.OnEvent('Change',qEdit)
-	QSGui.Add('Text','Section')
-	QSGui.Opt('+Owner ' QSGui.Hwnd)
-	; QSCB := QSGui.AddComboBox("vQSEdit w" width ' h200', entriesList)
-	QSCB.Text := initQuery
-	QSCB.OnEvent("Change", (*) => AutoComplete(QSCB, entriesList))
-	; QSCB.OnEvent('Change', (*) => updateEdit(QSCB, entriesList))
-	QSBtn := QSGui.AddButton("default hidden yp hp w0", "OK")
-	QSBtn.OnEvent("Click", (*) => processInput())
-	QSGui.OnEvent("Close", (*) => QSGui.Destroy())
-	QSGui.OnEvent("Escape", (*) => QSGui.Destroy())
-	; QSGui.Show( "w222")
-	; QSGui.Show("w" width ' h200')
-	QSGui.Show( "AutoSize")
-}
-
-processInput() {
-	QSSubmit := QSGui.Submit()    ; Save the contents of named controls into an object.
-	if QSSubmit.QSEdit {
-		; MsgBox(QSSubmit.QSEdit, "Debug GUI")
-		initQuery := QSSubmit.QSEdit
-		Infos.DestroyAll()
-		Sleep(100)
-		updated_Infos := Infos(QSSubmit.QSEdit)
-
-	}
-	QSGui.Destroy()
-	WinWaitClose(updated_Infos.hwnd)
-	Run(A_ScriptName)
-}
-}
-
-; class AutoCompleteGUI {
-;     static Create(data) {
-;         return AutoCompleteGUI(data)
-;     }
-
-;     __New(data) {
-;         this.data := this.ProcessInput(data)
-;         this.CreateGUI()
-;     }
-
-;     ProcessInput(input) {
-;         switch Type(input) {
-;             case "String":
-;                 if (FileExist(input)) {
-;                     return this.LoadFile(input)
-;                 } else {
-;                     return StrSplit(input, "`n", "`r")
-;                 }
-;             case "Array", "Map":
-;                 return input
-;             case "Object":
-;                 return input.OwnProps()
-;             default:
-;                 throw ValueError("Unsupported input type")
-;         }
-;     }
-
-;     ; LoadFile(filename) {
-;     ;     ext := FileExt(filename)
-;     ;     switch ext {
-;     ;         case "json":
-;     ;             return JSON.Parse(FileRead(filename))
-;     ;         case "ini":
-;     ;             return this.ParseIni(filename)
-;     ;         case "txt":
-;     ;             return StrSplit(FileRead(filename), "`n", "`r")
-;     ;         default:
-;     ;             throw ValueError("Unsupported file type")
-;     ;     }
-;     ; }
-
-;     LoadFile(filename) {
-;         ext := this.FileExt(filename)  ; Using class method
-;         switch ext {
-;             case "json":
-;                 return JSON.Parse(FileRead(filename))
-;             case "ini":
-;                 return this.ParseIni(filename)
-;             case "txt":
-;                 return StrSplit(FileRead(filename), "`n", "`r")
-;             default:
-;                 throw ValueError("Unsupported file type")
-;         }
-;     }
-
-;     ; New method added to existing class
-;     FileExt(filename) {
-;         SplitPath(filename,, &dir, &ext)
-;         return ext
-;     }
-
-;     ParseIni(filename) {
-;         result := Map()
-;         IniRead(sections, filename)
-;         for section in StrSplit(sections, "`n") {
-;             result[section] := IniRead(filename, section)
-;         }
-;         return result
-;     }
-
-;     CreateGUI() {
-;         this.gui := Gui("+Resize +MinSize320x240", "Enhanced AutoComplete")
-;         this.gui.OnEvent("Size", (*) => this.OnResize())
-
-;         this.gui.Add("Text", "w320", "Search:")
-;         this.searchBox := this.gui.Add("Edit", "w320 vSearchTerm")
-;         this.searchBox.OnEvent("Change", (*) => this.UpdateList())
-
-;         this.listBox := this.gui.Add("ListBox", "w320 h200 vSelectedItem")
-;         this.listBox.OnEvent("DoubleClick", (*) => this.SelectItem())
-
-;         this.gui.Add("Button", "w100 vOK", "Select").OnEvent("Click", (*) => this.SelectItem())
-;         this.gui.Show()
-
-;         this.UpdateList()
-;     }
-
-;     UpdateList() {
-;         searchTerm := this.searchBox.Value
-;         filteredItems := []
-
-;         for item in this.data {
-;             if (RegExMatch(item, "i)" . searchTerm)) {
-;                 filteredItems.Push(item)
-;             }
-;         }
-
-;         this.listBox.Delete()
-;         this.listBox.Add(filteredItems)
-;     }
-
-;     SelectItem() {
-;         if (selected := this.listBox.Text) {
-;             MsgBox("Selected: " . selected)
-;             this.gui.Destroy()
-;         }
-;     }
-
-;     OnResize() {
-;         if (this.gui.Pos.w = 320 or this.gui.Pos.h = 240) {
-;             return
-;         }
-
-;         ctrlWidth := this.gui.Pos.w - 20
-;         listHeight := this.gui.Pos.h - 120
-
-;         this.searchBox.Move(,, ctrlWidth)
-;         this.listBox.Move(,, ctrlWidth, listHeight)
-;     }
+; 	MakeLong(LoWord, HiWord) {
+; 		return (HiWord << 16) | (LoWord & 0xffff)
+; 	}
 ; }
 
-; ; Example usage
 ; #HotIf WinActive(A_ScriptName)
-; F1:: {
-;     data := [
-;         "Apple", "Banana", "Cherry", "Date", "Elderberry",
-;         "Fig", "Grape", "Honeydew", "Kiwi", "Lemon",
-;         "Mango", "Nectarine", "Orange", "Papaya", "Quince"
-;     ]
-;     AutoCompleteGUI.Create(data)
+; #5::testAutoComplete()
+
+; testAutoComplete() {
+; ; SetCapsLockState("Off")
+; acInfos := Infos('AutoComplete enabled'
+; 				'Press "Shift+{Enter}",to activate'
+; 			)
+; ; acInfos := Infos('Press "ctrl + a" to activate, or press "Shift+Enter"')
+; ; Hotkey(" ", (*) => createGUI())
+; ; Hotkey("^a", (*) => createGUI())
+; Hotkey('+Enter', (*) => createGUI() )
+; ; createGUI()
+; createGUI() {
+; 	initQuery := "Recommendation Library"
+; 	initQuery := ""
+; 	; global entriesList := ["Red", "Green", "Blue"]
+; 	mList := []
+; 	; mlist := understanding_the_risk
+; 	mlist := Links_AhkLib
+; 	; Infos(mlist)
+; 	; entriesList := [mlist]
+; 	; entries := []
+; 	entries := ''
+; 	entriesList := []
+; 	m:=''
+; 	for each, m in mList {
+; 		entriesList.SafePush(m)
+; 	}
+; 	e:=''
+; 	for each, e in entriesList {
+; 		; entriesList := ''
+; 		; entries := ''
+; 		; entriesList .= value '`n'
+; 		entries .= e '`n'
+; 	}
+
+; 	global QSGui, initQuery, entriesList
+; 	global width := Round(A_ScreenWidth / 4)
+; 	QSGui := Gui("AlwaysOnTop +Resize +ToolWindow Caption", "Recommendation Picker")
+; 	QSGui.SetColor := 0x161821
+; 	QSGui.BackColor := 0x161821
+; 	QSGui.SetFont( "s10 q5", "Fira Code")
+; 	; QSCB := QSGui.AddComboBox("vQSEdit w200", entriesList)
+; 	QSCB := QSGui.AddComboBox("vQSEdit w" width ' h200' ' Wrap', entriesList)
+; 	qEdit := QSGui.AddEdit('vqEdit w' width ' h200')
+; 	; qEdit.OnEvent('Change', (*) => updateEdit(QSCB, entriesList))
+; 	QSGui_Change(QSCB) => qEdit.OnEvent('Change',qEdit)
+; 	QSGui.Add('Text','Section')
+; 	QSGui.Opt('+Owner ' QSGui.Hwnd)
+; 	; QSCB := QSGui.AddComboBox("vQSEdit w" width ' h200', entriesList)
+; 	QSCB.Text := initQuery
+; 	QSCB.OnEvent("Change", (*) => AutoComplete(QSCB, entriesList))
+; 	; QSCB.OnEvent('Change', (*) => updateEdit(QSCB, entriesList))
+; 	QSBtn := QSGui.AddButton("default hidden yp hp w0", "OK")
+; 	QSBtn.OnEvent("Click", (*) => processInput())
+; 	QSGui.OnEvent("Close", (*) => QSGui.Destroy())
+; 	QSGui.OnEvent("Escape", (*) => QSGui.Destroy())
+; 	; QSGui.Show( "w222")
+; 	; QSGui.Show("w" width ' h200')
+; 	QSGui.Show( "AutoSize")
 ; }
 
-class AutoCompleteGui extends Gui {
-	__New(suggestions := [], minChars := 1, triggerString := "") {
-		super.__New("+AlwaysOnTop -Caption +ToolWindow")
-		this.suggestions := this.ProcessSuggestions(suggestions)
-		this.minChars := minChars
-		this.triggerString := triggerString
-		this.CreateGui()
-	}
+; processInput() {
+; 	QSSubmit := QSGui.Submit()    ; Save the contents of named controls into an object.
+; 	if QSSubmit.QSEdit {
+; 		; MsgBox(QSSubmit.QSEdit, "Debug GUI")
+; 		initQuery := QSSubmit.QSEdit
+; 		Infos.DestroyAll()
+; 		Sleep(100)
+; 		updated_Infos := Infos(QSSubmit.QSEdit)
 
-	ProcessSuggestions(input) {
+; 	}
+; 	QSGui.Destroy()
+; 	WinWaitClose(updated_Infos.hwnd)
+; 	Run(A_ScriptName)
+; }
+; }
+
+/**
+ * Enhanced AutoComplete class with flexible input and control support
+ */
+class AutoComplete {
+	static __New() {
+		this.CB_GETEDITSEL := 320
+		this.CB_SETEDITSEL := 322
+		this.MatchLimit := 5  ; Maximum matches to show
+		this.MinCharacters := 2  ; Minimum characters before showing matches
+	}
+	
+	/**
+	 * Process various input types into a consistent format
+	 * @param {Any} input The input to process
+	 * @returns {Array} Processed array of items
+	 */
+	static ProcessInput(input) {
 		result := []
-		if IsObject(input) {
-			if Type(input) is Array {
-				for item in input {
-					result.Push(this.ProcessSuggestions(item)*)
-				}
-			} else if Type(input) is Map || Type(input) is Object {
+		
+		switch Type(input) {
+			case "String":
+				; Handle string input
+				if InStr(input, "`n")
+					result := StrSplit(input, "`n", "`r")
+				else if InStr(input, "|")
+					result := StrSplit(input, "|")
+				else
+					result := [input]
+			
+			case "Array":
+				; Already in desired format
+				result := input
+			
+			case "Map":
+				; Convert both keys and values
 				for key, value in input {
-					result.Push(IsObject(value) ? key : value)
+					if IsObject(value)
+						result.Push(key)
+					else {
+						result.Push(key)
+						result.Push(value)
+					}
 				}
-			}
-		} else if Type(input) == "String" {
-			result := StrSplit(input, "`n", "`r")
+			
+			case "Object":
+				; Convert object properties
+				for prop in input.OwnProps()
+					result.Push(prop)
+			
+			default:
+				if HasMethod(input, "__Enum")
+					for item in input
+						result.Push(item)
+				else
+					throw ValueError("Unsupported input type")
 		}
+		
 		return result
 	}
-
-	CreateGui() {
-		this.listBox := this.Add("ListBox", "w200 r10 vSuggestionList")
-		this.listBox.OnEvent("DoubleClick", (*) => this.SelectSuggestion())
-		this.OnEvent("Close", (*) => this.Hide())
-		this.OnEvent("Escape", (*) => this.Hide())
+	
+	/**
+	 * Handle autocomplete for various control types
+	 * @param {Gui.Control} CtlObj The control to enhance
+	 * @param {Any} ListObj The source data
+	 * @param {Object} Options Additional options
+	 */
+	static Enhance(CtlObj, ListObj, Options := {}) {
+		; Process options
+		options := {
+			ShowMatches: Options.HasProp("ShowMatches") ? Options.ShowMatches : true,
+			MatchDisplay: Options.HasProp("MatchDisplay") ? Options.MatchDisplay : "Stacked",
+			MaxMatches: Options.HasProp("MaxMatches") ? Options.MaxMatches : this.MatchLimit,
+			MinChars: Options.HasProp("MinChars") ? Options.MinChars : this.MinCharacters
+		}
+		
+		; Process input data
+		items := this.ProcessInput(ListObj)
+		
+		; Set up event handling based on control type
+		switch CtlObj.Type {
+			case "Edit", "ComboBox":
+				this.EnhanceEditControl(CtlObj, items, options)
+			
+			case "ListBox":
+				this.EnhanceListControl(CtlObj, items, options)
+			
+			case "ListView":
+				this.EnhanceListViewControl(CtlObj, items, options)
+			
+			default:
+				throw ValueError("Unsupported control type")
+		}
 	}
-
-	Show(input, x, y) {
-		filteredSuggestions := this.FilterSuggestions(input)
-		this.listBox.Delete()
-		this.listBox.Add(filteredSuggestions)
-		super.Show(Format("x{1} y{2} AutoSize NoActivate", x, y))
+	
+	/**
+	 * Handle Edit/ComboBox autocomplete
+	 */
+	static EnhanceEditControl(CtlObj, items, options) {
+		; Store data with the control
+		CtlObj.AutoCompleteData := items
+		CtlObj.AutoCompleteOptions := options
+		
+		; Set up change handler
+		CtlObj.OnEvent("Change", this.HandleEditChange.Bind(this))
+		
+		; Set up ^Enter handler for showing matches
+		if (options.ShowMatches) {
+			HotIfWinActive("ahk_id " CtlObj.Gui.Hwnd)
+			Hotkey("^Enter", (*) => this.ShowMatches(CtlObj))
+		}
 	}
-
-	FilterSuggestions(input) {
-		filteredList := []
-		for suggestion in this.suggestions {
-			distance := String2.DamerauLevenshteinDistance(input, SubStr(suggestion, 1, StrLen(input)))
-			if (distance <= 2) {  ; Adjust this threshold as needed
-				filteredList.Push(suggestion)
+	
+	/**
+	 * Handle text change events
+	 */
+	static HandleEditChange(CtlObj, *) {
+		; Get current text
+		currContent := CtlObj.Text
+		if (StrLen(currContent) < CtlObj.AutoCompleteOptions.MinChars)
+			return
+			
+		; Don't process backspace/delete
+		if (GetKeyState("Backspace") || GetKeyState("Delete"))
+			return
+			
+		; Find best match
+		bestMatch := ""
+		for item in CtlObj.AutoCompleteData {
+			if (InStr(item, currContent) == 1) {
+				bestMatch := item
+				break
 			}
 		}
-		return filteredList
-	}
-
-	SelectSuggestion() {
-		if (selected := this.listBox.Text) {
-			if this.targetHwnd {
-				ControlSetText(selected, "ahk_id " this.targetHwnd)
+		
+		; Apply match if found
+		if (bestMatch && CtlObj.Type = "ComboBox") {
+			try {
+				if (ControlChooseString(bestMatch, CtlObj) > 0) {
+					start := StrLen(currContent)
+					end := StrLen(bestMatch)
+					PostMessage(this.CB_SETEDITSEL, 0, (end << 16) | (start & 0xffff),, CtlObj.Hwnd)
+				}
 			}
-			this.Hide()
+		} else if (bestMatch && CtlObj.Type = "Edit") {
+			CtlObj.Text := bestMatch
+			CtlObj.Gui.Focus
+			SendMessage(0xB1, StrLen(currContent), -1,, CtlObj.Hwnd)
+		}
+	}
+	
+	/**
+	 * Show multiple matches in specified display mode
+	 */
+	static ShowMatches(CtlObj) {
+		currContent := CtlObj.Text
+		if (StrLen(currContent) < CtlObj.AutoCompleteOptions.MinChars)
+			return
+			
+		; Find matches
+		matches := []
+		for item in CtlObj.AutoCompleteData {
+			if (InStr(item, currContent) == 1)
+				matches.Push(item)
+			if (matches.Length >= CtlObj.AutoCompleteOptions.MaxMatches)
+				break
+		}
+		
+		if (!matches.Length)
+			return
+			
+		; Show matches based on display mode
+		switch CtlObj.AutoCompleteOptions.MatchDisplay {
+			case "Stacked":
+				this.ShowStackedMatches(CtlObj, matches)
+			case "ListView":
+				this.ShowListViewMatches(CtlObj, matches)
+			case "Inline":
+				this.ShowInlineMatches(CtlObj, matches)
+		}
+	}
+	
+	/**
+	 * Show matches in stacked Infos-style display
+	 */
+	static ShowStackedMatches(CtlObj, matches) {
+		for index, match in matches {
+			Infos(match)
+		}
+	}
+	
+	/**
+	 * Show matches in a temporary ListView
+	 */
+	static ShowListViewMatches(CtlObj, matches) {
+		; Create temporary GUI
+		matchGui := Gui("+AlwaysOnTop -Caption +ToolWindow")
+		lv := matchGui.AddListView("w200 h150", ["Matches"])
+		
+		; Add matches
+		for match in matches
+			lv.Add(, match)
+			
+		; Position below control
+		CtlObj.GetPos(&x, &y, &w, &h)
+		matchGui.Show("x" x " y" (y + h))
+		
+		; Setup selection handler
+		lv.OnEvent("DoubleClick", (*) => (
+			CtlObj.Text := lv.GetText(lv.GetNext()),
+			matchGui.Destroy()
+		))
+		
+		; Auto-close
+		SetTimer(() => matchGui.Destroy(), -3000)
+	}
+
+	/**
+	 * Handle ListBox autocomplete
+	 */
+	static EnhanceListControl(CtlObj, items, options) {
+		; Store data with the control
+		CtlObj.AutoCompleteData := items
+		CtlObj.AutoCompleteOptions := options
+		
+		; Add items to ListBox
+		for item in items {
+			CtlObj.Add([item])
+		}
+		
+		; Set up search-as-you-type handling
+		CtlObj.OnEvent("Change", (*) => this.HandleListChange(CtlObj))
+	}
+
+	/**
+	 * Handle ListView autocomplete
+	 */
+	static EnhanceListViewControl(CtlObj, items, options) {
+		; Store data with the control
+		CtlObj.AutoCompleteData := items
+		CtlObj.AutoCompleteOptions := options
+		
+		; Add items to ListView
+		for item in items {
+			CtlObj.Add(, item)
+		}
+		
+		; Set up search-as-you-type handling
+		CtlObj.OnEvent("Change", (*) => this.HandleListViewChange(CtlObj))
+	}
+
+	/**
+	 * Handle ListBox changes
+	 */
+	static HandleListChange(CtlObj) {
+		; Implementation depends on specific needs
+		; This is a basic example
+		currentText := CtlObj.Text
+		if (currentText) {
+			loop CtlObj.GetCount() {
+				if (InStr(CtlObj.GetText(A_Index), currentText) == 1) {
+					CtlObj.Choose(A_Index)
+					break
+				}
+			}
 		}
 	}
 
-	ConnectTo(controlObj) {
-		this.targetHwnd := controlObj.Hwnd
-		controlObj.OnEvent("Change", (*) => this.OnInputChange(controlObj))
-	}
-
-	OnInputChange(controlObj) {
-		text := controlObj.Text
-		if (StrLen(text) >= this.minChars) &&
-			(this.triggerString == "" || InStr(text, this.triggerString) == 1) {
-			controlPos := controlObj.Pos
-			this.Show(text, controlPos.X, controlPos.Y + controlPos.H)
-		} else {
-			this.Hide()
+	/**
+	 * Handle ListView changes
+	 */
+	static HandleListViewChange(CtlObj) {
+		; Implementation depends on specific needs
+		; This is a basic example
+		currentText := CtlObj.GetText(CtlObj.GetNext())
+		if (currentText) {
+			loop CtlObj.GetCount() {
+				if (InStr(CtlObj.GetText(A_Index), currentText) == 1) {
+					CtlObj.Modify(A_Index, "Select Focus")
+					break
+				}
+			}
 		}
 	}
 
-	DemoAutoComplete() {
-		demoGui := Gui("+AlwaysOnTop +Resize", "AutoComplete Demo")
-		demoGui.SetFont("s10", "Segoe UI")
-		edit := demoGui.Add("Edit", "w300 vInputField")
-		this.ConnectTo(edit)
-		demoGui.Add("Text", "xm y+10", "Type to see suggestions. Press Shift+Enter to submit.")
-		demoGui.OnEvent("Close", (*) => ExitApp())
-		demoGui.Show()
-
-		HotIf(*) => WinActive("AutoComplete Demo")
-		Hotkey("+Enter", (*) => this.ProcessInput(demoGui))
-	}
-
-	ProcessInput(demoGui) {
-		if submitValue := demoGui.Submit()["InputField"] {
-			MsgBox("You selected: " submitValue)
+	/**
+	 * Show matches inline below the control
+	 */
+	static ShowInlineMatches(CtlObj, matches) {
+		; Get control position
+		CtlObj.GetPos(&x, &y, &w, &h)
+		
+		; Create temporary info box for matches
+		matchText := ""
+		for match in matches {
+			matchText .= match "`n"
 		}
-	}
-
-	AddListObj(newSuggestions) {
-		this.suggestions.Push(this.ProcessSuggestions(newSuggestions)*)
+		
+		; Use InfoBox to display matches
+		infoBox := InfoBox(matchText, 3000, {
+			x: x,
+			y: y + h,
+			width: w,
+			FontSize: 10
+		})
+		
+		; Set up click handling to select match
+		infoBox.control.OnEvent("Click", (*) => (
+			CtlObj.Text := infoBox.control.Text,
+			infoBox.Destroy()
+		))
 	}
 }
-
-; ; Create an instance of AutoCompleteGui with custom settings
-; ac := AutoCompleteGui(, 2, "dsp.")  ; Show suggestions after 2 chars, and only if input starts with "dsp."
-
-; ; Add suggestions from various sources
-; ac.AddListObj(["apple", "banana", "cherry"])
-; ; ac.AddListObj({car: "Ford", bike: "Trek"})
-; ac.AddListObj(Map("color", "red", "shape", "circle"))
-; ac.AddListObj("dog`ncat`nfish")
-
-; ; Run the demo
-; ac.DemoAutoComplete()
 
 /**
 	* Enhanced message box with rich text support using Gui2.AddRichEdit
@@ -3452,4 +3875,491 @@ class GuiColors {
 		"yellowgreen", "9ACD32"
 	)
 
+}
+; ---------------------------------------------------------------------------
+; class DisplayManager {
+; 	static Instances := Map()
+; 	static ScreenProps := {
+; 		width: A_ScreenWidth/3,
+; 		topMargin: A_ScreenHeight/2,
+; 		stackMargin: 30
+; 	}
+
+; 	static RegisterGui(guiObj, owner := "") {
+; 		this.Instances[guiObj.Hwnd] := {
+; 			guiObj: guiObj,
+; 			owner: owner
+; 		}
+; 		this.RepositionAll()
+; 	}
+
+; 	static UnregisterGui(hwnd) {
+; 		this.Instances.Delete(hwnd)
+; 		this.RepositionAll()
+; 	}
+
+; 	static GetExistingDisplays() {
+; 		return this.Instances.Clone()
+; 	}
+
+; 	static RepositionAll() {
+; 		existingCount := this.Instances.Count
+; 		for i, display in this.Instances {
+; 			y := this.ScreenProps.topMargin + (i-1)*this.ScreenProps.stackMargin
+; 			display.guiObj.Show(Format("y{1}", y))
+; 		}
+; 	}
+
+; 	static SetupGuiDefaults(guiObj) {
+; 		guiObj.Opt("+AlwaysOnTop -Caption +ToolWindow")
+; 		guiObj.MarginX := 0
+; 		guiObj.BackColor := "0x161821"
+; 		guiObj.SetFont("s10", "Segoe UI")
+; 		return guiObj
+; 	}
+; }
+
+class StackedDisplay {
+	stackMargin := 30
+	width := A_ScreenWidth/3
+	topMargin := A_ScreenHeight/2
+	isWaiting := true
+	
+	__New() {
+		this.displayGui := Gui("+AlwaysOnTop -Caption +ToolWindow")
+		this.displayGui.MarginX := 0
+		this.displayGui.SetFont("s10", "Segoe UI")
+		this.displayGui.BackColor := "0x161821"
+		this.hotkeyList := []  ; Track hotkeys for cleanup
+	}
+
+	AddOption(text, index, total, command) {
+		
+		; Create GUI control
+		this.displayGui.AddEdit(Format("x0 Center w{1} -E0x200 Background{2} c0x1EFF00", 
+			this.width, 
+			this.displayGui.BackColor), 
+			text)
+		
+		; Set up hotkey
+		HotIfWinActive("ahk_id " this.displayGui.Hwnd)
+		hotkeyFn := this.SelectOption.Bind(this, command)
+		Hotkey("F" index, hotkeyFn)
+		this.hotkeyList.Push({key: "F" index, fn: hotkeyFn})
+		
+		; Show the GUI
+		this.displayGui.Show(Format("y{1} AutoSize", 
+			this.topMargin + (index-1)*this.stackMargin))
+			
+		return this.displayGui
+	}
+	
+	SelectOption(command, *) {
+		this.CleanupHotkeys()
+		Sleep(A_Delay * 5)
+		this.displayGui.Hide()
+		this.displayGui.Destroy()
+		return command
+	}
+	
+	CleanupHotkeys() {
+		; HotIfWinActive("ahk_id " this.displayGui.Hwnd)
+		for hotkey in this.hotkeyList {
+			try Hotkey(hotkey.key, hotkey.fn, "Off")
+		}
+		; HotIf()
+	}
+
+	WaitForSelection(selectedCommand := "") {
+		; selectedCommand := ""
+		
+		; Wait for window to close or selection
+		try while !selectedCommand && WinExist(this.displayGui.Hwnd) {
+		; while !selectedCommand {
+			Sleep(50)
+		}
+		
+		this.CleanupHotkeys()
+		return selectedCommand
+	}
+}
+; ---------------------------------------------------------------------------
+; class CleanInputBox extends Gui {
+
+; 	; Width     := Round(A_ScreenWidth  / 1920 * 1200)
+; 	Width     := Round(A_ScreenWidth  / 3)
+; 	TopMargin := Round(A_ScreenHeight / 1080 * 800)
+
+; 	; DarkMode(BackgroundColor:='') {
+; 	; 	Gui2.DarkMode(this, BackgroundColor)
+; 	; 	return this
+; 	; }
+
+; 	; ; MakeFontNicer(fontSize := 15) {
+; 	; MakeFontNicer(fontParams*) {
+; 	; 	Gui2.MakeFontNicer(fontParams)
+; 	; 	return this
+; 	; }
+
+; 	__New() {
+; 		cibGui := Gui('AlwaysOnTop -Caption +Border')
+; 		super.__New('AlwaysOnTop -Caption +Border')
+; 		super.DarkMode()
+; 		super.MakeFontNicer('s10', 'q3', 'cRed')
+; 		this.MarginX := 0
+
+; 		this.InputField := this.AddEdit('x0 Center -E0x200 Background' this.BackColor ' w' this.Width)
+
+; 		this.Input := ''
+; 		this.isWaiting := true
+; 		this.RegisterHotkeys()
+; 	}
+
+; 	Show() => (super.Show('y' this.TopMargin ' w' this.Width), this)
+
+; 	/**
+; 	 * Occupy the thread until you type in your input and press
+; 	 * Enter, returns this input
+; 	 * @returns {String}
+; 	 */
+; 	WaitForInput() {
+; 		this.Show()
+; 		while this.isWaiting {
+; 		}
+; 		return this.Input
+; 	}
+
+; 	SetInput() {
+; 		this.Input := this.InputField.Text
+; 		this.isWaiting := false
+; 		this.Finish()
+; 	}
+
+; 	SetCancel() {
+; 		this.isWaiting := false
+; 		this.Finish()
+; 	}
+
+; 	RegisterHotkeys() {
+; 		HotIfWinactive('ahk_id ' this.Hwnd)
+; 		Hotkey('Enter', (*) => this.SetInput(), 'On')
+; 		Hotkey('CapsLock', (*) => this.SetCancel())
+; 		this.OnEvent('Escape', (*) => this.SetCancel())
+; 	}
+
+; 	Finish() {
+; 		HotIfWinactive('ahk_id ' this.Hwnd)
+; 		Hotkey('Enter', 'Off')
+; 		this.Minimize()
+; 		this.Destroy()
+; 	}
+; }
+
+class CleanInputBox {
+
+    ; Default settings
+    static Defaults := {
+        fontSize: 12,
+        quality: 5,
+        color: 'Blue',
+        font: 'Consolas',
+        width: Round(A_ScreenWidth / 3),
+        topMargin: Round(A_ScreenHeight / 1080 * 800),
+        backgroundColor: '0xA2AAAD'
+    }
+
+    ; Instance properties
+    gui := ""
+    InputField := ""
+    Input := ""
+    isWaiting := true
+    settings := Map()
+
+    /**
+     * Handle direct calls to the class (e.g., CleanInputBox())
+     * @param {String} name Method name (empty for direct calls)
+     * @param {Array} params Parameters passed to the call
+     * @returns {String} User input or empty string if cancelled
+     */
+    static __Call(name, params) {
+        if (name = "") {  ; Called directly as a function
+            instance := CleanInputBox(params*)
+            return instance.WaitForInput()
+        }
+    }
+
+    __New(p1 := "", p2 := "", p3 := "") {
+        ; Parse parameters into settings
+        this.settings := this.ParseParams(p1, p2, p3)
+		
+        ; Create GUI
+        this.gui := Gui('+AlwaysOnTop -Caption +Border')
+		
+        ; Apply styling using Gui2 methods
+        this.gui.DarkMode(this.settings.Get('backgroundColor', CleanInputBox.Defaults.backgroundColor))
+		
+        ; Set font
+        this.gui.SetFont(
+            's' this.settings.Get('fontSize', CleanInputBox.Defaults.fontSize) 
+            ' q' this.settings.Get('quality', CleanInputBox.Defaults.quality) 
+            ' c' this.settings.Get('color', CleanInputBox.Defaults.color),
+            this.settings.Get('font', CleanInputBox.Defaults.font)
+        )
+		
+        ; Setup GUI properties
+        this.gui.MarginX := 0
+
+        ; Add input field
+        this.InputField := this.gui.AddEdit(
+            'x0 Center -E0x200 Background' this.gui.BackColor 
+            ' w' this.settings.Get('width', CleanInputBox.Defaults.width)
+        )
+
+        ; Setup event handlers
+        this.RegisterHotkeys()
+
+		; this.WaitForInput()
+    }
+
+	static WaitForInput(){
+		return CleanInputBox().WaitForInput()
+	}
+
+    ParseParams(p1 := "", p2 := "", p3 := "") {
+        settings := Map()
+		
+        ; If first parameter is object/map, use as settings
+        if IsObject(p1) {
+            for key, value in (p1 is Map ? p1 : p1.OwnProps()) {
+                settings[key] := value
+            }
+            return settings
+        }
+
+        ; Otherwise only add parameters that were actually provided
+        if (p1 != "")
+            settings['fontSize'] := p1
+        if (p2 != "")
+            settings['color'] := (SubStr(p2, 1, 1) = 'c' ? p2 : 'c' p2)
+        if (p3 != "")
+            settings['quality'] := p3
+			
+        return settings
+    }
+
+    WaitForInput() {
+        this.gui.Show('y' this.settings.Get('topMargin', CleanInputBox.Defaults.topMargin) 
+            ' w' this.settings.Get('width', CleanInputBox.Defaults.width))
+			
+        while this.isWaiting {
+            Sleep(A_Delay)
+        }
+        return this.Input
+    }
+
+    RegisterHotkeys() {
+        HotIfWinactive('ahk_id ' this.gui.Hwnd)
+        Hotkey('Enter', (*) => (this.Input := this.InputField.Text, this.isWaiting := false, this.Finish()), 'On')
+        Hotkey('CapsLock', (*) => (this.isWaiting := false, this.Finish()))
+        this.gui.OnEvent('Escape', (*) => (this.isWaiting := false, this.Finish()))
+    }
+
+    Finish() {
+        HotIfWinactive('ahk_id ' this.gui.Hwnd)
+        Hotkey('Enter', 'Off')
+        this.gui.Minimize()
+        this.gui.Destroy()
+    }
+}
+
+; ---------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
+
+class Infos {
+	static fontSize := 8
+	static distance := 4
+	static unit := A_ScreenDPI / 144
+	static guiWidth := Infos.fontSize * Infos.unit * Infos.distance
+	static maximumInfos := Floor(A_ScreenHeight / Infos.guiWidth)
+	static spots := Infos._GeneratePlacesArray()
+	static maxNumberedHotkeys := 12
+	static maxWidthInChars := 110
+
+	__text := ''
+	text {
+		get => this.__text
+		set => this.__text := value
+	}
+
+	__New(text, autoCloseTimeout := 0) {
+		this.gui := Gui('AlwaysOnTop -Caption +ToolWindow')
+		this.autoCloseTimeout := autoCloseTimeout
+		this.text := text
+		this.spaceIndex := 0
+		if !this._GetAvailableSpace() {
+			this._StopDueToNoSpace()
+			return
+		}
+		this._CreateGui()
+		this._SetupHotkeysAndEvents()
+		this._SetupAutoclose()
+		this._Show()
+	}
+
+	_CreateGui() {
+		this.gui.DarkMode()
+		this.MakeFontNicer(Infos.fontSize ' cblue')
+		this.gui.NeverFocusWindow()
+		this.gcText := this.gui.AddText(, this._FormatText())
+		return this
+	}
+
+	DarkMode(BackgroundColor := '') {
+		this.gui.BackColor := BackgroundColor = '' ? '0xA2AAAD' : BackgroundColor
+		return this
+	}
+
+	MakeFontNicer(fontSize := 20) {
+		this.gui.SetFont('s' fontSize ' c0000ff', 'Consolas')
+		return this
+	}
+
+	NeverFocusWindow() {
+		WinSetExStyle('+0x08000000', this.gui)  ; WS_EX_NOACTIVATE
+		return this
+	}
+
+	static DestroyAll(*) {
+		for index, infoObj in Infos.spots {
+			if (infoObj is Infos) {
+				infoObj.Destroy()
+			}
+		}
+	}
+
+	static _GeneratePlacesArray() {
+		availablePlaces := []
+		loop Infos.maximumInfos {
+			availablePlaces.Push(false)
+		}
+		return availablePlaces
+	}
+
+	ReplaceText(newText) {
+		if !this.gui.Hwnd {
+			return Infos(newText, this.autoCloseTimeout)
+		}
+
+		if StrLen(newText) = StrLen(this.gcText.Text) {
+			this.gcText.Text := newText
+			this._SetupAutoclose()
+			return this
+		}
+
+		Infos.spots[this.spaceIndex] := false
+		return Infos(newText, this.autoCloseTimeout)
+	}
+
+	Destroy(*) {
+		if (!this.gui.Hwnd) {
+			return false
+		}
+		this.RemoveHotkeys()
+		this.gui.Destroy()
+		if (this.spaceIndex > 0) {
+			Infos.spots[this.spaceIndex] := false
+		}
+		return true
+	}
+
+	RemoveHotkeys() {
+		hotkeys := ['Escape', '^Escape']
+		if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
+			hotkeys.Push('F' this.spaceIndex)
+		}
+		HotIfWinExist('ahk_id ' this.gui.Hwnd)
+		for hk in hotkeys {
+			try Hotkey(hk, 'Off')
+		}
+		HotIf()
+	}
+
+	_FormatText() {
+		ftext := String(this.text)
+		lines := ftext.Split('`n')
+		; lines := StrSplit(ftext, '`n')
+		if lines.Length > 1 {
+			ftext := this._FormatByLine(lines)
+		}
+		else {
+			ftext := this._LimitWidth(ftext)
+		}
+
+		return String(this.text).Replace('&', '&&')
+		; return StrReplace(ftext,'&', '&&')
+	}
+
+	_FormatByLine(lines) {
+		newLines := []
+		for index, line in lines {
+			newLines.Push(this._LimitWidth(line))
+		}
+		ftext := ''
+		for index, line in newLines {
+			if index = newLines.Length {
+				ftext .= line
+				break
+			}
+			ftext .= line '`n'
+		}
+		return ftext
+	}
+
+	_LimitWidth(ltext) {
+		if StrLen(ltext) < Infos.maxWidthInChars {
+			return ltext
+		}
+		insertions := 0
+		while (insertions + 1) * Infos.maxWidthInChars + insertions < StrLen(ltext) {
+			insertions++
+			ltext := ltext.Insert('`n', insertions * Infos.maxWidthInChars + insertions)
+		}
+		return ltext
+	}
+
+	_GetAvailableSpace() {
+		for index, isOccupied in Infos.spots {
+			if !isOccupied {
+				this.spaceIndex := index
+				Infos.spots[index] := this
+				return true
+			}
+		}
+		return false
+	}
+
+	_CalculateYCoord() => Round(this.spaceIndex * Infos.guiWidth - Infos.guiWidth)
+
+	_StopDueToNoSpace() => this.Destroy()
+
+	_SetupHotkeysAndEvents() {
+		HotIfWinExist('ahk_id ' this.gui.Hwnd)
+		Hotkey('Escape', (*) => this.Destroy(), 'On')
+		Hotkey('^Escape', (*) => Infos.DestroyAll(), 'On')
+		if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
+			Hotkey('F' this.spaceIndex, (*) => this.Destroy(), 'On')
+		}
+		HotIf()
+		this.gcText.OnEvent('Click', (*) => this.Destroy())
+		this.gui.OnEvent('Close', (*) => this.Destroy())
+	}
+
+	_SetupAutoclose() {
+		if this.autoCloseTimeout {
+			SetTimer(() => this.Destroy(), -this.autoCloseTimeout)
+		}
+	}
+
+	_Show() => this.gui.Show('AutoSize NA x0 y' this._CalculateYCoord())
 }

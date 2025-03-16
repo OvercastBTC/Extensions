@@ -4057,119 +4057,119 @@ class StackedDisplay {
 
 class CleanInputBox {
 
-    ; Default settings
-    static Defaults := {
-        fontSize: 12,
-        quality: 5,
-        color: 'Blue',
-        font: 'Consolas',
-        width: Round(A_ScreenWidth / 3),
-        topMargin: Round(A_ScreenHeight / 1080 * 800),
-        backgroundColor: '0xA2AAAD'
-    }
+	; Default settings
+	static Defaults := {
+		fontSize: 12,
+		quality: 5,
+		color: 'Blue',
+		font: 'Consolas',
+		width: Round(A_ScreenWidth / 3),
+		topMargin: Round(A_ScreenHeight / 1080 * 800),
+		backgroundColor: '0xA2AAAD'
+	}
 
-    ; Instance properties
-    gui := ""
-    InputField := ""
-    Input := ""
-    isWaiting := true
-    settings := Map()
+	; Instance properties
+	gui := ""
+	InputField := ""
+	Input := ""
+	isWaiting := true
+	settings := Map()
 
-    /**
-     * Handle direct calls to the class (e.g., CleanInputBox())
-     * @param {String} name Method name (empty for direct calls)
-     * @param {Array} params Parameters passed to the call
-     * @returns {String} User input or empty string if cancelled
-     */
-    static __Call(name, params) {
-        if (name = "") {  ; Called directly as a function
-            instance := CleanInputBox(params*)
-            return instance.WaitForInput()
-        }
-    }
+	/**
+	 * Handle direct calls to the class (e.g., CleanInputBox())
+	 * @param {String} name Method name (empty for direct calls)
+	 * @param {Array} params Parameters passed to the call
+	 * @returns {String} User input or empty string if cancelled
+	 */
+	static __Call(name, params) {
+		if (name = "") {  ; Called directly as a function
+			instance := CleanInputBox(params*)
+			return instance.WaitForInput()
+		}
+	}
 
-    __New(p1 := "", p2 := "", p3 := "") {
-        ; Parse parameters into settings
-        this.settings := this.ParseParams(p1, p2, p3)
+	__New(p1 := "", p2 := "", p3 := "") {
+		; Parse parameters into settings
+		this.settings := this.ParseParams(p1, p2, p3)
 		
-        ; Create GUI
-        this.gui := Gui('+AlwaysOnTop -Caption +Border')
+		; Create GUI
+		this.gui := Gui('+AlwaysOnTop -Caption +Border')
 		
-        ; Apply styling using Gui2 methods
-        this.gui.DarkMode(this.settings.Get('backgroundColor', CleanInputBox.Defaults.backgroundColor))
+		; Apply styling using Gui2 methods
+		this.gui.DarkMode(this.settings.Get('backgroundColor', CleanInputBox.Defaults.backgroundColor))
 		
-        ; Set font
-        this.gui.SetFont(
-            's' this.settings.Get('fontSize', CleanInputBox.Defaults.fontSize) 
-            ' q' this.settings.Get('quality', CleanInputBox.Defaults.quality) 
-            ' c' this.settings.Get('color', CleanInputBox.Defaults.color),
-            this.settings.Get('font', CleanInputBox.Defaults.font)
-        )
+		; Set font
+		this.gui.SetFont(
+			's' this.settings.Get('fontSize', CleanInputBox.Defaults.fontSize) 
+			' q' this.settings.Get('quality', CleanInputBox.Defaults.quality) 
+			' c' this.settings.Get('color', CleanInputBox.Defaults.color),
+			this.settings.Get('font', CleanInputBox.Defaults.font)
+		)
 		
-        ; Setup GUI properties
-        this.gui.MarginX := 0
+		; Setup GUI properties
+		this.gui.MarginX := 0
 
-        ; Add input field
-        this.InputField := this.gui.AddEdit(
-            'x0 Center -E0x200 Background' this.gui.BackColor 
-            ' w' this.settings.Get('width', CleanInputBox.Defaults.width)
-        )
+		; Add input field
+		this.InputField := this.gui.AddEdit(
+			'x0 Center -E0x200 Background' this.gui.BackColor 
+			' w' this.settings.Get('width', CleanInputBox.Defaults.width)
+		)
 
-        ; Setup event handlers
-        this.RegisterHotkeys()
+		; Setup event handlers
+		this.RegisterHotkeys()
 
 		; this.WaitForInput()
-    }
+	}
 
 	static WaitForInput(){
 		return CleanInputBox().WaitForInput()
 	}
 
-    ParseParams(p1 := "", p2 := "", p3 := "") {
-        settings := Map()
+	ParseParams(p1 := "", p2 := "", p3 := "") {
+		settings := Map()
 		
-        ; If first parameter is object/map, use as settings
-        if IsObject(p1) {
-            for key, value in (p1 is Map ? p1 : p1.OwnProps()) {
-                settings[key] := value
-            }
-            return settings
-        }
+		; If first parameter is object/map, use as settings
+		if IsObject(p1) {
+			for key, value in (p1 is Map ? p1 : p1.OwnProps()) {
+				settings[key] := value
+			}
+			return settings
+		}
 
-        ; Otherwise only add parameters that were actually provided
-        if (p1 != "")
-            settings['fontSize'] := p1
-        if (p2 != "")
-            settings['color'] := (SubStr(p2, 1, 1) = 'c' ? p2 : 'c' p2)
-        if (p3 != "")
-            settings['quality'] := p3
+		; Otherwise only add parameters that were actually provided
+		if (p1 != "")
+			settings['fontSize'] := p1
+		if (p2 != "")
+			settings['color'] := (SubStr(p2, 1, 1) = 'c' ? p2 : 'c' p2)
+		if (p3 != "")
+			settings['quality'] := p3
 			
-        return settings
-    }
+		return settings
+	}
 
-    WaitForInput() {
-        this.gui.Show('y' this.settings.Get('topMargin', CleanInputBox.Defaults.topMargin) 
-            ' w' this.settings.Get('width', CleanInputBox.Defaults.width))
+	WaitForInput() {
+		this.gui.Show('y' this.settings.Get('topMargin', CleanInputBox.Defaults.topMargin) 
+			' w' this.settings.Get('width', CleanInputBox.Defaults.width))
 			
-        while this.isWaiting {
-            Sleep(A_Delay)
-        }
-        return this.Input
-    }
+		while this.isWaiting {
+			Sleep(A_Delay)
+		}
+		return this.Input
+	}
 
-    RegisterHotkeys() {
-        HotIfWinactive('ahk_id ' this.gui.Hwnd)
-        Hotkey('Enter', (*) => (this.Input := this.InputField.Text, this.isWaiting := false, this.Finish()), 'On')
-        Hotkey('CapsLock', (*) => (this.isWaiting := false, this.Finish()))
-        this.gui.OnEvent('Escape', (*) => (this.isWaiting := false, this.Finish()))
-    }
+	RegisterHotkeys() {
+		HotIfWinactive('ahk_id ' this.gui.Hwnd)
+		Hotkey('Enter', (*) => (this.Input := this.InputField.Text, this.isWaiting := false, this.Finish()), 'On')
+		Hotkey('CapsLock', (*) => (this.isWaiting := false, this.Finish()))
+		this.gui.OnEvent('Escape', (*) => (this.isWaiting := false, this.Finish()))
+	}
 
-    Finish() {
-        HotIfWinactive('ahk_id ' this.gui.Hwnd)
-        Hotkey('Enter', 'Off')
-        this.gui.Minimize()
-        this.gui.Destroy()
-    }
+	Finish() {
+		HotIfWinactive('ahk_id ' this.gui.Hwnd)
+		Hotkey('Enter', 'Off')
+		this.gui.Minimize()
+		this.gui.Destroy()
+	}
 }
 
 ; ---------------------------------------------------------------------------
@@ -4362,4 +4362,220 @@ class Infos {
 	}
 
 	_Show() => this.gui.Show('AutoSize NA x0 y' this._CalculateYCoord())
+}
+
+/**
+ * @name SelectableMsgBox
+ * @description Enhanced message box with selectable text
+ * @version 1.0.0
+ * @author OvercastBTC
+ * @date 2025-03-15
+ */
+
+; class SelectableMsgBox {
+; 	static Instances := Map()
+; 	static InstanceCount := 0
+	
+; 	; Default settings
+; 	DefaultSettings := {
+; 		Width: 400,
+; 		MinHeight: 150,
+; 		MaxHeight: 600,
+; 		ButtonHeight: 30,
+; 		MarginX: 20,
+; 		MarginY: 15,
+; 		Font: {
+; 			Name: "Segoe UI",
+; 			Size: 10
+; 		},
+; 		Colors: {
+; 			Background: 0xFFFFFF,
+; 			Text: 0x000000,
+; 			Button: 0xF0F0F0
+; 		}
+; 	}
+
+; 	__New(text, title := "", options := "", owner := "") {
+; 		; Debug output
+; 		SelectableMsgBox.InstanceCount += 1
+		
+; 		; Parse MsgBox style options
+; 		buttonSet := this._ParseOptions(options)
+		
+; 		; Create GUI
+; 		title := (title ? title : "Message " SelectableMsgBox.InstanceCount)
+; 		this.msgGui := Gui("+Owner" (owner ? owner : "") " +AlwaysOnTop")
+; 		this.msgGui.Title := title
+; 		this.msgGui.BackColor := this.DefaultSettings.Colors.Background
+; 		this.msgGui.SetFont("s" this.DefaultSettings.Font.Size, this.DefaultSettings.Font.Name)
+		
+; 		; Calculate dimensions
+; 		margin := this.DefaultSettings.MarginX
+; 		width := this.DefaultSettings.Width
+; 		editWidth := width - 2*margin
+		
+; 		; Create rich edit control with selectable text
+; 		this.textControl := this.msgGui.Add("Edit", 
+; 										"x" margin " y" margin " w" editWidth " r8 Multi ReadOnly",
+; 										text)
+		
+; 		; Make sure text is selectable
+; 		this.textControl.Opt("-WantReturn")
+		
+; 		; Calculate heights for button placement
+; 		; Get control position properly in AHK v2
+; 		this.textControl.GetPos(&ctrlX, &ctrlY, &ctrlW, &ctrlH)
+; 		textHeight := Max(ctrlH, this.DefaultSettings.MinHeight)
+		
+; 		; Add buttons
+; 		buttonY := textHeight + margin
+; 		buttonWidth := (width - (buttonSet.Length + 1)*margin) / buttonSet.Length
+		
+; 		for i, buttonText in buttonSet {
+; 			x := margin + (i-1)*(buttonWidth + margin)
+; 			btn := this.msgGui.AddButton(Format("x{1} y{2} w{3} h{4}",
+; 				x, buttonY, buttonWidth, this.DefaultSettings.ButtonHeight),
+; 				buttonText)
+; 			btn.OnEvent("Click", this._ButtonClick.Bind(this))
+; 		}
+		
+; 		; Set up result storage
+; 		this.Result := ""
+		
+; 		; Calculate final height
+; 		height := buttonY + this.DefaultSettings.ButtonHeight + margin
+		
+; 		; Set window title
+; 		this.msgGui.Title := title
+		
+; 		; Store instance
+; 		SelectableMsgBox.Instances[this.msgGui.Hwnd] := this
+		
+; 		; Show the window and wait for result
+; 		this.msgGui.Show(Format("w{1} h{2} Center", width, height))
+		
+; 		; Wait for result
+; 		WinWaitClose("ahk_id " this.msgGui.Hwnd)
+; 		return this.Result
+; 	}
+
+; 	_ButtonClick(GuiCtrl, *) {
+; 		this.Result := GuiCtrl.Text
+; 		this.msgGui.Destroy()
+; 		SelectableMsgBox.Instances.Delete(this.msgGui.Hwnd)
+; 	}
+
+; 	_ParseOptions(options) {
+; 		; Default button set
+; 		buttons := ["OK"]
+		
+; 		; Check for button types
+; 		if InStr(options, "OKCancel")
+; 			buttons := ["OK", "Cancel"]
+; 		else if InStr(options, "YesNo")
+; 			buttons := ["Yes", "No"]
+; 		else if InStr(options, "YesNoCancel")
+; 			buttons := ["Yes", "No", "Cancel"]
+; 		else if InStr(options, "RetryCancel")
+; 			buttons := ["Retry", "Cancel"]
+; 		else if InStr(options, "AbortRetryIgnore")
+; 			buttons := ["Abort", "Retry", "Ignore"]
+		
+; 		return buttons
+; 	}
+
+; 	; Static method to show a message box
+; 	static Show(text, title := "", options := "", owner := "") {
+; 		return SelectableMsgBox(text, title, options, owner)
+; 	}
+; }
+; class SimpleMessageBox {
+; class SelectableMsgBox {
+;     static __New(title, text, options := "") {
+;         this.Validate(title, text)
+
+;         mbGui := Gui()
+;         label := mbGui.AddText("", text)
+;         okButton := mbGui.Add("Button", "Default", "OK").OnEvent("Click", this.OnOkClick.Bind(this, gui))
+
+;         if InStr(options, "Cancel"){
+;             cancelButton := mbGui.Add("Button", "", "Cancel").OnEvent("Click", this.OnCancelClick.Bind(this, gui))
+; 		}
+;         mbGui.Show(title)
+;         return this
+;     }
+
+;     static Validate(title, text) {
+;         if !IsObject(title) || !String(title)
+;             throw TypeError("Title must be a string", -1)
+
+;         if !IsObject(text) || !String(text)
+;             throw TypeError("Text must be a string", -1)
+;     }
+
+;     static OnOkClick(gui, *) {
+;         gui.Destroy()
+;     }
+
+;     static OnCancelClick(gui, *) {
+;         gui.Destroy()
+;     }
+; }
+; Override the built-in MsgBox function
+MsgBox(params*) {
+	; Parse parameters based on MsgBox standard
+	text := "", title := "", options := "", owner := ""
+	
+	; Check if first parameter is text or options
+	if (params.Length >= 1) {
+		if (params[1] is Integer) || (InStr("OKCancel,YesNo,YesNoCancel,RetryCancel,AbortRetryIgnore", params[1])) {
+			options := params[1]
+		}
+		else {
+			text := params[1]
+		}
+	}
+	
+	; Check additional parameters
+	if (params.Length >= 2) {
+		if (options) {
+			text := params[2]
+			if (params.Length >= 3)
+				title := params[3]
+		} else {
+			title := params[2]
+			if (params.Length >= 3)
+				options := params[3]
+		}
+	}
+	
+	; Check for owner window
+	if (params.Length >= 4) {
+		owner := params[4]
+	}
+    mbGui := Gui()
+	label := mbGui.AddEdit("", text)
+	okButton := mbGui.AddButton("Default", "OK").OnEvent("Click", ObjBindMethod(OnOkClick))
+
+	if InStr(options, "Cancel"){
+		cancelButton := mbGui.AddButton("", "Cancel").OnEvent("Click", ObjBindMethod(OnCancelClick))
+	}
+	mbGui.Show(title)
+
+    Validate(title, text) {
+        if !IsObject(title) || !String(title) {
+            throw TypeError("Title must be a string", -1)
+		}
+        if !IsObject(text) || !String(text) {
+            throw TypeError("Text must be a string", -1)
+		}
+    }
+
+    OnOkClick(gui, *) {
+        mbGui.Destroy()
+    }
+
+    OnCancelClick(gui, *) {
+        mbGui.Destroy()
+    }
 }

@@ -88,66 +88,331 @@ Class Array2 {
 	}
 
 	/**
-	 * @description Adds one or more elements to the beginning of an array and returns the new length
-	 * @param elements* Elements to add to the beginning of the array
-	 * @returns {Integer} The new length of the array
+	 * @name Unshift
+	 * @description Enhanced unshift method that intelligently selects the most efficient implementation
+	 * @param {Any} elements* - Elements to add to the beginning of the array
+	 * @param {Object} options - Optional settings to control behavior:
+	 *                         - method: "auto", "nonMutating", "jsStyle", or "optimized" 
+	 *                         - preserveOriginal: When true, always uses nonMutating approach
+	 * @returns {Integer} - The new length of the array
 	 * @example
-	 * [1,2,3].Unshift(0) ; returns 4, array becomes [0,1,2,3]
-	 * [3,4,5].Unshift(1,2) ; returns 5, array becomes [1,2,3,4,5]
+	 * arr := [1,2,3]
+	 * arr.Unshift(0) ; adds 0 to beginning using best method 
+	 * arr.Unshift(4, 5, {method: "jsStyle"}) ; forces JavaScript-style method
 	 */
-	static Unshift(elements*) {
+	static Unshift(params*) {
 		
-		aNew := []
+		; Extract elements and options
+		elements := []
+		methodSpecified := false
 
+		; Is array empty?
+		if (this.Length = 0 || params.length = 0){
+			return this.Length
+		}
+
+		; Initialize default settings
+		options := {
+			method: "auto", 			; auto, WithPrepended, nonMutating, jsStyle, or optimized
+			smallArrayThreshold: 10, 	; arrays smaller than this use non-mutating
+			elementsThreshold: 3, 		; adding fewer elements than this uses JS style
+			preserveOriginal: false 	; when true, always uses nonMutating
+		}
+
+		for param in params {
+			if IsObject(param) && !param.HasProp("Length") {
+				; This appears to be an options object
+				for key, value in param.OwnProps() {
+					if options.HasProp(key) {
+						options.%key% := value
+						if (key = "method")
+							methodSpecified := true
+					}
+				}
+			} else {
+				; This is an element to unshift
+				elements.Push(param)
+			}
+		}
+		
+
+		; Handle static call pattern
+		if (elements.Length > 0 && Type(this) = "Class" && IsObject(elements[1]) && elements[1].HasProp("Length")) {
+			arr := elements[1]
+			elements.RemoveAt(1)
+			; return this.Unshift(elements*)
+			return this.Unshift(elements)
+		}
+
+		
+		; Determine best method if auto
+		if (!methodSpecified && options.method = "auto") {
+			if (options.preserveOriginal) {
+				options.method := "nonMutating"
+			}
+			else if (this.Length < options.smallArrayThreshold) {
+				options.method := "nonMutating" ; Non-mutating is fastest for small arrays
+			}
+			else if (elements.Length < options.smallArrayThreshold) {
+				options.method := "WithPrepended" ; Mutating version is typically second fastest for small arrays
+			}
+			else if (elements.Length <= options.elementsThreshold) {
+				options.method := "jsStyle"     ; JS-style is good for few elements
+			}
+			else {
+				options.method := "optimized"   ; Optimized for larger operations
+			}
+		}
+		
+		; Execute the selected method
+		switch options.method {
+			case "nonMutating":
+				return this.nonMutatingUnshift(elements*)
+			case "WithPrepended":
+				return this.WithPrepended(elements*)
+			case "jsStyle":
+				return this.jsUnshift(elements*)
+			case "optimized":
+				return this.OptimizedUnshift(elements*)
+			default: ; Fallback to optimized if invalid method
+			return this.OptimizedUnshift(elements*)
+				; return this.nonMutatingUnshift(elements*)
+		}
+	}
+
+	/**
+	 * @name nonMutatingUnshift
+	 * @description Non-mutating implementation for unshift
+	 * @param {Any} params* - Elements to add to the beginning of the array
+	 * @returns {Integer} - The new length of the array 
+	 */
+	static nonMutatingUnshift(params*) {
+		
+		elements := []
+		
+		if Type(this) = 'Array' {
+			params := elements
+			return this.Unshift(elements*)
+		}
+		; Handle static call pattern
+		if (elements.Length > 0 && Type(this) = "Class" && IsObject(elements[1]) && elements[1].HasProp("Length")) {
+			arr := elements[1]
+			elements.RemoveAt(1)
+			return this.nonMutatingUnshift(arr, elements*)
+		}
+
+		result := []
+		
+		; Add new elements
+		for element in elements {
+			result.Push(element)
+		}
+		
+		; Add original array elements
+		for item in this {
+			result.Push(item)
+		}
+		
+		; Clear and repopulate the original array
+		this.Length := 0
+		for item in result {
+			this.Push(item)
+		}
+		
+		return this.Length
+	}
+
+	/**
+	 * @name WithPrepended
+	 * @description Non-mutating function that returns a new array with elements prepended
+	 * @param {Array} params* - Elements to prepend to the array
+	 * @returns {Array} - A new array with the elements prepended
+	 * @example
+	 * newArr := [1,2,3].WithPrepended(0) ; returns [0,1,2,3], original unchanged
+	 */
+	static withPrepended(params*) {
+
+		elements := []
+		
+		; if Type(this) = 'Array' {
+		; 	params := elements
+		; 	return this.Unshift(elements*)
+		; }
+
+		; Handle static call pattern
+		if (elements.Length > 0 && Type(this) = "Class" && IsObject(elements[1]) && elements[1].HasProp("Length")) {
+			arr := elements[1]
+			elements.RemoveAt(1)
+			
+			; Add new elements
+			result := []
+			for element in elements {
+				result.Push(element)
+			}
+			
+			; Add original array elements
+			for item in arr {
+				result.Push(item)
+			}
+			
+			return result
+		}
+		
+		; Create a new array for the result
+		result := []
+		
+		; Add new elements
+		for element in elements {
+			result.Push(element)
+		}
+		
+		; Add original array elements
+		for item in this {
+			result.Push(item)
+		}
+		
+		; Return the new array
+		return result
+	}
+
+	/**
+	 * @name jsUnshift
+	 * @description JavaScript-style implementation for unshift
+	 * @param {Any} params* - Elements to add to the beginning of the array
+	 * @returns {Integer} - The new length of the array
+	 */
+	static jsUnshift(params*) {
+
+		elements := []
+		
+		; if Type(this) = 'Array' {
+		; 	params := elements
+		; 	return this.Unshift(elements*)
+		; }
+		
+		; Handle empty case for performance
+		if (elements.Length == 0) {
+			return this.Length
+		}
+		
+		; Handle static call pattern
+		if (elements.Length > 0 && Type(this) = "Class" && IsObject(elements[1]) && elements[1].HasProp("Length")) {
+			arr := elements[1]
+			elements.RemoveAt(1)
+			return this.jsUnshift(arr, elements*)
+		}
+
+		; Track original length
+		originalLength := this.Length
+		
+		; Pre-allocate space to avoid index errors
+		Loop elements.Length {
+			this.Push("")  ; Add placeholder items at the end
+		}
+		
+		; Loop from the end to avoid overwriting
+		i := originalLength
+		while (i > 0) {
+			this[i + elements.Length] := this[i]
+			i--
+		}
+		
+		; Insert new elements
+		for i, element in elements {
+			this[i] := element
+		}
+		
+		; Return the new length
+		return this.Length
+	}
+
+	/**
+	 * @name OptimizedUnshift
+	 * @description Optimized implementation that uses different strategies based on input size
+	 * @param {Any} params* - Elements to add to the beginning of the array
+	 * @returns {Integer} - The new length of the array
+	 */
+	static OptimizedUnshift(params*) {
+		
+		elements := []
+		
+		; if Type(this) = 'Array' {
+		; 	params := elements
+		; 	return this.Unshift(elements*)
+		; }
+		
+		; Early return if no elements
 		if (elements.Length == 0){
 			return this.Length
 		}
 
-		; Handle case where this method is called statically with an array as first parameter
-		if (elements.Length > 0 && Type(this) == "Class" && IsObject(elements[1]) && elements[1].HasProp("Length")) {
+		; Handle static call pattern
+		if (elements.Length > 0 && Type(this) = "Class" && IsObject(elements[1]) && elements[1].HasProp("Length")) {
 			arr := elements[1]
 			elements.RemoveAt(1)
-			return this.Unshift(arr, elements*)
-		}
-		
-		for element in elements{
-			aNew.Push(element)
+			return this.OptimizedUnshift(arr, elements*)
 		}
 
-		; Add all existing elements from the original array
-		this.Reduce((acc, val) => (acc.Push(val), acc), aNew)
-
-		; for item in this {
-		; 	aNew.Push(item)
-		; }
-
-		; Clear the original array
-		this.Length := 0
+		; For small amounts of elements, use optimized in-place approach
+		if (elements.Length <= 3) {
+			; Save original length
+			originalLength := this.Length
+			
+			; Pre-allocate space to avoid index errors
+			Loop elements.Length {
+				this.Push("") ; Add placeholders
+			}
+			
+			; Move elements from end to beginning
+			i := originalLength
+			while (i > 0) {
+				this[i + elements.Length] := this[i]
+				i--
+			}
+			
+			; Add new elements at the beginning
+			for i, element in elements {
+				this[i] := element
+			}
+		} else {
+			; For larger element sets, use safer non-mutating approach
+			result := []
+			
+			; Add new elements first
+			for element in elements {
+				result.Push(element)
+			}
+			
+			; Add original elements
+			for item in this {
+				result.Push(item)
+			}
+			
+			; Clear and repopulate
+			this.Length := 0
+			for item in result {
+				this.Push(item)
+			}
+		}
 		
-		; Use Extend to add all elements from newArray back to this array
-		this.Extend(aNew)
-		
-		; for item in aNew {
-		; 	this.Push(item)
-		; }
-
-		; Return the new length
-		return this.length
+		; Return new length
+		return this.Length
 	}
 
 	/**
-	 * @description Alias for Unshift that can be used statically
-	 * @param arr The array to modify
-	 * @param elements* Elements to add to the beginning of the array 
-	 * @returns {Integer} The new length of the array
-	 * @example
-	 * Array2.Array_Unshift([1,2,3], 0) ; returns 4, array becomes [0,1,2,3]
+	 * @name Array_Unshift
+	 * @description Static function version for working with arbitrary arrays
+	 * @param {Array} arr - The array to modify
+	 * @param {Any} elements* - Elements to add to the beginning
+	 * @param {Object} options - Optional settings (same as Unshift method)
+	 * @returns {Integer} - The new length of the array
 	 */
-	static Array_Unshift(arr, elements*) {
-		if (!IsObject(arr) || !arr.HasProp("Length"))
+	static Array_Unshift(arr, params*) {
+		if (!IsObject(arr) || !arr.HasProp("Length")) {
 			throw ValueError("Array_Unshift: First argument must be an array", -1)
+		}
 		
-		return arr.Unshift(elements*)
+		return arr.Unshift(params*)
 	}
 
 	/**
@@ -249,15 +514,19 @@ Class Array2 {
 	 * [1,2,3,4,5].Reduce((a,b) => (a+b)) ; returns 15 (sum of all numbers)
 	 */
 	static Reduce(func, initialValue?) {
-		if !HasMethod(func)
+		if !HasMethod(func) {
 			throw ValueError("Reduce: func must be a function", -1)
+		}
 		len := this.Length + 1
-		if len = 1
+		if len = 1 {
 			return initialValue ?? ""
-		if IsSet(initialValue)
+		}
+		if IsSet(initialValue) {
 			out := initialValue, i := 0
-		else
+		}
+		else {
 			out := this[1], i := 1
+		}
 		while ++i < len {
 			out := func(out, this[i])
 		}
@@ -372,8 +641,9 @@ Class Array2 {
 	 */
 	static Extend(enums*) {
 		for enum in enums {
-			if !HasMethod(enum, "__Enum")
+			if !HasMethod(enum, "__Enum") {
 				throw ValueError("Extend: arr must be an iterable")
+			}
 			for _, v in enum {
 				this.Push(v)
 			}
@@ -496,8 +766,9 @@ Class Array2 {
 	 */
 	static Unique() {
 		unique := Map()
-		for v in this
+		for v in this {
 			unique[v] := 1
+		}
 		return [unique*]
 	}
 
@@ -665,51 +936,73 @@ Class Array2 {
 	}
 
 	/**
-	 * Sort method with support for custom comparison functions
-	 * @param {Function|String} optionsOrCallback Optional callback function or sorting options
-	 * @param {String} key Optional key for sorting object arrays
-	 * @returns {Array} The sorted array
+	 * @name Sort
+	 * @description Sorts an array with support for custom comparison functions
+	 * @param {Function|String} optionsOrCallback - Optional callback function or sorting options
+	 * @param {String} key - Optional key for sorting object arrays
+	 * @returns {Array} - The sorted array
+	 * @example arr.Sort("N")  ; Sort numerically
+	 * @example arr.Sort((a, b) => a.value - b.value)  ; Custom sort using callback
 	 */
-		static Sort(optionsOrCallback := "N", key?) {
-			if !this.Length   ; Handle empty array case
-				return this
-
-			; If using a custom comparison function
-			if HasMethod(optionsOrCallback) {
-				return this._CustomSort(optionsOrCallback, key)
-			}
-
-			; For standard sorting options
-			if InStr(optionsOrCallback, "N") {
-				return this._NumericSort(key)
-			} else if RegExMatch(optionsOrCallback, "i)C(?!0)|C1|COn") {
-				return this._CaseSensitiveSort(key)
-			} else if RegExMatch(optionsOrCallback, "i)C0|COff") {
-				return this._CaseInsensitiveSort(key)
-			} else if InStr(optionsOrCallback, "Random") {
-				return this._RandomSort()
-			}
-
-			; Handle reverse option
-			if RegExMatch(optionsOrCallback, "i)R(?!a)") {
-				this.Reverse()
-			}
-
-			; Handle unique option
-			if InStr(optionsOrCallback, "U") {
-				this := this.Unique()
-			}
-
+	static Sort(optionsOrCallback := "N", key?) {
+		if !this.Length   ; Handle empty array case
 			return this
+
+		; If using a custom comparison function
+		if HasMethod(optionsOrCallback) {
+			; Fix: Ensure key is properly passed, even if undefined
+			return this._CustomSort(optionsOrCallback, IsSet(key) ? key : unset)
 		}
 
+		; For standard sorting options
+		if InStr(optionsOrCallback, "N") {
+			return this._NumericSort(IsSet(key) ? key : unset)
+		}
+		else if RegExMatch(optionsOrCallback, "i)C(?!0)|C1|COn") {
+			return this._CaseSensitiveSort(IsSet(key) ? key : unset)
+		}
+		else if RegExMatch(optionsOrCallback, "i)C0|COff") {
+			return this._CaseInsensitiveSort(IsSet(key) ? key : unset)
+		}
+		else if InStr(optionsOrCallback, "Random") {
+			return this._RandomSort()
+		}
+
+		; Handle reverse option
+		if RegExMatch(optionsOrCallback, "i)R(?!a)") {
+			this.Reverse()
+		}
+
+		; Handle unique option
+		if InStr(optionsOrCallback, "U") {
+			this := this.Unique()
+		}
+
+		return this
+	}
+
+	/**
+	 * @name _CustomSort
+	 * @description Internal method to sort with a custom comparison function
+	 * @param {Function} compareFunc - The comparison function
+	 * @param {String} key - Optional key for sorting object arrays
+	 * @returns {Array} - The sorted array
+	 * @private
+	 */
 	static _CustomSort(compareFunc, key?) {
 		; Implementation of custom sort using bubble sort
 		n := this.Length
 		for i in Range(n - 1) {
 			for j in Range(n - i - 1) {
-				val1 := key ? this[j + 1][key] : this[j + 1]
-				val2 := key ? this[j + 2][key] : this[j + 2]
+				; Fix: Properly handle the key parameter when it's set or not
+				if IsSet(key) {
+					val1 := this[j + 1][key]
+					val2 := this[j + 2][key]
+				} else {
+					val1 := this[j + 1]
+					val2 := this[j + 2]
+				}
+				
 				if (compareFunc(val1, val2) > 0) {
 					; Swap elements
 					temp := this[j + 1]
@@ -721,19 +1014,40 @@ Class Array2 {
 		return this
 	}
 
+	/**
+	 * @name _NumericSort
+	 * @description Internal method to sort numerically
+	 * @param {String} key - Optional key for sorting object arrays
+	 * @returns {Array} - The sorted array
+	 * @private
+	 */
 	static _NumericSort(key?) {
 		; Implement numeric sort
-		return this._CustomSort((a, b) => (a > b) - (a < b), key)
+		return this._CustomSort((a, b) => (a > b) - (a < b), IsSet(key) ? key : unset)
 	}
 
-	static _CaseSensitiveSort(key?) {
-		; Implement case-sensitive sort
-		return this._CustomSort((a, b) => StrCompare(String(a), String(b)), key)
-	}
-
+	/**
+	 * @name _CaseSensitiveSort
+	 * @description Internal method to sort with case sensitivity
+	 * @param {String} key - Optional key for sorting object arrays
+	 * @returns {Array} - The sorted array
+	 * @private
+	 */
 	static _CaseInsensitiveSort(key?) {
 		; Implement case-insensitive sort
-		return this._CustomSort((a, b) => StrCompare(String(a), String(b), true), key)
+		return this._CustomSort((a, b) => StrCompare(String(a), String(b), true), IsSet(key) ? key : unset)
+	}
+
+	/**
+	 * @name _CaseSensitiveSort
+	 * @description Internal method to sort with case sensitivity
+	 * @param {String} key - Optional key for sorting object arrays
+	 * @returns {Array} - The sorted array
+	 * @private
+	 */
+	static _CaseSensitiveSort(key?) {
+		; Implement case-sensitive sort
+		return this._CustomSort((a, b) => StrCompare(String(a), String(b)), IsSet(key) ? key : unset)
 	}
 
 	static _RandomSort() {
@@ -1736,3 +2050,201 @@ class SymbolicLinkHandler {
 		}
 	}
 }
+
+/**
+ * @name UnshiftBenchmark
+ * @description Perform performance comparison of different unshift implementations
+ * @author OvercastBTC
+ * @date 2025.03.15
+ * @version 1.0.5
+ */
+
+class UnshiftBenchmark {
+	/**
+	 * @description Run benchmarks on different unshift implementations
+	 * @param {Integer} iterations Number of benchmark iterations
+	 * @param {Integer} arraySize Size of test array
+	 * @param {Integer} elementsToAdd Number of elements to add in each unshift
+	 * @returns {Object} Benchmark results
+	 */
+	static Run(iterations := 1000, arraySize := 100, elementsToAdd := 3) {
+		results := Map()
+		elements := template := []
+		trayNotify(Type(this) ' ' A_ThisFunc, 'Benchmark started.')
+
+		; Setup test array template
+		Loop arraySize {
+			template.Push(A_Index)
+		}
+
+		; Setup elements to add
+		Loop elementsToAdd {
+			elements.Push("new" A_Index)
+		}
+
+		; Benchmark current implementation
+		results['Current Implementation'] := {
+			time: 0,
+			method: 'Current Implementation'
+		}
+		startTime := A_TickCount
+		Loop iterations {
+			arr := template.Clone()
+			arr.Unshift(elements*)
+		}
+		results['Current Implementation'].time := A_TickCount - startTime
+
+		; Benchmark JavaScript-style implementation
+		results['JavaScript-Style'] := {
+			time: 0,
+			method: 'JavaScript-Style'
+		}
+		startTime := A_TickCount
+		Loop iterations {
+			arr := template.Clone()
+			this.jsUnshift(arr, elements*)
+		}
+		results["JavaScript-Style"].time := A_TickCount - startTime
+
+		; Benchmark WithPrepended implementation
+		results['WithPrepended'] := {
+			time: 0,
+			method: 'WithPrepended'
+		}
+		startTime := A_TickCount
+		Loop iterations {
+			arr := template.Clone()
+			arr := this.WithPrepended(arr, elements*)
+		}
+		results['WithPrepended'].time := A_TickCount - startTime
+
+		; Benchmark non-mutating implementation
+		results['Non-Mutating'] := {
+			time: 0,
+			method: 'Non-Mutating'
+		}
+		startTime := A_TickCount
+		Loop iterations {
+			arr := template.Clone()
+			arr := this.nonMutatingUnshift(arr, elements*)
+		}
+		results['Non-Mutating'].time := A_TickCount - startTime
+
+		; Benchmark optimized implementation
+		results['Optimized'] := {
+			time: 0,
+			method: 'Optimized'
+		}
+		startTime := A_TickCount
+		Loop iterations {
+			arr := template.Clone()
+			this.optimizedUnshift(arr, elements*)
+		}
+		results['Optimized'].time := A_TickCount - startTime
+
+		; Format and display results
+		output := "Unshift Performance Benchmark`n"
+		output .= "===========================`n"
+		output .= Format("Test Configuration: {} iterations, array size {}, adding {} elements`n`n",
+						iterations, arraySize, elementsToAdd)
+
+		; Find the fastest method for highlighting
+		fastest := ""
+		fastestTime := 999999
+		for method, result in results {
+			if (result.time < fastestTime) {
+				fastestTime := result.time
+				fastest := method
+			}
+		}
+
+		; Display results ordered by performance
+		sortedResults := []
+		for method, result in results {
+			sortedResults.Push(result)
+		}
+
+		; Sort array by time (fastest first)
+		sortedResults.Sort((a, b) => a.time - b.time)
+
+		; Output formatted results
+		for i, result in sortedResults {
+			highlight := result.method == fastest ? " ← FASTEST" : ""
+			output .= Format("{}: {}ms{}`n", result.method, result.time, highlight)
+		}
+
+		; Display and return results
+		MsgBox(output)
+		return results
+	}
+	
+	/**
+	 * @description JavaScript-style unshift implementation for benchmark (FIXED)
+	 * @param {Array} arr Array to modify
+	 * @param {Array} elements* Elements to add
+	 * @returns {Integer} New array length
+	 */
+	static jsUnshift(arr, elements*) {
+		; arr := Array()
+		arr.jsUnshift(arr, elements*)
+	}
+	
+	/**
+	 * @description Mutating unshift implementation
+	 * @param {Array} arr Original array
+	 * @param {Array} elements* Elements to prepend
+	 * @returns {Array} New array with elements prepended
+	 */    
+	static WithPrepended(arr, elements*) {
+		; arr := Array()
+		arr.WithPrepended(arr, elements*)
+	}
+	
+	/**
+	 * @description Non-mutating unshift implementation
+	 * @param {Array} arr Original array
+	 * @param {Array} elements* Elements to prepend
+	 * @returns {Array} New array with elements prepended
+	 */    
+	static nonMutatingUnshift(arr, elements*) => arr.nonMutatingUnshift(arr, elements*)
+	; static nonMutatingUnshift(arr, elements*) {
+	; 	; arr := Array()
+	; 	arr.nonMutatingUnshift(arr, elements*)
+	; }
+
+	/**
+	 * @description Optimized unshift implementation (FIXED)
+	 * @param {Array} arr Array to modify
+	 * @param {Array} elements* Elements to add
+	 * @returns {Integer} New array length
+	 */
+	static optimizedUnshift(arr, elements*) {
+		arr := Array()
+		Array2.optimizedUnshift(arr, elements*)
+	}
+}
+
+:X?*C1:p.test::UnshiftBenchmark.Run(1000, 1000, 5000)
+; :X?*C1:p.test::{
+	; ; Test the implementation
+	; months := ["April", "May", "June", "July"]
+	; months.unshift("Jan", "Feb", "Mar")
+
+	; mon_tostring := months.ToString()
+	; mon_join := months.Join()
+	; mon .= 'months_tostring:`n' mon_tostring
+	; mon .= '`n'
+	; mon .= 'months_join:`n' mon_join
+	; x := months.Length
+
+	; infos(
+	; 	'[months]`n'
+	; 	mon
+	; 	'`n'
+	; 	'# of months: ' x)
+	; Run the benchmark with default settings
+	; UnshiftBenchmark.Run()
+
+	; For more detailed comparison with larger arrays
+; 	UnshiftBenchmark.Run(1000, 1000, 5000)
+; }

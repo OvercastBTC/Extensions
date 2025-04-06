@@ -1,6 +1,7 @@
+; String.Prototype.DefineProp := Object.Prototype.DefineProp
 class __javascript_strings {
     static __New() {
-        String.Prototype.DefineProp := Object.Prototype.DefineProp
+        ; String.Prototype.DefineProp := Object.Prototype.DefineProp
         
         ; === Properties ===
         String.Prototype.DefineProp('length', {get: (this) => StrLen(this)})

@@ -288,54 +288,54 @@ class docProperties {
 ; 		)'
 ; 	}
 
-;     /**
-;      * @description Sets clipboard content as RTF format with enhanced error handling
-;      * @param {String} rtfText The RTF formatted text
-;      * @throws {Error} If clipboard operations fail
-;      */
-;     static SetClipboardRTF(rtfText) {
-;         ; Register RTF format if needed
-;         static CF_RTF := DllCall("RegisterClipboardFormat", "Str", "Rich Text Format", "UInt")
+; 	/**
+; 	 * @description Sets clipboard content as RTF format with enhanced error handling
+; 	 * @param {String} rtfText The RTF formatted text
+; 	 * @throws {Error} If clipboard operations fail
+; 	 */
+; 	static SetClipboardRTF(rtfText) {
+; 		; Register RTF format if needed
+; 		static CF_RTF := DllCall("RegisterClipboardFormat", "Str", "Rich Text Format", "UInt")
 		
-;         if (!CF_RTF)
-;             throw Error("Failed to register RTF clipboard format", -1)
+; 		if (!CF_RTF)
+; 			throw Error("Failed to register RTF clipboard format", -1)
 		
-;         ; Open and clear clipboard with timeout handling
-;         startTime := A_TickCount
-;         while (!DllCall("OpenClipboard", "Ptr", A_ScriptHwnd)) {
-;             if (A_TickCount - startTime > 1000)
-;                 throw Error("Failed to open clipboard", -1)
-;             Sleep(10)
-;         }
+; 		; Open and clear clipboard with timeout handling
+; 		startTime := A_TickCount
+; 		while (!DllCall("OpenClipboard", "Ptr", A_ScriptHwnd)) {
+; 			if (A_TickCount - startTime > 1000)
+; 				throw Error("Failed to open clipboard", -1)
+; 			Sleep(10)
+; 		}
 		
-;         DllCall("EmptyClipboard")
+; 		DllCall("EmptyClipboard")
 		
-;         ; Allocate and copy RTF data
-;         hGlobal := DllCall("GlobalAlloc", "UInt", 0x42, "Ptr", StrPut(rtfText, "UTF-8"))
-;         if (!hGlobal)
-;             throw Error("Failed to allocate memory for clipboard", -1)
+; 		; Allocate and copy RTF data
+; 		hGlobal := DllCall("GlobalAlloc", "UInt", 0x42, "Ptr", StrPut(rtfText, "UTF-8"))
+; 		if (!hGlobal)
+; 			throw Error("Failed to allocate memory for clipboard", -1)
 			
-;         try {
-;             pGlobal := DllCall("GlobalLock", "Ptr", hGlobal, "Ptr")
-;             if (!pGlobal)
-;                 throw Error("Failed to lock global memory", -1)
+; 		try {
+; 			pGlobal := DllCall("GlobalLock", "Ptr", hGlobal, "Ptr")
+; 			if (!pGlobal)
+; 				throw Error("Failed to lock global memory", -1)
 				
-;             StrPut(rtfText, pGlobal, "UTF-8")
-;             DllCall("GlobalUnlock", "Ptr", hGlobal)
+; 			StrPut(rtfText, pGlobal, "UTF-8")
+; 			DllCall("GlobalUnlock", "Ptr", hGlobal)
 			
-;             ; Set clipboard data
-;             if (!DllCall("SetClipboardData", "UInt", CF_RTF, "Ptr", hGlobal))
-;                 throw Error("Failed to set clipboard data", -1)
-;         } catch Error as err {
-;             ; Cleanup on error
-;             DllCall("GlobalFree", "Ptr", hGlobal)
-;             DllCall("CloseClipboard")
-;             throw err
-;         }
+; 			; Set clipboard data
+; 			if (!DllCall("SetClipboardData", "UInt", CF_RTF, "Ptr", hGlobal))
+; 				throw Error("Failed to set clipboard data", -1)
+; 		} catch Error as err {
+; 			; Cleanup on error
+; 			DllCall("GlobalFree", "Ptr", hGlobal)
+; 			DllCall("CloseClipboard")
+; 			throw err
+; 		}
 		
-;         DllCall("CloseClipboard")
-;         Sleep(50)  ; Small delay to ensure clipboard operations complete
-;     }
+; 		DllCall("CloseClipboard")
+; 		Sleep(50)  ; Small delay to ensure clipboard operations complete
+; 	}
 
 ; }
 
@@ -349,7 +349,8 @@ class rtfHandler extends docProperties {
 		}
 
 		startTime := A_TickCount
-		while (!DllCall('OpenClipboard', 'Ptr', A_ScriptHwnd)) {
+		; while (!DllCall('OpenClipboard', 'Ptr', A_ScriptHwnd)) {
+		while (!DllCall('OpenClipboard', 'Ptr', 0)) {
 			if (A_TickCount - startTime > 1000) {
 				throw Error('Failed to open clipboard', -1)
 			}
@@ -666,7 +667,7 @@ class FormatConverter {
 		
 		; Calculate confidence score (adjust threshold as needed)
 		; confidenceThreshold := 4  ; Minimum number of matches needed
-		confidenceThreshold := 1  ; Minimum number of matches needed
+		confidenceThreshold := 2  ; Minimum number of matches needed
 		isRTF := matchCount >= confidenceThreshold
 		
 		; Validate basic structure integrity
@@ -1030,6 +1031,18 @@ class String2 {
 		__ObjDefineProp(String.Prototype, "WLength",{get:(arg)	=>String2.WLength(arg)})
 	}
 
+	/**
+     * @description Automatically converts input to string representation
+     * @param {Any} input The value to convert
+     */
+	__New(input?) {
+		if !IsSet(input){
+			input := ""
+		}
+		; Use existing ToString logic for conversion
+		this.value := String2.ToString(input)
+		return this.value
+	}
 	; static Send(input?){
 	; 	; (Type(this) == 'String' && IsSet(this) && this != '')
 	; 	Type(this) == 'String'? Clip.Send(this)	: Clip.Send(input)
@@ -1055,6 +1068,61 @@ class String2 {
 	
 	}
 
+	static HTMLToRTF(t := this) => FormatConverter.HTMLToRTF(this)
+	static RTFtoRTF(t := this) => FormatConverter.RTFtoRTF(this)
+
+	/**
+     * @description Converts any input to string representation
+     * @param {Any} input The value to convert to string
+     * @returns {String} String representation of input
+     */
+	static ToString(input?) {
+		if !IsSet(input)
+			input := this
+
+		; Check input type and call appropriate conversion
+		switch Type(input) {
+			case "Object", "Map", "Array":
+				return this._ObjectToString(input)
+			case "String":
+				return input
+			case "Integer", "Float":
+				return String(input) 
+			case "Undefined":
+				return ""
+			default:
+				try {
+					if input.HasOwnProp("ToString")
+						return input.ToString()
+					return String(input)
+				}
+				return String(input)
+		}
+	}
+	
+	/**
+	 * @description Internal method to convert objects to string
+	 * @param {Object} obj The object to convert
+	 * @returns {String} String representation
+	 */
+	static _ObjectToString(obj) {
+		switch Type(obj) {
+			case "Array":
+				return "[" obj.Join(", ") "]"
+			case "Map":
+				pairs := []
+				for k, v in obj
+					pairs.Push(k ": " this.ToString(v))
+				return "{" pairs.Join(", ") "}"
+			case "Object":
+				pairs := []
+				for k, v in obj.OwnProps()
+					pairs.Push(k ": " this.ToString(v))
+				return "{" pairs.Join(", ") "}"
+			default:
+				return String(obj)
+		}
+	}
 
 	/**
 	 * @description Converts a string to a Map object
@@ -1086,49 +1154,6 @@ class String2 {
 	static ToArray(strObj*) {
 		return this._StringToArray(Type('String') && IsSet(strObj) ? strObj : this)
 	}
-
-	/**
-	 * @description Converts a string to an Object with properties
-	 * @param {String} strObj Optional string to convert, uses 'this' if not provided
-	 * @returns {Object} Object with properties from the string
-	 * @example
-	 * str := "prop1=value1`nprop2=value2"
-	 * obj := String2.ToObject(str)
-	 * ; Or: obj := str.ToObject()
-	 */
-	; static ToObject(strObj*) {
-	;     return this._StringToObject(Type('String') && IsSet(strObj) ? strObj : this)
-	; }
-
-	/**
-	 * @description Converts a string to a Map object
-	 * @param {String} strObj Optional string to convert, uses 'this' if not provided
-	 * @returns {Map} Map object with key-value pairs from the string
-	 * @throws {TypeError} If input is not a string
-	 * @example
-	 * str := "key1=value1`nkey2=value2"
-	 * mapObj := String2.ToMap(str)
-	 */
-
-	; TODO Fix - still not passing tests
-	; static ToMap(strObj?) {
-	;     str := Type(strObj) = "String" ? strObj : this
-	;     if (Type(str) != "String")
-	;         throw TypeError("Input must be a string")
-		
-	;     map := Map()
-	;     if (str = "")
-	;         return map
-			
-	;     for line in StrSplit(str, "`n", "`r") {
-	;         if (line := Trim(line)) {
-	;             parts := StrSplit(line, "=", " `t", 2)
-	;             if (parts.Length = 2)
-	;                 map[Trim(parts[1])] := Trim(parts[2])
-	;         }
-	;     }
-	;     return map
-	; }
 	
 	/**
 	 * @description Converts a string to an Object with properties
@@ -2444,3 +2469,1198 @@ class StringConversionTests extends TestSuite {
 ; Obj := str.ToMap(str)
 
 ; Infos(Obj.ToString())
+
+#Requires AutoHotkey v2.0+
+#SingleInstance Force
+#Include <Includes/Basic>
+; ; Shift+Ctrl+f
+; +^f::convertbrand()
+
+
+class TextReplacer {
+    mapFM := Map(
+        'FM', ['FM\s?Global', 'FMG\s?', 'fmglobal'],
+        'FM ', ['FMG\s'],
+        'FM Affiliated', ['AFM', 'Affiliated\s?FM'],
+        'FM Boiler RE', ['Mutual\s?Boiler\s?Re'],
+        'sites', [
+            {osite:'fmglobal\.com/liquid', nsite: 'fm.com/liquid'}, 
+            {osite: 'fmglobaldatasheets\.com', nsite: 'fm.com/resources/fm-data-sheets'},
+            {osite:'fmglobalcatalog\.com', nsite: 'fmcatalog.com'}, 
+            {osite:'fmglobal\.com/training-center', nsite: 'fm.com/training-center'}, 
+        ]
+    )
+
+    Needle := '(?:([\`'\`"]\w+[\`'\`"][,\s])|(\d+,)|([\`'\`"]{2}))'
+    kNeedle := '([\`'\`"]\w+[\`'\`"][,\s])'
+    vNeedle := '(\d+,)'
+    bNeedle := '([\`'\`"]{2})'
+
+    __New() {
+        this.CreateGUI()
+    }
+
+    ProcessRTFFile(rtfFilePath) {
+        try {
+            nfile := FileOpen(rtfFilePath, "r")
+            fContent := nfile.Read()
+            nfile.Close()
+
+            processedContent := this.ProcessRTFContent(fContent)
+
+            nfile := FileOpen(rtfFilePath, "w")
+            nfile.Write(processedContent)
+            nfile.Close()
+
+            return processedContent
+        } catch as err {
+            MsgBox("Error processing RTF file: " . err.Message)
+            return ""
+        }
+    }
+
+    ProcessRTFContent(rtfContent) {
+        lines := StrSplit(rtfContent, "`n")
+        processedLines := []
+
+        for line in lines {
+            processedLine := this.ProcessLine(line)
+            processedLines.Push(processedLine)
+        }
+
+        return processedLines.Join("`n")
+    }
+
+    ProcessLine(line) {
+        if (line ~= this.Needle) {
+            for key, values in this.mapFM {
+                if (IsObject(values)) {
+                    if (key == "sites") {
+                        for site in values {
+                            line := RegExReplace(line, site.osite, site.nsite)
+                        }
+                    } else {
+                        for pattern in values {
+                            line := RegExReplace(line, pattern, key)
+                        }
+                    }
+                } else {
+                    line := RegExReplace(line, values, key)
+                }
+            }
+        }
+        return line
+    }
+
+    ProcessText(originalText) {
+        try {
+            this.UpdateGUI("Original Text", originalText)
+
+            textFormat := this.GetTextFormat(originalText)
+            this.UpdateGUI("Text Format", textFormat)
+
+            modifiedText := this.ReplaceText(originalText)
+            this.UpdateGUI("Modified Text", modifiedText)
+
+            return modifiedText
+        } catch as err {
+            this.ShowMessage("Error: " . err.Message)
+            return ""
+        }
+    }
+
+    ExtractPlainTextFromRTF(rtfText) {
+        plainText := rtfText
+        plainText := RegExReplace(plainText, "^\{\\rtf1.*?\\par", "")  ; Remove RTF header
+        plainText := RegExReplace(plainText, "\\[a-z]+", "")  ; Remove RTF commands
+        plainText := RegExReplace(plainText, "\\'[0-9a-f]{2}", "")  ; Remove escaped characters
+        plainText := StrReplace(plainText, "\par", "`n")  ; Replace paragraph breaks with newlines
+        plainText := StrReplace(plainText, "}", "")  ; Remove closing brace
+        return Trim(plainText)
+    }
+
+    GetTextFormat(text) {
+        if (RegExMatch(text, "^\{\\rtf"))
+            return "Rich Text Format"
+        else
+            return "Plain Text"
+    }
+
+    ReplaceText(text) {
+        modifiedText := text
+        for key, values in this.mapFM {
+            if (IsObject(values)) {
+                if (key == "sites") {
+                    for site in values {
+                        modifiedText := RegExReplace(modifiedText, site.osite, site.nsite)
+                    }
+                } else {
+                    for pattern in values {
+                        modifiedText := RegExReplace(modifiedText, pattern, key)
+                    }
+                }
+            } else {
+                modifiedText := RegExReplace(modifiedText, values, key)
+            }
+        }
+        return modifiedText
+    }
+
+    UpdateRichTextWithReplacements(richText, originalPlainText, modifiedPlainText) {
+        if (originalPlainText == modifiedPlainText)
+            return richText
+
+        ; Create a map of original to modified substrings
+        replaceMap := Map()
+        originalParts := StrSplit(originalPlainText, "`n")
+        modifiedParts := StrSplit(modifiedPlainText, "`n")
+        
+        for index, originalPart in originalParts {
+            if (originalPart != modifiedParts[index]) {
+                replaceMap[originalPart] := modifiedParts[index]
+            }
+        }
+
+        ; Replace in rich text
+        for original, modified in replaceMap {
+            richText := StrReplace(richText, original, modified)
+        }
+
+        return richText
+    }
+
+    CreateGUI() {
+        this.gui := Gui("+Resize +MinSize400x300")
+        this.gui.Title := "Text Replacer"
+        this.gui.OnEvent("Close", (*) => this.gui.Hide())
+
+        this.gui.Add("Text", "w400", "Original Text:")
+        this.originalTextEdit := this.gui.Add("Edit", "r4 w400 ReadOnly")
+        this.gui.Add("Text", "w400", "Text Format:")
+        this.formatEdit := this.gui.Add("Edit", "r1 w400 ReadOnly")
+        this.gui.Add("Text", "w400", "Modified Text:")
+        this.modifiedTextEdit := this.gui.Add("Edit", "r4 w400 ReadOnly")
+        this.gui.Add("Text", "w400", "Window Info:")
+        this.windowInfoEdit := this.gui.Add("Edit", "r6 w400 ReadOnly")
+
+        this.gui.Add("Button", "w100", "Close").OnEvent("Click", (*) => this.gui.Hide())
+    }
+
+    UpdateGUI(field, value) {
+        switch field {
+            case "Original Text":
+                this.originalTextEdit.Value := value
+            case "Text Format":
+                this.formatEdit.Value := value
+            case "Modified Text":
+                this.modifiedTextEdit.Value := value
+            case "Window Info":
+                this.windowInfoEdit.Value := value
+        }
+        this.ShowGUI()
+    }
+
+    ShowGUI() {
+        ; this.gui.Show()
+    }
+
+    ShowMessage(msg) {
+        MsgBox(msg, "Text Replacer", 0x2000)  ; 0x2000 flag makes the MsgBox always on top
+    }
+
+    GetActiveWindowInfo() {
+        ; Store the current active window
+        originalActiveWindow := WinExist("A")
+
+        ; Wait a bit to ensure the target window is active
+        Sleep(50)
+
+        ; Get info about the now-active window (which should be the target application)
+        windowId := WinGetID("A")
+        windowTitle := WinGetTitle(windowId)
+        windowClass := WinGetClass(windowId)
+        processName := WinGetProcessName(windowId)
+
+        ; Get focused control information
+        focusedControl := ControlGetFocus("A")
+        controlClass := ControlGetClassNN(focusedControl)
+        
+        ; Get control styles and exstyles
+        controlStyle := ControlGetStyle(focusedControl)
+        controlExStyle := ControlGetExStyle(focusedControl)
+
+        ; Translate styles to Win32 constants
+        translatedStyle := this.TranslateStyles(controlStyle)
+        translatedExStyle := this.TranslateExStyles(controlExStyle)
+
+        ; Additional info for hznHorizon.exe
+        additionalInfo := ""
+        if (processName = "hznHorizon.exe") {
+            additionalInfo := this.GetHorizonWindowInfo(windowId, focusedControl)
+        }
+
+        ; Activate the original window
+        if (originalActiveWindow)
+            WinActivate("ahk_id " originalActiveWindow)
+
+        return {
+            id: windowId, 
+            title: windowTitle, 
+            class: windowClass, 
+            process: processName,
+            focusedControl: focusedControl,
+            controlClass: controlClass,
+            controlStyle: Format("0x{:X}", controlStyle),
+            controlExStyle: Format("0x{:X}", controlExStyle),
+            translatedStyle: translatedStyle,
+            translatedExStyle: translatedExStyle,
+            additionalInfo: additionalInfo
+        }
+    }
+
+    GetHorizonWindowInfo(hWnd, hControl) {
+        static GA_ROOT := 2
+        static GA_ROOTOWNER := 3
+        static GA_PARENT := 1
+        static GW_CHILD := 5
+
+        hRoot := DllCall("GetAncestor", "Ptr", hWnd, "UInt", GA_ROOT, "Ptr")
+        hRootOwner := DllCall("GetAncestor", "Ptr", hWnd, "UInt", GA_ROOTOWNER, "Ptr")
+        hParent := DllCall("GetAncestor", "Ptr", hControl, "UInt", GA_PARENT, "Ptr")
+        hChild := DllCall("GetWindow", "Ptr", hControl, "UInt", GW_CHILD, "Ptr")
+
+        info := "Root Window: " . this.GetWindowDetails(hRoot) . "`n"
+        info .= "Root Owner: " . this.GetWindowDetails(hRootOwner) . "`n"
+        info .= "Parent Window: " . this.GetWindowDetails(hParent) . "`n"
+        info .= "Child Window: " . (hChild ? this.GetWindowDetails(hChild) : "None")
+
+        return info
+    }
+
+    GetWindowDetails(hWnd) {
+        if (!hWnd)
+            return "N/A"
+
+        class := WinGetClass("ahk_id " . hWnd)
+        title := WinGetTitle("ahk_id " . hWnd)
+        return Format("0x{:X} ({:s}) - {:s}", hWnd, class, title)
+    }
+
+    TranslateStyles(style) {
+        styles := []
+        styleMap := Map(
+            0x00000000, "WS_OVERLAPPED",
+            0x00C00000, "WS_CAPTION",
+            0x00080000, "WS_SYSMENU",
+            0x00040000, "WS_THICKFRAME",
+            0x00020000, "WS_MINIMIZEBOX",
+            0x00010000, "WS_MAXIMIZEBOX",
+            0x00000001, "WS_TABSTOP",
+            0x00000002, "WS_GROUP",
+            0x00000004, "WS_SIZEBOX",
+            0x00000020, "WS_VSCROLL",
+            0x00000010, "WS_HSCROLL",
+            0x00800000, "WS_BORDER",
+            0x00400000, "WS_DLGFRAME",
+            0x00000100, "WS_VISIBLE",
+            0x08000000, "WS_DISABLED",
+            0x10000000, "WS_CHILD"
+        )
+
+        for flag, name in styleMap {
+            if (style & flag)
+                styles.Push(name)
+        }
+
+        return styles.Length ? styles.Join(", ") : "None"
+    }
+
+    TranslateExStyles(exStyle) {
+        exStyles := []
+        exStyleMap := Map(
+            0x00000001, "WS_EX_DLGMODALFRAME",
+            0x00000004, "WS_EX_NOPARENTNOTIFY",
+            0x00000008, "WS_EX_TOPMOST",
+            0x00000010, "WS_EX_ACCEPTFILES",
+            0x00000020, "WS_EX_TRANSPARENT",
+            0x00000040, "WS_EX_MDICHILD",
+            0x00000080, "WS_EX_TOOLWINDOW",
+            0x00000100, "WS_EX_WINDOWEDGE",
+            0x00000200, "WS_EX_CLIENTEDGE",
+            0x00000400, "WS_EX_CONTEXTHELP",
+            0x00001000, "WS_EX_RIGHT",
+            0x00002000, "WS_EX_RTLREADING",
+            0x00004000, "WS_EX_LEFTSCROLLBAR",
+            0x00010000, "WS_EX_CONTROLPARENT",
+            0x00020000, "WS_EX_STATICEDGE",
+            0x00040000, "WS_EX_APPWINDOW",
+            0x00080000, "WS_EX_LAYERED",
+            0x00100000, "WS_EX_NOINHERITLAYOUT",
+            0x00200000, "WS_EX_NOREDIRECTIONBITMAP",
+            0x00400000, "WS_EX_LAYOUTRTL",
+            0x02000000, "WS_EX_COMPOSITED",
+            0x08000000, "WS_EX_NOACTIVATE"
+        )
+
+        for flag, name in exStyleMap {
+            if (exStyle & flag)
+                exStyles.Push(name)
+        }
+
+        return exStyles.Length ? exStyles.Join(", ") : "None"
+    }
+}
+
+
+; ProcessAndPasteText() {
+;     replacer := TextReplacer()
+;     AE.SM_BISL(&sm)
+;     AE.cBakClr(&cBak)
+
+;     ; Store the current active window
+;     originalActiveWindow := WinExist("A")
+
+;     ; Use key.SendVK for select all
+;     key.SendVK(key.selectall)
+;     Sleep(100)
+
+;     ; Use key.SendVK for copy
+;     key.SendVK(key.copy)
+;     AE.cSleep(150)
+    
+;     originalText := A_Clipboard
+;     AE.cSleep(150)
+;     modifiedText := replacer.ProcessText(originalText)
+
+;     if (modifiedText != "") {
+;         windowInfo := replacer.GetActiveWindowInfo()
+;         infoText := "Process: " . windowInfo.process . "`n"
+;                   . "Class: " . windowInfo.class . "`n"
+;                   . "Control: " . windowInfo.controlClass . "`n"
+;                   . "Control Style: " . windowInfo.controlStyle . "`n"
+;                   . "Translated Style: " . windowInfo.translatedStyle . "`n"
+;                   . "Control ExStyle: " . windowInfo.controlExStyle . "`n"
+;                   . "Translated ExStyle: " . windowInfo.translatedExStyle . "`n"
+;                   . "Additional Info:`n" . windowInfo.additionalInfo
+;         replacer.UpdateGUI("Window Info", infoText)
+        
+;         ; Activate the original window before pasting
+;         if (originalActiveWindow) {
+;             WinActivate("ahk_id " originalActiveWindow)
+;             WinWaitActive("ahk_id " originalActiveWindow)
+;             Sleep(100)  ; Give a moment for the window to become fully active
+;         }
+
+;         ; Set the clipboard to the modified text
+;         A_Clipboard := modifiedText
+;         AE.cSleep(150)
+
+;         ; Use key.SendVK for paste
+;         key.SendVK(key.paste)
+;     }
+;     sleep(500)
+;     AE.cRestore(cBak)
+;     AE.rSM_BISL(sm)
+; }
+
+
+
+; ProcessAndPasteText() {
+;     AE.SM_BISL(&sm)
+;     AE.cBakClr(&cBak)
+
+;     ; Store the current active window
+;     originalActiveWindow := WinExist("A")
+
+;     ; Use key.SendVK for select all
+;     key.SendVK(key.selectall)
+;     Sleep(100)
+
+;     ; Use key.SendVK for copy
+;     key.SendVK(key.copy)
+;     AE.cSleep(150)
+    
+;     ; Get the RTF content from the clipboard
+;     rtfContent := AE.GetRichTextFromClipboard()
+
+;     ; Extract the plain text from the RTF content
+;     plainText := AE.ExtractPlainTextFromRTF(rtfContent)
+
+;     ; Process the plain text
+;     modifiedPlainText := replacer.ProcessText(plainText)
+
+;     if (modifiedPlainText != plainText) {
+;         ; Replace the text portion in the RTF content
+;         modifiedRtfContent := AE.ReplaceTextInRTF(rtfContent, plainText, modifiedPlainText)
+
+;         windowInfo := replacer.GetActiveWindowInfo()
+;         infoText := "Process: " . windowInfo.process . "`n"
+;                   . "Class: " . windowInfo.class . "`n"
+;                   . "Control: " . windowInfo.controlClass . "`n"
+;                   . "Control Style: " . windowInfo.controlStyle . "`n"
+;                   . "Translated Style: " . windowInfo.translatedStyle . "`n"
+;                   . "Control ExStyle: " . windowInfo.controlExStyle . "`n"
+;                   . "Translated ExStyle: " . windowInfo.translatedExStyle . "`n"
+;                   . "Additional Info:`n" . windowInfo.additionalInfo
+;         replacer.UpdateGUI("Window Info", infoText)
+        
+;         ; Activate the original window before pasting
+;         if (originalActiveWindow) {
+;             WinActivate("ahk_id " originalActiveWindow)
+;             WinWaitActive("ahk_id " originalActiveWindow)
+;             Sleep(100)  ; Give a moment for the window to become fully active
+;         }
+
+;         ; Set the clipboard to the modified RTF content
+;         AE.SetClipboardRichText(modifiedRtfContent)
+;         AE.cSleep(150)
+
+;         ; Use key.SendVK for paste
+;         key.SendVK(key.paste)
+;     }
+
+;     Sleep(500)
+;     AE.cRestore(cBak)
+;     AE.rSM_BISL(sm)
+; }
+
+; ^+f::ProcessAndPasteText()
+
+
+ProcessAndPasteText(){
+    AE.SM_BISL(&sm)
+    AE.cBakClr(&cBak)
+    mapFM := Map(
+        'FM', ['FM\s?Global', 'FMG\s?', 'fmglobal'],
+        'FM ', ['FMG\s'],
+        'FM Affiliated', ['AFM', 'Affiliated\s?FM'],
+        'FM Boiler RE', ['Mutual\s?Boiler\s?Re'],
+        'sites', [
+            {osite:'fmglobal\.com/liquid', nsite: 'fm.com/liquid'}, 
+            {osite: 'fmglobaldatasheets\.com', nsite: 'fm.com/resources/fm-data-sheets'},
+            {osite:'fmglobalcatalog\.com', nsite: 'fmcatalog.com'}, 
+            {osite:'fmglobal\.com/training-center', nsite: 'fm.com/training-center'}, 
+        ]
+    )
+
+    Needle := '(?:([\`'\`"]\w+[\`'\`"][,\s])|(\d+,)|([\`'\`"]{2}))'
+    kNeedle := '([\`'\`"]\w+[\`'\`"][,\s])'
+    vNeedle := '(\d+,)'
+    bNeedle := '([\`'\`"]{2})'
+
+    ; Use key.SendVK for select all
+    ; key.SendVK(key.selectall)
+    ; Sleep(100)
+
+    ; Use key.SendVK for copy
+    ; key.SendVK(key.copy)
+    ; AE.cSleep(150)
+    
+    ; Get the RTF content from the clipboard
+    rtfContent := A_Clipboard
+    AE.cSleep(150)
+    fname := 'temprtffile.rtf'
+    FileDelete(fname)
+    FileAppend(rtfContent, fname, '`n UTF-8')
+
+    return
+    fOpen := FileOpen(fname, 'rw', 'UTF-8')
+    arrFile := [], fArrObj := []
+    fLine := '', fString := ''
+
+    ProcessLine(line) {
+        ; if (line ~= Needle) {
+            for key, values in mapFM {
+                if (IsObject(values)) {
+                    if (key == "sites") {
+                        for site in values {
+                            line := RegExReplace(line, site.osite, site.nsite)
+                        }
+                    } else {
+                        for pattern in values {
+                            line := RegExReplace(line, pattern, key)
+                        }
+                    }
+                } else {
+                    line := RegExReplace(line, values, key)
+                }
+            }
+        ; }
+        return line
+    }
+    ; Read file contents
+    loop read fName {
+        fArrObj.Push(A_LoopReadLine)
+        fLine .= A_LoopReadLine '`n'
+    }
+
+    ; Process each line
+    for aLine in fArrObj {
+        newLine := ProcessLine(aLine)
+        fString .= newLine '`n'
+    }
+
+    ; Write updated content back to file
+    fOpen.Write(fString)
+    fOpen := ''
+    ; return 0
+    sleep(100)
+
+    oFile := FileOpen(fname, 'r', 'UTF-8')
+    rFile := oFile.Read()
+
+    A_Clipboard := rFile
+    AE.cSleep(150)
+    ; MsgBox(rFile)
+
+    ; return
+    ; Use key.SendVK for paste
+    key.SendVK(key.paste)
+
+    Sleep(500)
+    AE.cRestore(cBak)
+    AE.rSM_BISL(sm)
+}
+
+class SpecialCharactersGui {
+	CharacterGroups := Map(
+		"Accented", "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔŒÕÖØÙÚÛÜßàáâãäåæçèéêëìíîïñòóôœõöøùúûüÿ",
+		"Symbols", "¿¡«»§¶†‡•-–—™©®",
+		"Currency", "¢€¥£₤¤",
+		"Greek", "αβγδεζηθικλμνξοπρσςτυφχψωΓΔΘΛΞΠΣΦΨΩ",
+		"Math", "∫∑∏√−±∞≈∝≡≠≤≥×·÷∂′″∇‰°∴",
+		"Sets", "ø∈∉∩∪⊂⊃⊆⊇¬∧∨∃∀⇒⇔→↔↑ℵ",
+		"Superscript", "⁰¹²³⁴⁵⁶⁷⁸⁹",
+		"Subscript", "₀₁₂₃₄₅₆₇₈₉"
+	)
+
+	UnitArray := ["kW", "MW", "kVA", "MVA", "ft²", "ft³", "m²", "m³", "°C", "°F", "Ω", "µ", "¼", "½", "¾", "⅓", "⅔"]
+	ScientificArray := ["×10⁻⁹", "×10⁻⁶", "×10⁻³", "×10³", "×10⁶", "×10⁹"]
+	TooltipHwnds := Map()
+	Settings := {System: {SizeOfTI: 24 + (A_PtrSize * 6)}}
+
+	__New() {
+		this.gui := Gui("+AlwaysOnTop -Caption +ToolWindow")
+		this.gui.MakeFontNicer()
+		this.gui.NeverFocusWindow()
+		this.gui.DarkMode(0x2D2D30)
+		this.buttonWidth := 40
+		this.buttonHeight := 35
+		this.columnsCount := 20
+		this.currentY := 10
+		this.padding := 5
+		
+		; Calculate total width for headers
+		this.totalWidth := (this.buttonWidth * this.columnsCount) + (this.padding * (this.columnsCount - 1))
+		
+		; Add close button and escape functionality
+		this.AddCloseButton()
+		this.SetupHotkeys()
+		
+		this.CreateLayout()
+	}
+
+	AddCloseButton() {
+		closeBtn := this.gui.AddText( 
+			Format("x{1} y5 +Border cRed Center", this.totalWidth + 15), 
+			"×")
+		closeBtn.OnEvent("Click", (*) => this.gui.Destroy())
+		this.GuiCtrlSetTip(closeBtn, "Close (Escape)")
+	}
+
+	SetupHotkeys() {
+		; Add Escape and Ctrl+Escape hotkeys to close
+		this.gui.OnEvent("Escape", (*) => this.gui.Destroy())
+		HotIfWinActive("ahk_id " this.gui.Hwnd)
+		Hotkey("^Escape", (*) => this.gui.Destroy())
+		HotIf()
+	}
+
+	CreateGroupHeader(groupName) {
+		; Header now uses calculated total width
+		header := this.gui.AddText( 
+			Format("x0 y{1} w{2} h25 Background404040 Center", 
+				this.currentY, this.totalWidth), 
+			groupName)
+		this.currentY += 25 + this.padding
+	}
+
+	AddCharacterButtons(charArray) {
+		for index, char in charArray {
+			x := this.padding + (Mod(index - 1, this.columnsCount) * (this.buttonWidth + this.padding))
+			y := this.currentY + (Floor((index - 1) / this.columnsCount) * (this.buttonHeight + this.padding))
+			
+			btn := this.gui.AddText( 
+				Format("x{1} y{2} w{3} h{4} +Border +BackgroundTrans Center", 
+				; Format("x{1} y{2} w{3} h{4} +Border cBlue Center", 
+					x, y, this.buttonWidth, this.buttonHeight), 
+				char)
+			
+			this.GuiCtrlSetTip(btn, "Click to send ' " char " ' or copy to clipboard")
+			btn.OnEvent("Click", this.SendChar.Bind(this, char))
+		}
+		
+		rowCount := Ceil(charArray.Length / this.columnsCount)
+		this.currentY += (rowCount * (this.buttonHeight + this.padding))
+	}
+
+	CreateLayout() {
+		; Add dark theme styling
+		; this.gui.SetFont("s11 cWhite")
+		this.gui.MakeFontNicer("12 c1eff00")
+		
+		this.CreateCharacterGroups()
+		this.CreateUnitGroup()
+		this.CreateScientificGroup()
+		
+		; Show GUI centered on screen
+		this.gui.Show("AutoSize Center")
+	}
+
+	CreateCharacterGroups() {
+		for groupName, chars in this.CharacterGroups {
+			; Add group header with background
+			this.CreateGroupHeader(groupName)
+
+			; Convert string to array and add buttons
+			charArray := StrSplit(chars)
+			this.AddCharacterButtons(charArray)
+			
+			; Add spacing after group
+			this.currentY += this.padding * 2
+		}
+	}
+
+	CreateUnitGroup() {
+		this.CreateGroupHeader("Common Units")
+		this.AddCharacterButtons(this.UnitArray)
+		this.currentY += this.padding * 2
+	}
+
+	CreateScientificGroup() {
+		this.CreateGroupHeader("Scientific")
+		this.AddCharacterButtons(this.ScientificArray)
+		this.currentY += this.padding
+	}
+
+	GuiCtrlSetTip(GuiCtrl, TipText, UseAhkStyle := true) {
+		static TTF_SUBCLASS := 0x0010
+		static TTF_IDISHWND := 0x0001
+		
+		if !(GuiCtrl is Gui.Control)
+			return false
+			
+		HGUI := GuiCtrl.Gui.Hwnd
+		HCTL := GuiCtrl.Hwnd
+		
+		if !this.TooltipHwnds.Has(HGUI) {
+			HTT := DllCall("CreateWindowEx", "UInt", 0, "Str", "tooltips_class32",
+				"Ptr", 0, "UInt", 0x80000003, "Int", 0x80000000, "Int", 0x80000000,
+				"Int", 0x80000000, "Int", 0x80000000, "Ptr", HGUI, "Ptr", 0,
+				"Ptr", 0, "Ptr", 0, "UPtr")
+				
+			if (!HTT)
+				return false
+				
+			if (UseAhkStyle)
+				DllCall("Uxtheme.dll\SetWindowTheme", "Ptr", HTT, "Ptr", 0, "Ptr", 0)
+				
+			this.TooltipHwnds[HGUI] := HTT
+		}
+		
+		TI := Buffer(this.Settings.System.SizeOfTI, 0)
+		NumPut("UInt", this.Settings.System.SizeOfTI, TI)
+		NumPut("UInt", TTF_SUBCLASS | TTF_IDISHWND, TI, 4)
+		NumPut("UPtr", HGUI, TI, 8)
+		NumPut("UPtr", HCTL, TI, 8 + A_PtrSize)
+		NumPut("UPtr", StrPtr(TipText), TI, 24 + (A_PtrSize * 3))
+		
+		SendMessage(0x0432, 0, TI.Ptr, this.TooltipHwnds[HGUI])  ; TTM_ADDTOOL
+		SendMessage(0x0418, 0, -1, this.TooltipHwnds[HGUI])      ; TTM_SETMAXTIPWIDTH
+		
+		return true
+	}
+
+	SendChar(char, *) {
+		; Check if there's a focused window that can receive input
+		if (WinActive("A") && ControlGetFocus("A")) {
+			SendMode("Event")
+			SetKeyDelay(-1, -1)
+			Send(char)
+		} else {
+			; Copy to clipboard and show tooltip
+			A_Clipboard := char
+			InfoTip := Infos("Copied '" char "' to clipboard")
+			SetTimer(() => InfoTip.Destroy(), -7000)
+		}
+	}
+}
+
+findtheglobal(){
+
+	arrNeedle := []
+	n1 := n := theMatchString := cBak := theText := ''
+	n := 'imx)(?:^|\n|\r)'
+	n1 := n '(g)\b'
+	n2 := n '(global)([\w\s\n\r]+)?'
+	n3 := n '(g\B)([\s\n\r])?'
+	arrNeedle := [n1, n2, n3]
+
+	Clip.SM()
+	Clip.BakClr(&cBak)
+	Send(key.SelectAll key.copy)
+
+	Clip.Sleep()
+
+	theText := A_Clipboard
+
+	if A_Clipboard = '' {
+		Clip.Sleep(10)
+	}
+
+	; for each, value in arrNeedle {
+	; 	theText.RegExMatch(value, &objMatch:=[])
+	; }
+
+	; if objMatch.Len < 1 {
+	; 	Infos('objMatch.Length = ' objMatch.Len)
+	; }
+	; else {
+	; 	for each, value in objMatch {
+	; 		theMatchString .= '"' value '"' '`n'
+	; 	}
+	; }
+
+	; Infos(theMatchString)
+
+	for each, value in arrNeedle {
+		newtheText := theText.RegExReplace(value, '')
+	}
+
+	Clip.ClearClipboard()
+
+	if A_Clipboard != '' {
+		clip.Sleep(10)
+	}
+
+	Infos(newtheText)
+
+	Sleep(750)
+	theMatchString := objMatch := cBak := theText := ''
+	objMatch := []
+}
+
+^+f::findtheglobal
+; ^+f::ProcessAndPasteText()
+
+class NumberConverter {
+	/**
+	 * @description Converts a decimal number to hexadecimal.
+	 * @param {Integer|String} num The decimal number to convert.
+	 * @param {Boolean} hexPrefix Whether to include the "0x" prefix in the result.
+	 * @returns {String} The hexadecimal representation of the number.
+	 */
+	static DecToHex(num, hexPrefix := true) {
+		if (Type(num) == "String") {
+			if (!RegExMatch(num, "^-?\d+$"))  ; Check if the string is a valid integer
+				throw ValueError("Invalid input: '" . num . "' is not a valid number")
+			num := Integer(num)
+		}
+		return (hexPrefix ? "0x" : "") . Format("{:X}", num)
+	}
+
+	/**
+	 * @description Converts a hexadecimal string to a decimal number.
+	 * @param {String|Integer} num The hexadecimal string or integer to convert.
+	 * @returns {Integer} The decimal representation of the number.
+	 */
+	static HexToDec(num) {
+		if (Type(num) == "String") {
+			; Remove "0x" prefix if it exists
+			num := RegExReplace(num, "^0x", "")
+			; Ensure the string is not empty and only contains valid hexadecimal characters
+			if (num = "" || !RegExMatch(num, "^[0-9A-Fa-f]+$")) {
+				throw ValueError("Invalid hexadecimal string: " . num)
+			}
+		} else if (Type(num) == "Float") {
+			num := Floor(num)  ; Convert float to integer
+		} else if (Type(num) != "Integer") {
+		try {
+			return Format("{:u}", Integer("0x" . num))
+		} catch {
+			throw ValueError("Invalid hexadecimal string: " . num)
+		}
+		}
+		return Format("{:u}", Integer("0x" . num))
+	}
+}
+
+/*
+    Github: https://github.com/Nich-Cebolla/AutoHotkey-LibV2/blob/main/FillStr.ahk
+    Author: Nich-Cebolla
+    Version: 1.0.0
+    License: MIT
+*/
+
+/**
+ * @class
+ * In this documentation an instance of `FillStr` is referred to as `Filler`.
+ * FillStr constructs strings of the requested length out of the provided filler string. Multiple
+ * `Filler` objects can be active at any time. It would technically be possible to use a single
+ * `Filler` object and swap out the substrings on the property `Filler.Str`, but this is not
+ * recommended because FillStr caches some substrings for efficiency, so you may not get the expected
+ * result after swapping out the `Str` property.
+ *
+ * Internally, FillStr works by deconstructing the input integer into its base 10 components. It
+ * constructs then caches the strings for components that are divisible by 10, then adds on the
+ * remainder. This offers a balance between efficiency, flexibility, and memory usage.
+ *
+ * Since this is expected to be most frequently used to pad strings with surrounding whitespace,
+ * the `FillStr` object is instantiated with an instance of itself using a single space character
+ * as the filler string. This is available on the property `FillStr.S`, and can also be utilized using
+ * `FillStr[Qty]` to output a string of Qty space characters.
+ */
+class FillStr {
+    static __New() {
+        this.S := FillStr(' ')
+    }
+    static __Item[Qty] {
+        Get => this.S[Qty]
+        Set => this.S.Cache.Set(Qty, value)
+    }
+
+    /**
+     * @description - Constructs the offset string according to the input parameters.
+     * @param {Integer} Len - The length of the output string.
+     * @param {Integer} TruncateAction - Controls how the filler string `Filler.Str` is truncated when
+     * `Len` is not evenly divisible by `Filler.Len`. The options are:
+     * - 0: Does not truncate the filler string, and allows the width of the output string to exceed
+     * `Len`.
+     * - 1: Does not truncate the filler string, and does not allow the width of the output string to
+     * exceed `Len`, sometimes resulting in the width being less than `Len`.
+     * - 2: Does not truncate the filler string, and does not allow the width of the output string to
+     * exceed `Len`, and adds space characters to fill the remaining space. The space characters are
+     * added to the left side of the output string.
+     * - 3: Does not truncate the filler string, and does not allow the width of the output string to
+     * exceed `Len`, and adds space characters to fill the remaining space. The space characters are
+     * added to the right side of the output string.
+     * - 4: Truncates the filler string, and the truncated portion is on the left side of the output
+     * string.
+     * - 5: Truncates the filler string, and the truncated portion is on the right side of the output
+     * string.
+     */
+    static GetOffsetStr(Len, TruncateAction, self) {
+        Out := self[Floor(Len / self.Len)]
+        if R := Mod(Len, self.Len) {
+            switch TruncateAction {
+                case 0: Out .= self[1]
+                case 2: Out := FillStr[R] Out
+                case 3: Out .= FillStr[R]
+                case 4: Out := SubStr(self[1], self.Len - R + 1) Out
+                case 5: Out .= SubStr(self[1], 1, R)
+            }
+        }
+        return Out
+    }
+
+    /**
+     * @description - Creates a new FillStr object, referred to as `Filler` in this documentation.
+     * Use the FillStr instance to generate strings of repeating characters. For general usage,
+     * see {@link FillStr#__Item}.
+     * @param {String} Str - The string to repeat.
+     * @example
+        Filler := FillStr('-')
+        Filler[10] ; ----------
+        Filler.LeftAlign('Hello, world!', 26)       ; Hello, world!-------------
+        Filler.LeftAlign('Hello, world!', 26, 5)    ; -----Hello, world!--------
+        Filler.CenterAlign('Hello, world!', 26)     ; -------Hello, world!------
+        Filler.CenterAlign('Hello, world!', 26, 1)  ; -------Hello, world!------
+        Filler.CenterAlign('Hello, world!', 26, 2)  ; ------Hello, world!-------
+        Filler.CenterAlign('Hello, world!', 26, 3)  ; -------Hello, world!-------
+        Filler.CenterAlign('Hello, world!', 26, 4)  ; ------Hello, world!------
+        Filler.RightAlign('Hello, world!', 26)      ; -------------Hello, world!
+        Filler.RightAlign('Hello, world!', 26, 5)   ; --------Hello, world!-----
+     * @
+     * @returns {FillStr} - A new FillStr object.
+     */
+    __New(Str) {
+        this.Str := Str
+        Loop 10
+            Out .= Str
+        this[10] := Out
+        this.Len := StrLen(Str)
+    }
+    Cache := Map()
+    __Item[Qty] {
+        /**
+         * @description - Returns the string of the specified number of repetitions. The `Qty`
+         * parameter does not represent string length, it represents number of repetitions of
+         * `Filler.Str`, which is the same as string length only when the length of `Filler.Str` == 1.
+         * @param {Integer} Qty - The number of repetitions.
+         * @returns {String} - The string of the specified number of repetitions.
+         */
+        Get {
+            if !Qty
+                return ''
+            Out := ''
+            if this.Cache.Has(Number(Qty))
+                return this.Cache[Number(Qty)]
+            r := Mod(Qty, 10)
+            Loop r
+                Out .= this.Str
+            Qty -= r
+            if Qty {
+                Split := StrSplit(Qty)
+                for n in Split {
+                    if n = 0
+                        continue
+                    Tens := 1
+                    Loop StrLen(Qty) - A_Index
+                        Tens := Tens * 10
+                    if this.Cache.Has(Tens) {
+                        Loop n
+                            Out .= this.Cache.Get(Tens)
+                    } else {
+                        Loop n
+                            Out .= _Process(Tens)
+                    }
+                }
+            }
+            return Out
+
+            _Process(Qty) {
+                local Out
+                ; if !RegExMatch(Qty, '^10+$')
+                ;     throw Error('Logical error in _Process function call.', -1)
+                Tenth := Integer(Qty / 10)
+                if this.Cache.Has(Tenth) {
+                    Loop 10
+                        Out .= this.Cache.Get(Tenth)
+                } else
+                    Out := _Process(Tenth)
+                this.Cache.Set(Number(Qty), Out)
+                return Out
+            }
+        }
+        /**
+         * @description - Sets the cache value of the indicated `Qty`. This can be useful in a
+         * situation where you know you will be using a string of X length often, but X is not
+         * divisible by 10. `FillStr` instances do not cache lengths unless they are divisible by
+         * 10 to avoid memory bloat, but will still return a cached value if the input Qty exists in
+         * the cache.
+         */
+        Set {
+            this.Cache.Set(Number(Qty), value)
+        }
+    }
+
+    /**
+     * @description - Center aligns the string within a specified width. This method is compatible
+     * with filler strings of any length.
+     * @param {String} Str - The string to center align.
+     * @param {Integer} Width - The width of the output string in number of characters.
+     * @param {Number} [RemainderAction=1] - The action to take when the difference between the width
+     * and the string length is not evenly divisible by 2.
+     * - 0: Exclude the remainder.
+     * - 1: Add the remainder to the left side.
+     * - 2: Add the remainder to the right side.
+     * - 3: Add the remainder to both sides.
+     */
+    CenterAlign(Str, Width, RemainderAction := 1, Padding := ' ', TruncateActionLeft := 1, TruncateActionRight := 2) {
+        Space := Width - StrLen(Str) - (LenPadding := StrLen(Padding) * 2)
+        if Space < 1
+            return Str
+        Split := Floor(Space / 2)
+        if R := Mod(Space, 2) {
+            switch RemainderAction {
+                case 0: LeftOffset := RightOffset := Split
+                case 1: LeftOffset := Split + R, RightOffset := Split
+                case 2: LeftOffset := Split, RightOffset := Split + R
+                case 3: LeftOffset := RightOffset := Split + R
+                default:
+                    throw MethodError('Invalid RemainderAction.', -1, 'RemainderAction: ' RemainderAction)
+            }
+        } else
+            LeftOffset := RightOffset := Split
+        return FillStr.GetOffsetStr(LeftOffset, TruncateActionLeft, this) Padding Str Padding FillStr.GetOffsetStr(RightOffset, TruncateActionRight, this)
+    }
+
+    /**
+     * @description - Center aligns a string within a specified width. This method is only compatible
+     * with filler strings that are 1 character in length.
+     * @param {String} Str - The string to center align.
+     * @param {Number} Width - The width of the output string.
+     * @param {Number} [RemainderAction=1] - The action to take when the difference between the width
+     * and the string length is not evenly divisible by 2.
+     * - 0: Exclude the remainder.
+     * - 1: Add the remainder to the left side.
+     * - 2: Add the remainder to the right side.
+     * - 3: Add the remainder to both sides.
+     * @returns {String} - The center aligned string.
+     */
+    CenterAlignA(Str, Width, RemainderAction := 1) {
+        Space := Width - StrLen(Str)
+        r := Mod(Space, 2)
+        Split := (Space - r) / 2
+        switch RemainderAction {
+            case 0: return this[Split] Str this[Split]
+            case 1: return this[Split + r] Str this[Split]
+            case 2: return this[Split] Str this[Split + r]
+            case 3: return this[Split + r] Str this[Split + r]
+            default:
+                throw MethodError('Invalid RemainderAction.', -1, 'RemainderAction: ' RemainderAction)
+        }
+    }
+
+    /** @description - Clears the cache. */
+    ClearCache() => this.Cache.Clear()
+
+    /**
+     * @description - Left aligns a string within a specified width. This method is compatible with
+     * filler strings of any length.
+     * @param {String} Str - The string to left align.
+     * @param {Integer} Width - The width of the output string in number of characters.
+     * @param {Integer} [LeftOffset=0] - The offset from the left side in number of characters. The
+     * offset is constructed by using the filler string (`Filler.Str`) value and repeating
+     * it until the offset length is reached.
+     * @param {String} [Padding=' '] - The `Padding` value is added to the left and right side of
+     * `Str` to create space between the string and the filler characters. To not use padding, set
+     * it to an empty string.
+     * @param {Integer} [TruncateActionLeft=1] - This parameter controls how the filler string
+     * `Filler.Str` is truncated when the LeftOffset is not evenly divisible by the length of
+     * `Filler.Str`. For a full explanation, see {@link FillStr.GetOffsetStr}.
+     * @param {Integer} [TruncateActionRight=2] - This parameter controls how the filler string
+     * `Filler.Str` is truncated when the remaining character count on the right side of the output
+     * string is not evenly divisible by the length of `Filler.Str`. For a full explanation, see
+     * {@link FillStr.GetOffsetStr}.
+     */
+    LeftAlign(Str, Width, LeftOffset := 0, Padding := ' ', TruncateActionLeft := 1, TruncateActionRight := 2) {
+        if LeftOffset + (LenStr := StrLen(Str)) + (LenPadding := StrLen(Padding) * 2) > Width
+            LeftOffset := Width - LenStr - LenPadding
+        if LeftOffset > 0
+            Out .= FillStr.GetOffsetStr(LeftOffset, TruncateActionLeft, this)
+        Out .= Padding Str Padding
+        if (Remainder := Width - StrLen(Out))
+            Out .= FillStr.GetOffsetStr(Remainder, TruncateActionRight, this)
+        return Out
+    }
+
+    /**
+     * @description - Left aligns a string within a specified width. This method is only compatible
+     * with filler strings that are 1 character in length.
+     * @param {String} Str - The string to left align.
+     * @param {Number} Width - The width of the output string.
+     * @param {Number} [LeftOffset=0] - The offset from the left side.
+     * @returns {String} - The left aligned string.
+     */
+    LeftAlignA(Str, Width, LeftOffset := 0) {
+        if LeftOffset {
+            if LeftOffset + StrLen(Str) > Width
+                LeftOffset := Width - StrLen(Str)
+            return this[LeftOffset] Str this[Width - StrLen(Str) - LeftOffset]
+        }
+        return Str this[Width - StrLen(Str)]
+    }
+
+    ; /**
+    ;  * @description - Right aligns a string within a specified width. This method is compatible with
+    ;  * filler strings of any length.
+    ;  * @param {String} Str - The string to right align.
+    ;  * @param {Integer} Width - The width of the output string in number of characters.
+    ;  * @param {Integer} [RightOffset=0] - The offset from the right side in number of characters. The
+    ;  * offset is constructed by using the filler string (`Filler.Str`) value and repeating
+    ;  * it until the offset length is reached.
+    ;  * @param {String} [Padding=' '] - The `Padding` value is added to the left and right side of
+    ;  * `Str` to create space between the string and the filler characters. To not use padding, set
+    ;  * it to an empty string.
+    ;  * @param {Integer} [TruncateActionLeft=1] - This parameter controls how the filler string
+    ;  * `Filler.Str` is truncated when the remaining character count on the left side of the output
+    ;  * string is not evenly divisible by the length of `Filler.Str`. For a full explanation, see
+    ;  * {@link FillStr.GetOffsetStr}.
+    ;  * @param {Integer} [TruncateActionRight=2] - This parameter controls how the filler string
+    ;  * `Filler.Str` is truncated when the RightOffset is not evenly divisible by the length of
+    ;  * `Filler.Str`. For a full explanation, see {@link FillStr.GetOffsetStr}.
+    ;  * @returns {String} - The right aligned string.
+    ;  */
+    ; RightAlign(Str, Width, RightOffset := 0, Padding := ' ', TruncateActionLeft := 1, TruncateActionRight := 2) {
+    ;     if RightOffset + (LenStr := StrLen(Str)) + (LenPadding := StrLen(Padding) * 2) > Width
+    ;         RightOffset := Width - LenStr - LenPadding
+    ;     Out := Padding Str Padding
+    ;     if (Remainder := Width - StrLen(Out) - RightOffset)
+    ;         Out := FillStr.GetOffsetStr(Remainder, TruncateActionRight, this) Out
+    ;     if RightOffset > 0
+    ;         Out := FillStr.GetOffsetStr(RightOffset, TruncateActionLeft, this) Out
+    ;     return Out
+    ; }
+
+	/**
+	 * Right aligns text within a specified width with flexible padding and offset options
+	 * @param {String} params* - Parameters in flexible order:
+	 *   - str: String to align
+	 *   - width: Total width for alignment 
+	 *   - rightOffset: Offset from right edge (default: 0)
+	 *   - padding: Padding character/string (default: ' ')
+	 *   - truncateActionLeft: Left truncation mode (default: 1)
+	 *   - truncateActionRight: Right truncation mode (default: 2)
+	 * @returns {String} Right-aligned text string
+	 * @throws {ValueError} If width < string length
+	 */
+	RightAlign(params*) {
+		; Initialize defaults
+		config := {
+			str: "",
+			width: 0, 
+			rightOffset: 0,
+			padding: " ",
+			truncateActionLeft: 1,
+			truncateActionRight: 2
+		}
+	
+		; Parse parameters
+		for param in params {
+			if (param is String && !config.str)
+				config.str := param
+			else if (param is Integer && !config.width)
+				config.width := param
+			else if (param is Integer)
+				config.rightOffset := param
+			else if (param is String)
+				config.padding := param
+		}
+	
+		; Validate
+		if (!config.str || !config.width)
+			throw ValueError("String and width are required", -1)
+			
+		if (config.rightOffset + (lenStr := StrLen(config.str)) + 
+			(lenPadding := StrLen(config.padding) * 2) > config.width)
+			config.rightOffset := config.width - lenStr - lenPadding
+	
+		; Build output
+		out := config.padding config.str config.padding
+		
+		if (remainder := config.width - StrLen(out) - config.rightOffset)
+			out := FillStr.GetOffsetStr(remainder, config.truncateActionRight, this) out
+			
+		if (config.rightOffset > 0)
+			out := FillStr.GetOffsetStr(config.rightOffset, config.truncateActionLeft, this) out
+	
+		return out
+	}
+    /**
+     * @description - Right aligns a string within a specified width. This method is only compatible
+     * with filler strings that are 1 character in length.
+     * @param {String} Str - The string to right align.
+     * @param {Number} Width - The width of the output string.
+     * @param {Number} [RightOffset=0] - The offset from the right side.
+     * @returns {String} - The right aligned string.
+     */
+    RightAlignA(Str, Width, RightOffset := 0) {
+        if RightOffset {
+            if RightOffset + StrLen(Str) > Width
+                RightOffset := Width - StrLen(Str)
+            return this[Width - StrLen(Str) - RightOffset] Str this[RightOffset]
+        }
+        return this[Width - StrLen(Str)] Str
+    }
+}

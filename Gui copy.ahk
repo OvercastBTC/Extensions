@@ -1565,6 +1565,241 @@ class InfoBox {
 }
 ; ---------------------------------------------------------------------------
 
+/**
+ * @class Infos
+ * @description Information display box with grid-based positioning
+ */
+; class Infos {
+; 	static __New() {
+; 		; Calculate basic metrics
+; 		unit := A_ScreenDPI / 144
+; 		fontSize := 8
+; 		distance := 4
+; 		width := fontSize * unit * distance
+
+; 		; Initialize settings
+; 		this.Settings := {
+; 			Grid: {
+; 				ID: "Infos",
+; 				Enabled: true,
+; 				Columns: 1,
+; 				Rows: Floor(A_ScreenHeight / (fontSize * 2)),
+; 				Spacing: 5
+; 			},
+; 			Position: {
+; 				; Mode: "Grid",
+; 				X: 0,
+; 				Y: 0
+; 			},
+; 			Size: {
+; 				Width: width,
+; 				Height: fontSize * 2
+; 			},
+; 			Font: {
+; 				Name: "Consolas",
+; 				Size: fontSize,
+; 				Quality: 5,
+; 				Color: "cBlue"
+; 			},
+; 			Colors: {
+; 				Background: "0xA2AAAD",
+; 				Text: "000000"
+; 			},
+; 			Margins: {
+; 				X: 0,
+; 				Y: 0
+; 			},
+; 			Styles: "+AlwaysOnTop -Caption +ToolWindow",
+; 			Limits: {
+; 				MaxNumberedHotkeys: 12,
+; 				MaxWidthInChars: 110
+; 			}
+; 		}
+; 	}
+
+; 	__text := ""
+; 	text {
+; 		get => this.__text
+; 		set => this.__text := value
+; 	}
+
+; 	__New(text, autoCloseTimeout := 0) {
+; 		this.text := text
+; 		this.timeout := autoCloseTimeout
+; 		this.box := InfoBox(Infos.Settings)
+		
+; 		if (this.box) {
+; 			this.CreateContent()
+; 			this.SetupEvents()
+; 			this.Show()
+
+; 			if (this.timeout > 0) {
+; 				SetTimer(() => this.Destroy(), -this.timeout)
+; 			}
+; 		}
+; 	}
+
+; 	CreateContent() {
+; 		this.control := this.box.AddControl("Text", "Center", this._FormatText())
+; 	}
+
+; 	_FormatText() {
+; 		ftext := String(this.text)
+; 		lines := StrSplit(ftext, "`n")
+		
+; 		if (lines.Length > 1) {
+; 			ftext := this._FormatByLine(lines)
+; 		} else {
+; 			ftext := this._LimitWidth(ftext)
+; 		}
+
+; 		return StrReplace(ftext, "&", "&&")
+; 	}
+
+; 	_FormatByLine(lines) {
+; 		newLines := []
+; 		for line in lines {
+; 			newLines.Push(this._LimitWidth(line))
+; 		}
+; 		return newLines.Join("`n")
+; 	}
+
+; 	_LimitWidth(text) {
+; 		if (StrLen(text) < Infos.Settings.Limits.MaxWidthInChars) {
+; 			return text
+; 		}
+		
+; 		insertions := 0
+; 		while ((insertions + 1) * Infos.Settings.Limits.MaxWidthInChars + insertions) < StrLen(text) {
+; 			insertions++
+; 			text := text.Insert("`n", insertions * Infos.Settings.Limits.MaxWidthInChars + insertions)
+; 		}
+; 		return text
+; 	}
+
+; 	SetupEvents() {
+; 		; Click to close
+; 		this.control.OnEvent("Click", (*) => this.Destroy())
+		
+; 		; Function key hotkeys if in range
+; 		if (this.box.position.row > 0 && this.box.position.row <= Infos.Settings.Limits.MaxNumberedHotkeys) {
+; 			HotIfWinActive("ahk_id " this.box.gui.Hwnd)
+; 			Hotkey("F" this.box.position.row, (*) => this.Destroy())
+; 		}
+; 	}
+
+; 	Show() => this.box.Show()
+; 	Destroy() => this.box.Destroy()
+; 	static DestroyAll() => InfoBox.DestroyAll()
+; }
+
+/**
+ * @class CleanInputBox
+ * @description Clean input box with centered positioning
+ */
+/*
+class CleanInputBox {
+	static __New() {
+		; Initialize settings
+		this.Settings := {
+			Grid: {
+				ID: "CleanInputBox",
+				Enabled: false,
+				Columns: 1,
+				Rows: 1,
+				Spacing: 10
+			},
+			Position: {
+				Mode: "Center",
+				TopMargin: Round(A_ScreenHeight / 1080 * 800)
+			},
+			Size: {
+				Width: Round(A_ScreenWidth / 3),
+				Height: 30
+			},
+			Font: {
+				Name: "Consolas",
+				Size: 12,
+				Quality: 5,
+				Color: "cBlue"
+			},
+			Colors: {
+				Background: "0xA2AAAD",
+				Text: "000000"
+			},
+			Margins: {
+				X: 0,
+				Y: 0
+			},
+			Styles: "+AlwaysOnTop -Caption +ToolWindow",
+			Input: {
+				MinChars: 2,
+				MaxMatches: 5,
+				ShowMatchList: true
+			}
+		}
+	}
+
+	Input := ""
+	IsWaiting := true
+
+	__New(suggestions := []) {
+		this.suggestions := suggestions
+		this.box := InfoBox(CleanInputBox.Settings)
+		
+		if (this.box) {
+			this.CreateContent()
+			this.SetupEvents()
+			this.Show()
+		}
+	}
+
+	CreateContent() {
+		this.control := this.box.AddControl("Edit", 
+			"x0 Center -E0x200 w" this.box.settings.Size.Width)
+
+		if (this.suggestions.Length > 0) {
+			AutoComplete.Enhance(this.control, this.suggestions, {
+				MaxMatches: this.box.settings.Input.MaxMatches,
+				MinChars: this.box.settings.Input.MinChars,
+				ShowMatchList: this.box.settings.Input.ShowMatchList
+			})
+		}
+	}
+
+	SetupEvents() {
+		HotIfWinActive("ahk_id " this.box.gui.Hwnd)
+		Hotkey("Enter", (*) => this.SetInput())
+		Hotkey("CapsLock", (*) => this.SetCancel())
+	}
+
+	SetInput() {
+		this.Input := this.control.Text
+		this.IsWaiting := false
+		this.Destroy()
+	}
+
+	SetCancel() {
+		this.IsWaiting := false
+		this.Destroy()
+	}
+
+	Show() => this.box.Show()
+	Destroy() => this.box.Destroy()
+
+	WaitForInput() {
+		while this.IsWaiting {
+			Sleep(10)
+		}
+		return this.Input
+	}
+
+	static WaitForInput() {
+		inputBox := CleanInputBox()
+		return inputBox.WaitForInput()
+	}
+}
+*/
 ; Info(text, timeout?) => Infos(text, timeout ?? 2000)
 Info(text, timeout?) => Infos(text, timeout ?? 10000)
 
@@ -3302,7 +3537,375 @@ class GuiReSizer2 {
 		GuiReSizer(GuiObj, WindowMinMax := 1, Width, Height)
 	}
 }
+/*
+    Github: https://github.com/Nich-Cebolla/AutoHotkey-LibV2/blob/main/FillStr.ahk
+    Author: Nich-Cebolla
+    Version: 1.0.0
+    License: MIT
+*/
 
+/**
+ * @class
+ * In this documentation an instance of `FillStr` is referred to as `Filler`.
+ * FillStr constructs strings of the requested length out of the provided filler string. Multiple
+ * `Filler` objects can be active at any time. It would technically be possible to use a single
+ * `Filler` object and swap out the substrings on the property `Filler.Str`, but this is not
+ * recommended because FillStr caches some substrings for efficiency, so you may not get the expected
+ * result after swapping out the `Str` property.
+ *
+ * Internally, FillStr works by deconstructing the input integer into its base 10 components. It
+ * constructs then caches the strings for components that are divisible by 10, then adds on the
+ * remainder. This offers a balance between efficiency, flexibility, and memory usage.
+ *
+ * Since this is expected to be most frequently used to pad strings with surrounding whitespace,
+ * the `FillStr` object is instantiated with an instance of itself using a single space character
+ * as the filler string. This is available on the property `FillStr.S`, and can also be utilized using
+ * `FillStr[Qty]` to output a string of Qty space characters.
+ */
+class FillStr {
+    static __New() {
+        this.S := FillStr(' ')
+    }
+    static __Item[Qty] {
+        Get => this.S[Qty]
+        Set => this.S.Cache.Set(Qty, value)
+    }
+
+    /**
+     * @description - Constructs the offset string according to the input parameters.
+     * @param {Integer} Len - The length of the output string.
+     * @param {Integer} TruncateAction - Controls how the filler string `Filler.Str` is truncated when
+     * `Len` is not evenly divisible by `Filler.Len`. The options are:
+     * - 0: Does not truncate the filler string, and allows the width of the output string to exceed
+     * `Len`.
+     * - 1: Does not truncate the filler string, and does not allow the width of the output string to
+     * exceed `Len`, sometimes resulting in the width being less than `Len`.
+     * - 2: Does not truncate the filler string, and does not allow the width of the output string to
+     * exceed `Len`, and adds space characters to fill the remaining space. The space characters are
+     * added to the left side of the output string.
+     * - 3: Does not truncate the filler string, and does not allow the width of the output string to
+     * exceed `Len`, and adds space characters to fill the remaining space. The space characters are
+     * added to the right side of the output string.
+     * - 4: Truncates the filler string, and the truncated portion is on the left side of the output
+     * string.
+     * - 5: Truncates the filler string, and the truncated portion is on the right side of the output
+     * string.
+     */
+    static GetOffsetStr(Len, TruncateAction, self) {
+        Out := self[Floor(Len / self.Len)]
+        if R := Mod(Len, self.Len) {
+            switch TruncateAction {
+                case 0: Out .= self[1]
+                case 2: Out := FillStr[R] Out
+                case 3: Out .= FillStr[R]
+                case 4: Out := SubStr(self[1], self.Len - R + 1) Out
+                case 5: Out .= SubStr(self[1], 1, R)
+            }
+        }
+        return Out
+    }
+
+    /**
+     * @description - Creates a new FillStr object, referred to as `Filler` in this documentation.
+     * Use the FillStr instance to generate strings of repeating characters. For general usage,
+     * see {@link FillStr#__Item}.
+     * @param {String} Str - The string to repeat.
+     * @example
+        Filler := FillStr('-')
+        Filler[10] ; ----------
+        Filler.LeftAlign('Hello, world!', 26)       ; Hello, world!-------------
+        Filler.LeftAlign('Hello, world!', 26, 5)    ; -----Hello, world!--------
+        Filler.CenterAlign('Hello, world!', 26)     ; -------Hello, world!------
+        Filler.CenterAlign('Hello, world!', 26, 1)  ; -------Hello, world!------
+        Filler.CenterAlign('Hello, world!', 26, 2)  ; ------Hello, world!-------
+        Filler.CenterAlign('Hello, world!', 26, 3)  ; -------Hello, world!-------
+        Filler.CenterAlign('Hello, world!', 26, 4)  ; ------Hello, world!------
+        Filler.RightAlign('Hello, world!', 26)      ; -------------Hello, world!
+        Filler.RightAlign('Hello, world!', 26, 5)   ; --------Hello, world!-----
+     * @
+     * @returns {FillStr} - A new FillStr object.
+     */
+    __New(Str) {
+        this.Str := Str
+        Loop 10
+            Out .= Str
+        this[10] := Out
+        this.Len := StrLen(Str)
+    }
+    Cache := Map()
+    __Item[Qty] {
+        /**
+         * @description - Returns the string of the specified number of repetitions. The `Qty`
+         * parameter does not represent string length, it represents number of repetitions of
+         * `Filler.Str`, which is the same as string length only when the length of `Filler.Str` == 1.
+         * @param {Integer} Qty - The number of repetitions.
+         * @returns {String} - The string of the specified number of repetitions.
+         */
+        Get {
+            if !Qty
+                return ''
+            Out := ''
+            if this.Cache.Has(Number(Qty))
+                return this.Cache[Number(Qty)]
+            r := Mod(Qty, 10)
+            Loop r
+                Out .= this.Str
+            Qty -= r
+            if Qty {
+                Split := StrSplit(Qty)
+                for n in Split {
+                    if n = 0
+                        continue
+                    Tens := 1
+                    Loop StrLen(Qty) - A_Index
+                        Tens := Tens * 10
+                    if this.Cache.Has(Tens) {
+                        Loop n
+                            Out .= this.Cache.Get(Tens)
+                    } else {
+                        Loop n
+                            Out .= _Process(Tens)
+                    }
+                }
+            }
+            return Out
+
+            _Process(Qty) {
+                local Out
+                ; if !RegExMatch(Qty, '^10+$')
+                ;     throw Error('Logical error in _Process function call.', -1)
+                Tenth := Integer(Qty / 10)
+                if this.Cache.Has(Tenth) {
+                    Loop 10
+                        Out .= this.Cache.Get(Tenth)
+                } else
+                    Out := _Process(Tenth)
+                this.Cache.Set(Number(Qty), Out)
+                return Out
+            }
+        }
+        /**
+         * @description - Sets the cache value of the indicated `Qty`. This can be useful in a
+         * situation where you know you will be using a string of X length often, but X is not
+         * divisible by 10. `FillStr` instances do not cache lengths unless they are divisible by
+         * 10 to avoid memory bloat, but will still return a cached value if the input Qty exists in
+         * the cache.
+         */
+        Set {
+            this.Cache.Set(Number(Qty), value)
+        }
+    }
+
+    /**
+     * @description - Center aligns the string within a specified width. This method is compatible
+     * with filler strings of any length.
+     * @param {String} Str - The string to center align.
+     * @param {Integer} Width - The width of the output string in number of characters.
+     * @param {Number} [RemainderAction=1] - The action to take when the difference between the width
+     * and the string length is not evenly divisible by 2.
+     * - 0: Exclude the remainder.
+     * - 1: Add the remainder to the left side.
+     * - 2: Add the remainder to the right side.
+     * - 3: Add the remainder to both sides.
+     */
+    CenterAlign(Str, Width, RemainderAction := 1, Padding := ' ', TruncateActionLeft := 1, TruncateActionRight := 2) {
+        Space := Width - StrLen(Str) - (LenPadding := StrLen(Padding) * 2)
+        if Space < 1
+            return Str
+        Split := Floor(Space / 2)
+        if R := Mod(Space, 2) {
+            switch RemainderAction {
+                case 0: LeftOffset := RightOffset := Split
+                case 1: LeftOffset := Split + R, RightOffset := Split
+                case 2: LeftOffset := Split, RightOffset := Split + R
+                case 3: LeftOffset := RightOffset := Split + R
+                default:
+                    throw MethodError('Invalid RemainderAction.', -1, 'RemainderAction: ' RemainderAction)
+            }
+        } else
+            LeftOffset := RightOffset := Split
+        return FillStr.GetOffsetStr(LeftOffset, TruncateActionLeft, this) Padding Str Padding FillStr.GetOffsetStr(RightOffset, TruncateActionRight, this)
+    }
+
+    /**
+     * @description - Center aligns a string within a specified width. This method is only compatible
+     * with filler strings that are 1 character in length.
+     * @param {String} Str - The string to center align.
+     * @param {Number} Width - The width of the output string.
+     * @param {Number} [RemainderAction=1] - The action to take when the difference between the width
+     * and the string length is not evenly divisible by 2.
+     * - 0: Exclude the remainder.
+     * - 1: Add the remainder to the left side.
+     * - 2: Add the remainder to the right side.
+     * - 3: Add the remainder to both sides.
+     * @returns {String} - The center aligned string.
+     */
+    CenterAlignA(Str, Width, RemainderAction := 1) {
+        Space := Width - StrLen(Str)
+        r := Mod(Space, 2)
+        Split := (Space - r) / 2
+        switch RemainderAction {
+            case 0: return this[Split] Str this[Split]
+            case 1: return this[Split + r] Str this[Split]
+            case 2: return this[Split] Str this[Split + r]
+            case 3: return this[Split + r] Str this[Split + r]
+            default:
+                throw MethodError('Invalid RemainderAction.', -1, 'RemainderAction: ' RemainderAction)
+        }
+    }
+
+    /** @description - Clears the cache. */
+    ClearCache() => this.Cache.Clear()
+
+    /**
+     * @description - Left aligns a string within a specified width. This method is compatible with
+     * filler strings of any length.
+     * @param {String} Str - The string to left align.
+     * @param {Integer} Width - The width of the output string in number of characters.
+     * @param {Integer} [LeftOffset=0] - The offset from the left side in number of characters. The
+     * offset is constructed by using the filler string (`Filler.Str`) value and repeating
+     * it until the offset length is reached.
+     * @param {String} [Padding=' '] - The `Padding` value is added to the left and right side of
+     * `Str` to create space between the string and the filler characters. To not use padding, set
+     * it to an empty string.
+     * @param {Integer} [TruncateActionLeft=1] - This parameter controls how the filler string
+     * `Filler.Str` is truncated when the LeftOffset is not evenly divisible by the length of
+     * `Filler.Str`. For a full explanation, see {@link FillStr.GetOffsetStr}.
+     * @param {Integer} [TruncateActionRight=2] - This parameter controls how the filler string
+     * `Filler.Str` is truncated when the remaining character count on the right side of the output
+     * string is not evenly divisible by the length of `Filler.Str`. For a full explanation, see
+     * {@link FillStr.GetOffsetStr}.
+     */
+    LeftAlign(Str, Width, LeftOffset := 0, Padding := ' ', TruncateActionLeft := 1, TruncateActionRight := 2) {
+        if LeftOffset + (LenStr := StrLen(Str)) + (LenPadding := StrLen(Padding) * 2) > Width
+            LeftOffset := Width - LenStr - LenPadding
+        if LeftOffset > 0
+            Out .= FillStr.GetOffsetStr(LeftOffset, TruncateActionLeft, this)
+        Out .= Padding Str Padding
+        if (Remainder := Width - StrLen(Out))
+            Out .= FillStr.GetOffsetStr(Remainder, TruncateActionRight, this)
+        return Out
+    }
+
+    /**
+     * @description - Left aligns a string within a specified width. This method is only compatible
+     * with filler strings that are 1 character in length.
+     * @param {String} Str - The string to left align.
+     * @param {Number} Width - The width of the output string.
+     * @param {Number} [LeftOffset=0] - The offset from the left side.
+     * @returns {String} - The left aligned string.
+     */
+    LeftAlignA(Str, Width, LeftOffset := 0) {
+        if LeftOffset {
+            if LeftOffset + StrLen(Str) > Width
+                LeftOffset := Width - StrLen(Str)
+            return this[LeftOffset] Str this[Width - StrLen(Str) - LeftOffset]
+        }
+        return Str this[Width - StrLen(Str)]
+    }
+
+    ; /**
+    ;  * @description - Right aligns a string within a specified width. This method is compatible with
+    ;  * filler strings of any length.
+    ;  * @param {String} Str - The string to right align.
+    ;  * @param {Integer} Width - The width of the output string in number of characters.
+    ;  * @param {Integer} [RightOffset=0] - The offset from the right side in number of characters. The
+    ;  * offset is constructed by using the filler string (`Filler.Str`) value and repeating
+    ;  * it until the offset length is reached.
+    ;  * @param {String} [Padding=' '] - The `Padding` value is added to the left and right side of
+    ;  * `Str` to create space between the string and the filler characters. To not use padding, set
+    ;  * it to an empty string.
+    ;  * @param {Integer} [TruncateActionLeft=1] - This parameter controls how the filler string
+    ;  * `Filler.Str` is truncated when the remaining character count on the left side of the output
+    ;  * string is not evenly divisible by the length of `Filler.Str`. For a full explanation, see
+    ;  * {@link FillStr.GetOffsetStr}.
+    ;  * @param {Integer} [TruncateActionRight=2] - This parameter controls how the filler string
+    ;  * `Filler.Str` is truncated when the RightOffset is not evenly divisible by the length of
+    ;  * `Filler.Str`. For a full explanation, see {@link FillStr.GetOffsetStr}.
+    ;  * @returns {String} - The right aligned string.
+    ;  */
+    ; RightAlign(Str, Width, RightOffset := 0, Padding := ' ', TruncateActionLeft := 1, TruncateActionRight := 2) {
+    ;     if RightOffset + (LenStr := StrLen(Str)) + (LenPadding := StrLen(Padding) * 2) > Width
+    ;         RightOffset := Width - LenStr - LenPadding
+    ;     Out := Padding Str Padding
+    ;     if (Remainder := Width - StrLen(Out) - RightOffset)
+    ;         Out := FillStr.GetOffsetStr(Remainder, TruncateActionRight, this) Out
+    ;     if RightOffset > 0
+    ;         Out := FillStr.GetOffsetStr(RightOffset, TruncateActionLeft, this) Out
+    ;     return Out
+    ; }
+
+	/**
+	 * Right aligns text within a specified width with flexible padding and offset options
+	 * @param {String} params* - Parameters in flexible order:
+	 *   - str: String to align
+	 *   - width: Total width for alignment 
+	 *   - rightOffset: Offset from right edge (default: 0)
+	 *   - padding: Padding character/string (default: ' ')
+	 *   - truncateActionLeft: Left truncation mode (default: 1)
+	 *   - truncateActionRight: Right truncation mode (default: 2)
+	 * @returns {String} Right-aligned text string
+	 * @throws {ValueError} If width < string length
+	 */
+	RightAlign(params*) {
+		; Initialize defaults
+		config := {
+			str: "",
+			width: 0, 
+			rightOffset: 0,
+			padding: " ",
+			truncateActionLeft: 1,
+			truncateActionRight: 2
+		}
+	
+		; Parse parameters
+		for param in params {
+			if (param is String && !config.str)
+				config.str := param
+			else if (param is Integer && !config.width)
+				config.width := param
+			else if (param is Integer)
+				config.rightOffset := param
+			else if (param is String)
+				config.padding := param
+		}
+	
+		; Validate
+		if (!config.str || !config.width)
+			throw ValueError("String and width are required", -1)
+			
+		if (config.rightOffset + (lenStr := StrLen(config.str)) + 
+			(lenPadding := StrLen(config.padding) * 2) > config.width)
+			config.rightOffset := config.width - lenStr - lenPadding
+	
+		; Build output
+		out := config.padding config.str config.padding
+		
+		if (remainder := config.width - StrLen(out) - config.rightOffset)
+			out := FillStr.GetOffsetStr(remainder, config.truncateActionRight, this) out
+			
+		if (config.rightOffset > 0)
+			out := FillStr.GetOffsetStr(config.rightOffset, config.truncateActionLeft, this) out
+	
+		return out
+	}
+    /**
+     * @description - Right aligns a string within a specified width. This method is only compatible
+     * with filler strings that are 1 character in length.
+     * @param {String} Str - The string to right align.
+     * @param {Number} Width - The width of the output string.
+     * @param {Number} [RightOffset=0] - The offset from the right side.
+     * @returns {String} - The right aligned string.
+     */
+    RightAlignA(Str, Width, RightOffset := 0) {
+        if RightOffset {
+            if RightOffset + StrLen(Str) > Width
+                RightOffset := Width - StrLen(Str)
+            return this[Width - StrLen(Str) - RightOffset] Str this[RightOffset]
+        }
+        return this[Width - StrLen(Str)] Str
+    }
+}
 
 /*
     Github: https://github.com/Nich-Cebolla/AutoHotkey-LibV2/blob/main/Align.ahk
@@ -3966,6 +4569,207 @@ class GuiColors {
 }
 ; ---------------------------------------------------------------------------
 
+; class DisplayManager {
+; 	static Instances := Map()
+; 	static ScreenProps := {
+; 		width: A_ScreenWidth/3,
+; 		topMargin: A_ScreenHeight/2,
+; 		stackMargin: 30
+; 	}
+
+; 	static RegisterGui(guiObj, owner := "") {
+; 		this.Instances[guiObj.Hwnd] := {
+; 			guiObj: guiObj,
+; 			owner: owner
+; 		}
+; 		this.RepositionAll()
+; 	}
+
+; 	static UnregisterGui(hwnd) {
+; 		this.Instances.Delete(hwnd)
+; 		this.RepositionAll()
+; 	}
+
+; 	static GetExistingDisplays() {
+; 		return this.Instances.Clone()
+; 	}
+
+; 	static RepositionAll() {
+; 		existingCount := this.Instances.Count
+; 		for i, display in this.Instances {
+; 			y := this.ScreenProps.topMargin + (i-1)*this.ScreenProps.stackMargin
+; 			display.guiObj.Show(Format("y{1}", y))
+; 		}
+; 	}
+
+; 	static SetupGuiDefaults(guiObj) {
+; 		guiObj.Opt("+AlwaysOnTop -Caption +ToolWindow")
+; 		guiObj.MarginX := 0
+; 		guiObj.BackColor := "0x161821"
+; 		guiObj.SetFont("s10", "Segoe UI")
+; 		return guiObj
+; 	}
+; }
+
+; class StackedDisplay {
+; 	stackMargin := 30
+; 	width := A_ScreenWidth/3
+; 	topMargin := A_ScreenHeight/2
+; 	isWaiting := true
+	
+; 	__New() {
+; 		this.displayGui := Gui("+AlwaysOnTop -Caption +ToolWindow")
+; 		this.displayGui.MarginX := 0
+; 		this.displayGui.SetFont("s10", "Segoe UI")
+; 		this.displayGui.BackColor := "0x161821"
+; 		this.hotkeyList := []  ; Track hotkeys for cleanup
+; 	}
+
+; 	AddOption(text, index, total, command) {
+		
+; 		; Create GUI control
+; 		this.displayGui.AddEdit(Format("x0 Center w{1} -E0x200 Background{2} c0x1EFF00", 
+; 			this.width, 
+; 			this.displayGui.BackColor), 
+; 			text)
+		
+; 		; Set up hotkey
+; 		HotIfWinActive("ahk_id " this.displayGui.Hwnd)
+; 		hotkeyFn := this.SelectOption.Bind(this, command)
+; 		Hotkey("F" index, hotkeyFn)
+; 		this.hotkeyList.Push({key: "F" index, fn: hotkeyFn})
+		
+; 		; Show the GUI
+; 		this.displayGui.Show(Format("y{1} AutoSize", 
+; 			this.topMargin + (index-1)*this.stackMargin))
+			
+; 		return this.displayGui
+; 	}
+	
+; 	SelectOption(command, *) {
+; 		this.CleanupHotkeys()
+; 		Sleep(A_Delay * 5)
+; 		this.displayGui.Hide()
+; 		this.displayGui.Destroy()
+; 		return command
+; 	}
+	
+; 	CleanupHotkeys() {
+; 		; HotIfWinActive("ahk_id " this.displayGui.Hwnd)
+; 		for hotkey in this.hotkeyList {
+; 			try Hotkey(hotkey.key, hotkey.fn, "Off")
+; 		}
+; 		; HotIf()
+; 	}
+
+; 	WaitForSelection(selectedCommand := "") {
+; 		; selectedCommand := ""
+		
+; 		; Wait for window to close or selection
+; 		try while !selectedCommand && WinExist(this.displayGui.Hwnd) {
+; 		; while !selectedCommand {
+; 			Sleep(50)
+; 		}
+		
+; 		this.CleanupHotkeys()
+; 		return selectedCommand
+; 	}
+; }
+; class StackedDisplay {
+; 	__New() {
+; 		this.guis := []
+; 		this.selected := false
+; 		this.result := 0
+; 	}
+
+; 	/**
+; 	 * Add an option to the display
+; 	 * @param {String} text Text to display
+; 	 * @param {Integer} value Value to return if selected
+; 	 * @param {Integer} index Position in stack (1-based)
+; 	 */
+; 	AddOption(text, value, index) {
+; 		guiObj := Gui("+AlwaysOnTop -Caption +ToolWindow")
+; 		guiObj.SetFont("s10", "Segoe UI")
+; 		guiObj.AddText("x10 y5", text)
+		
+; 		; Store data
+; 		guiObj.value := value
+		
+; 		; Calculate position (centered, stacked)
+; 		screenWidth := A_ScreenWidth
+; 		screenHeight := A_ScreenHeight
+; 		guiWidth := screenWidth / 3
+; 		guiHeight := 30
+; 		guiX := (screenWidth - guiWidth) / 2
+; 		guiY := (screenHeight / 2) + ((index - 1) * guiHeight)
+		
+; 		guiObj.Show(Format("x{1} y{2} w{3} h{4}", guiX, guiY, guiWidth, guiHeight))
+		
+; 		; Add to tracking
+; 		this.guis.Push(guiObj)
+		
+; 		; Setup hotkeys
+; 		this.SetupHotkeys(guiObj, index)
+; 	}
+
+; 	/**
+; 	 * Setup hotkeys for F-keys and clicks
+; 	 * @param {Gui} guiObj GUI object to attach events to
+; 	 * @param {Integer} index F-key number
+; 	 */
+; 	SetupHotkeys(guiObj, index) {
+; 		; F-key hotkey
+; 		HotIfWinExist("ahk_id " guiObj.Hwnd)
+; 		Hotkey("F" index, this.HandleSelection.Bind(this, guiObj))
+
+; 		; Click handler
+; 		guiObj.OnEvent("Click", this.HandleSelection.Bind(this, guiObj))
+; 	}
+
+; 	/**
+; 	 * Handle selection via F-key or click
+; 	 * @param {Gui} guiObj Selected GUI
+; 	 */
+; 	HandleSelection(guiObj, *) {
+; 		this.selected := true
+; 		this.result := guiObj.value
+; 		this.CleanupGuis()
+; 	}
+
+; 	/**
+; 	 * Wait for user selection
+; 	 * @param {Integer} timeout Timeout in milliseconds (0 = no timeout)
+; 	 * @returns {Integer} Selected value or 0 if cancelled
+; 	 */
+; 	WaitForSelection(timeout := 0) {
+; 		startTime := A_TickCount
+; 		while !this.selected {
+; 			if (timeout && (A_TickCount - startTime > timeout)) {
+; 				this.CleanupGuis()
+; 				return 0
+; 			}
+; 			Sleep(10)
+; 		}
+; 		return this.result
+; 	}
+
+; 	/**
+; 	 * Clean up all GUI windows
+; 	 */
+; 	CleanupGuis() {
+; 		for guiObj in this.guis
+; 			guiObj.Destroy()
+; 		this.guis := []
+; 	}
+
+; 	/**
+; 	 * Clean up on object destruction
+; 	 */
+; 	__Delete() {
+; 		this.CleanupGuis()
+; 	}
+; }
 class StackedDisplay {
     width := A_ScreenWidth/3
     topMargin := A_ScreenHeight/2
@@ -4044,7 +4848,77 @@ class StackedDisplay {
         this.CleanupGuis()
     }
 }
-; --------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
+; class CleanInputBox extends Gui {
+
+; 	; Width     := Round(A_ScreenWidth  / 1920 * 1200)
+; 	Width     := Round(A_ScreenWidth  / 3)
+; 	TopMargin := Round(A_ScreenHeight / 1080 * 800)
+
+; 	; DarkMode(BackgroundColor:='') {
+; 	; 	Gui2.DarkMode(this, BackgroundColor)
+; 	; 	return this
+; 	; }
+
+; 	; ; MakeFontNicer(fontSize := 15) {
+; 	; MakeFontNicer(fontParams*) {
+; 	; 	Gui2.MakeFontNicer(fontParams)
+; 	; 	return this
+; 	; }
+
+; 	__New() {
+; 		cibGui := Gui('AlwaysOnTop -Caption +Border')
+; 		super.__New('AlwaysOnTop -Caption +Border')
+; 		super.DarkMode()
+; 		super.MakeFontNicer('s10', 'q3', 'cRed')
+; 		this.MarginX := 0
+
+; 		this.InputField := this.AddEdit('x0 Center -E0x200 Background' this.BackColor ' w' this.Width)
+
+; 		this.Input := ''
+; 		this.isWaiting := true
+; 		this.RegisterHotkeys()
+; 	}
+
+; 	Show() => (super.Show('y' this.TopMargin ' w' this.Width), this)
+
+; 	/**
+; 	 * Occupy the thread until you type in your input and press
+; 	 * Enter, returns this input
+; 	 * @returns {String}
+; 	 */
+; 	WaitForInput() {
+; 		this.Show()
+; 		while this.isWaiting {
+; 		}
+; 		return this.Input
+; 	}
+
+; 	SetInput() {
+; 		this.Input := this.InputField.Text
+; 		this.isWaiting := false
+; 		this.Finish()
+; 	}
+
+; 	SetCancel() {
+; 		this.isWaiting := false
+; 		this.Finish()
+; 	}
+
+; 	RegisterHotkeys() {
+; 		HotIfWinactive('ahk_id ' this.Hwnd)
+; 		Hotkey('Enter', (*) => this.SetInput(), 'On')
+; 		Hotkey('CapsLock', (*) => this.SetCancel())
+; 		this.OnEvent('Escape', (*) => this.SetCancel())
+; 	}
+
+; 	Finish() {
+; 		HotIfWinactive('ahk_id ' this.Hwnd)
+; 		Hotkey('Enter', 'Off')
+; 		this.Minimize()
+; 		this.Destroy()
+; 	}
+; }
 
 class CleanInputBox {
 

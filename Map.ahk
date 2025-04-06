@@ -209,8 +209,8 @@ class Map2 {
 	 * @param mapToSet ***Map*** the map to set into the initial map
 	 */
 	static SafeSetMap(mapToSet) {
-		for key, value in mapToSet {
-			this.SafeSet(key, value)
+		for k, value in mapToSet {
+			this.SafeSet(k, value)
 		}
 		return mapToSet
 	}
@@ -218,8 +218,8 @@ class Map2 {
 
 	static Reverse() {
 		reversedMap := Map()
-		for key, value in this {
-			reversedMap.Set(value, key)
+		for k, value in this {
+			reversedMap.Set(value, k)
 		}
 		return reversedMap
 	}
@@ -283,13 +283,13 @@ class Map2 {
 			return this[keyName]
 		}
 		options := []
-		for key, _ in this {
-			if InStr(key, keyName){
-				options.Push(key)
+		for k, _ in this {
+			if InStr(k, keyName){
+				options.Push(k)
 			}
 		}
 		chosen := this.Choose(options*)
-		if chosen{
+		if chosen {
 			return this[chosen]
 		}
 		return ""
@@ -297,13 +297,13 @@ class Map2 {
 	; static Choose(keyName) => this._ChooseMap(keyName)
 	; ---------------------------------------------------------------------------
 	static _MapToString(delim := ", ") {
-		value := key := str := ''
-		for key, value in this {
-			; if key = mapObj.Length {
+		value := k := str := ''
+		for k, value in this {
+			; if k = mapObj.Length {
 			; 	str .= value
 			; 	break
 			; }
-			str .= key ' : ' value delim
+			str .= k ' : ' value delim
 		}
 		; return str
 		return RTrim(str, delim)
@@ -312,7 +312,7 @@ class Map2 {
 	; ---------------------------------------------------------------------------
 
 	static _MapHasValue(valueToFind) {
-        for key, value in this {
+        for k, value in this {
             if (value = valueToFind) {
                 return value
             }
@@ -323,9 +323,9 @@ class Map2 {
 	static HasValue(valueToFind) => this._MapHasValue(valueToFind)
 
 	static _MapHaskey(keyToFind) {
-		for key, value in this {
-			if (key = keyToFind){
-				return true
+		for k, value in this {
+			if (k = keyToFind){
+				return k
 			}
 		}
 		return false
@@ -333,4 +333,4 @@ class Map2 {
 	static HasKey(keyToFind) => this._MapHaskey(keyToFind)
 	; ---------------------------------------------------------------------------
 }
-; ---------------------------------------------------------------------------
+

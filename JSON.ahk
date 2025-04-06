@@ -1,5 +1,10 @@
 /************************************************************************
- * @description: JSON格式字符串序列化和反序列化, 修改自[HotKeyIt/Yaml](https://github.com/HotKeyIt/Yaml)
+ * @file JSON.ahk
+ * @description JSON string serialization and deserialization
+ * @description: JSON 格式字符串序列化和反序列化 
+ * 修改自
+ * [HotKeyIt/Yaml](https://github.com/HotKeyIt/Yaml)
+ * 
  * 增加了对true/false/null类型的支持, 保留了数值的类型
  * @author thqby, HotKeyIt
  * @date 2021/10/04

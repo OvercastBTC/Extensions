@@ -1,9 +1,21 @@
+/************************************************************************
+ * @description Creating a class for clipboard manipulation
+ * The class provides both static and non-static versions to allow flexibility in usage:
+ * - Static version (Clip.[method]): Used when you need to call the method directly from the class
+ * - Non-static version (instance.[method]): Used when working with class instances
+ * @author OvercastBTC
+ * @date 2025/03/17
+ * @version 3.0.0
+ ***********************************************************************/
+
 #Requires AutoHotkey v2.0+
-#Include <Includes\ObjectTypeExtensions>
+#Include <Includes\Basic>
 
 global A_Delay := Clip.delayTime
 
 class Clip {
+
+	#Requires AutoHotkey v2.0+
 
 	static defaultEndChar := ''
 	static defaultIsClipReverted := true
@@ -20,7 +32,9 @@ class Clip {
      * @description Default delay time for the class
      * @property {Integer} Dynamic calculation based on system performance
      */
-    static d := delay := this.delayTime
+    static d := dly := delay := this.delayTime
+    static dly := delay := this.delayTime
+    static delay := this.delayTime
 	
 	/************************************************************************
 	* @description Get the handle of the focused control
@@ -54,9 +68,15 @@ class Clip {
 		this.SM()
 	}
 
+	__New(show := true, d := -1) {
+		this.DH(show)
+		Clip.SD(d)
+		Clip.SM()
+	}
+
 	/************************************************************************
 	* @description Set SendMode, SendLevel, and BlockInput
-	* @example AE.SM_BISL(&SendModeObj, 1)
+	* @example this.SM_BISL(&SendModeObj, 1)
 	***********************************************************************/
 	static _SendMode_SendLevel_BlockInput(&SendModeObj?, n := 1) {
 		this.SM(&SendModeObj)
@@ -66,12 +86,26 @@ class Clip {
 	static SM_BISL(&SendModeObj?, n := 1) => this._SendMode_SendLevel_BlockInput(&SendModeObj?, n:=1)
 
 	/************************************************************************
-	* @description Change SendMode and SetKeyDelay
-	* @function this.SM(&objSM:=this.objSM)
-	* @param {Object}{this.objSM}:= {
-		* @param {Object}{Integer} 	: this.objSM.s: A_SendMode,
-		* @param {Object}{Integer} 	: this.objSM.d: A_KeyDelay,
-		* @param {Object}{Integer} 	: this.objSM.p: A_KeyDuration
+	 * @description Changes SendMode to 'Event' and adjusts SetKeyDelay settings. 
+	 * The class provides both static and non-static versions to allow flexibility in usage:
+	 * - Static version (Clip.SM): Used when you need to call the method directly from the class
+	 * - Non-static version (instance.SM): Used when working with class instances
+	 * 
+	 * @function SM
+	 * @param {Object} objSM - Configuration object for send mode settings
+	 * @param {String} objSM.s - Current send mode (A_SendMode)
+	 * @param {Integer} objSM.d - Key delay in milliseconds (A_KeyDelay)
+	 * @param {Integer} objSM.p - Key press duration (A_KeyDuration)
+	 * 
+	 * @returns {Object} Returns the modified objSM object
+	 * 
+	 * @example
+	 * ; Static usage
+	 * Clip.SM()
+	 * 
+	 * ; Instance usage
+	 * myClip := Clip()
+	 * myClip.SM()
 	*************************************************************************/
 
 	static _SendMode(&objSM := this.objSM) {
@@ -84,11 +118,15 @@ class Clip {
 
 	static SM(&objSM:= this.objSM) => this._SendMode(&objSM:= this.objSM)
 
-	static objSM := objSendMode := {
+	SM(&objSM:= this.objSM) => Clip.SM(&objSM:= this.objSM)
+
+	static objSM := {
 		s: A_SendMode,
 		d: A_KeyDelay,
 		p: A_KeyDuration
 	}
+
+	objSM := Clip.objSM
 	; ---------------------------------------------------------------------------
 	/************************************************************************
 	* @description Restore SendMode and SetKeyDelay
@@ -103,34 +141,35 @@ class Clip {
 	
 	/************************************************************************
 	* @description Set BlockInput and SendLevel
-	* @example AE.BISL(1)
+	* @example this.BISL(1)
 	* @var {Integer} : Send_Level := A_SendLevel
 	* @var {Integer} : Block_Input := bi := 0
 	* @var {Integer} : n = send level increase number
 	* @returns {Integer}
 	*************************************************************************/
 
-	static _BlockInputSendLevel(n := 1, bi := 0, &Send_Level?) {
+	static _BlockInputSendLevel(n := 1, bi := 0, &send_Level?) {
 		SendLevel(0)
-		Send_Level := sl := A_SendLevel
+		send_Level := sl := A_SendLevel
 		(sl < 100) ? SendLevel(sl + n) : SendLevel(n + n)
 		(n >= 1) ? bi := 1 : bi := 0 
 		BlockInput(bi)
-		return Send_Level
+		return send_Level
 	}
 	static BISL(n := 1, bi := 0, &sl?) => this._BlockInputSendLevel(n, bi, &sl?)
 	; ---------------------------------------------------------------------------
 
 	/************************************************************************
 	* @description Set detection for hidden windows and text
-	* @example AE.DH(1)
+	* @example this.DH(1)
 	***********************************************************************/
 	static _DetectHidden_Text_Windows(n := true) {
 		DetectHiddenText(n)
 		DetectHiddenWindows(n)
 	}
-	static DetectHidden(n) => this._DetectHidden_Text_Windows(n)
-	static DH(n) => this._DetectHidden_Text_Windows(n)
+	static DetectHidden(n) 	=> this._DetectHidden_Text_Windows(n)
+	static DH(n) 			=> this._DetectHidden_Text_Windows(n)
+	DH(n) 					=> this.DH(n)
 
 	/************************************************************************
 	* @description Set various delay settings
@@ -149,74 +188,310 @@ class Clip {
 	/**
 	 * Sets clipboard content as RTF format
 	 * @param {String} rtfText The RTF formatted text
+	 * @throws {OSError} If clipboard operations fail
+	 * @returns {Boolean} True if successful
 	 */
+	; static _SetClipboardRTF(rtfText) {
+	; 	; Register RTF format if needed
+	; 	static CF_RTF := DllCall("RegisterClipboardFormat", "Str", "Rich Text Format", "UInt")
+	; 	if !CF_RTF {
+	; 		throw OSError("Failed to register RTF clipboard format", -1)
+	; 	}
+
+	; 	; Try to open clipboard with retry logic
+	; 	maxAttempts := 5
+	; 	attempt := 0
+	; 	while attempt < maxAttempts {
+	; 		try {
+	; 			; if DllCall("OpenClipboard", "Ptr", A_ScriptHwnd) {
+	; 			if DllCall("OpenClipboard") {
+	; 				break
+	; 			}
+	; 			attempt++
+	; 			if attempt = maxAttempts {
+	; 				throw OSError("Failed to open clipboard after " maxAttempts " attempts", -1)
+	; 			}
+	; 			Sleep(this.d/2)  ; Wait before next attempt
+	; 		}
+	; 	}
+
+	; 	try {
+	; 		; Clear clipboard
+	; 		if !DllCall("EmptyClipboard")
+	; 			throw OSError("Failed to empty clipboard", -1)
+			
+	; 		; Allocate global memory
+	; 		if !(hGlobal := DllCall("GlobalAlloc", "UInt", 0x42, "Ptr", StrPut(rtfText, "UTF-8")))
+	; 			throw OSError("Failed to allocate memory", -1)
+				
+	; 		try {
+	; 			; Lock and write to memory
+	; 			if !(pGlobal := DllCall("GlobalLock", "Ptr", hGlobal, "Ptr"))
+	; 				throw OSError("Failed to lock memory", -1)
+					
+	; 			StrPut(rtfText, pGlobal, "UTF-8")
+				
+	; 			; Unlock - ignore return value, check A_LastError instead
+	; 			DllCall("GlobalUnlock", "Ptr", hGlobal)
+	; 			if A_LastError && A_LastError != 0x0B7 ; ERROR_INVALID_PARAMETER (already unlocked)
+	; 				throw OSError("Failed to unlock memory", -1)
+				
+	; 			; Set clipboard data
+	; 			if !DllCall("SetClipboardData", "UInt", CF_RTF, "Ptr", hGlobal)
+	; 				throw OSError("Failed to set clipboard data", -1)
+					
+	; 			return true
+	; 		}
+	; 		catch Error as e {
+	; 			; Clean up on error
+	; 			if hGlobal
+	; 				DllCall("GlobalFree", "Ptr", hGlobal)
+	; 			throw e
+	; 		}
+	; 	}
+	; 	finally {
+	; 		; Always close clipboard
+	; 		DllCall('CloseClipboard')
+	; 	}
+	; }
+
 	static _SetClipboardRTF(rtfText) {
 		; Register RTF format if needed
-		static CF_RTF := DllCall("RegisterClipboardFormat", "Str", "Rich Text Format", "UInt*")
+		static CF_RTF := DllCall("RegisterClipboardFormat", "Str", "Rich Text Format", "UInt")
 		
 		; Open and clear clipboard
-		this.OpenClipboard() 	
-		; DllCall('OpenClipboard', 'Ptr') ; DllCall("OpenClipboard", "Ptr", A_ScriptHwnd)
-		this.EmptyClipboard() 	; DllCall('EmptyClipboard')
+		; DllCall("OpenClipboard", "Ptr", A_ScriptHwnd)
+		DllCall("OpenClipboard", "Ptr", 0)
+		DllCall("EmptyClipboard")
 		
 		; Allocate and copy RTF data
 		hGlobal := DllCall("GlobalAlloc", "UInt", 0x42, "Ptr", StrPut(rtfText, "UTF-8"))
 		pGlobal := DllCall("GlobalLock", "Ptr", hGlobal, "Ptr")
 		StrPut(rtfText, pGlobal, "UTF-8")
-		this.gUnlock(hGlobal) 	; DllCall("GlobalUnlock", "Ptr", hGlobal)
+		DllCall("GlobalUnlock", "Ptr", hGlobal)
 		
 		; Set clipboard data and close
 		DllCall("SetClipboardData", "UInt", CF_RTF, "Ptr", hGlobal)
 		DllCall("CloseClipboard")
-		Sleep(this.A_Delay)
+		; this.Sleep()
 	}
 
-	static _SetClipboard(text:='') {
-		if text = ''{
-			text := this
-		}
-		; text := this
-		CF_TEXT := 1
+	; static _SetClipboard(text:='') {
+	; 	if text = ''{
+	; 		text := this
+	; 	}
+	; 	; text := this
+	; 	CF_TEXT := 1
 
-		if this.cOpen() { 	; if DllCall("OpenClipboard", "Ptr") {
-			this.cEmpty() 	; DllCall("EmptyClipboard")
-			hMem := DllCall("GlobalAlloc", "UInt", 0x42, "Ptr", StrPut(text, "UTF-8"))
-			pMem := DllCall("GlobalLock", "Ptr", hMem)
-			StrPut(text, pMem, "UTF-8")
-			DllCall("GlobalUnlock", "Ptr", hMem)
-			DllCall("SetClipboardData", "UInt", CF_TEXT, "Ptr", hMem)
-			this.cClose() 	; DllCall("CloseClipboard")
-			Sleep(this.A_Delay)
-			return true
+	; 	if this.cOpen() { 	; if DllCall("OpenClipboard", "Ptr") {
+	; 		this.cEmpty() 	; DllCall("EmptyClipboard")
+	; 		hMem := DllCall("GlobalAlloc", "UInt", 0x42, "Ptr", StrPut(text, "UTF-8"))
+	; 		pMem := DllCall("GlobalLock", "Ptr", hMem)
+	; 		StrPut(text, pMem, "UTF-8")
+	; 		DllCall("GlobalUnlock", "Ptr", hMem)
+	; 		DllCall("SetClipboardData", "UInt", CF_TEXT, "Ptr", hMem)
+	; 		this.cClose() 	; DllCall("CloseClipboard")
+	; 		Sleep(this.A_Delay)
+	; 		return true
+	; 	}
+	; 	return false
+	; }
+	static _SetClipboard(text := "") {
+		; Validate input
+		if !IsSet(text) || text = ""{
+			throw ValueError("Text parameter is required and cannot be empty.", -1)
 		}
-		return false
+		; Define clipboard format constants
+		static CF_TEXT := 1, CF_UNICODETEXT := 13
+	
+		; Open the clipboard
+		if !DllCall("User32.dll\OpenClipboard", "Ptr", 0){
+			throw OSError("Failed to open clipboard.", -1)
+		}
+		try {
+			; Clear the clipboard
+			if !DllCall("User32.dll\EmptyClipboard"){
+				throw OSError("Failed to empty clipboard.", -1)
+	}
+			; Allocate global memory for the text
+			hMem := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 0x42, "UPtr", StrPut(text, "UTF-16"))
+			if !hMem{
+				throw OSError("Failed to allocate global memory.", -1)
+	}
+			; Lock the memory and copy the text
+			pMem := DllCall("Kernel32.dll\GlobalLock", "Ptr", hMem, "Ptr")
+			if !pMem{
+				throw OSError("Failed to lock global memory.", -1)
+			}
+
+			StrPut(text, pMem, "UTF-16")
+			DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hMem)
+	
+			; Set the clipboard data
+			if !DllCall("User32.dll\SetClipboardData", "UInt", CF_UNICODETEXT, "Ptr", hMem){
+				throw OSError("Failed to set clipboard data.", -1)
+			}
+			; Success
+			return true
+
+		}
+		catch Error as e {
+			; Free the memory on error
+			if hMem{
+				DllCall("Kernel32.dll\GlobalFree", "Ptr", hMem)
+			}
+			throw e
+		} finally {
+			; Close the clipboard
+			DllCall("User32.dll\CloseClipboard")
+		}
 	}
 	static _SetClipboardPlain(t) => this._SetClipboard(t)
 	/************************************************************************
-	* @description Calculate the system's delay time based on computer load
-	* @function getdelayTime()
-	* @param {Object}{this.objSM}:= {
-		* @param {Object}{Integer} 	: this.objSM.s: A_SendMode,
-		* @param {Object}{Integer} 	: this.objSM.d: A_KeyDelay,
-		* @param {Object}{Integer} 	: this.objSM.p: A_KeyDuration
+	* @description Calculate system delay time with improved accuracy and reliability
+	* @returns {Number} Calibrated delay time in milliseconds
+	* @throws {Error} If performance counter operations fail
+	* @example delay := Clip.getdelayTime()
 	*************************************************************************/
+	static getdelayTime() {
+		; Initialize variables with strong typing
+		counterBefore := counterAfter := freq := 0
+		iterations := 1000
+		samples := 5
+		delays := []
 
-	static getdelayTime(){
-		counterAfter := counterBefore := freq := 0
-		DllCall('QueryPerformanceFrequency', 'Int*', &freq := 0)
-		DllCall('QueryPerformanceCounter', 'Int*', &counterBefore := 0)
-		; loop 1000 {
-		loop {
-			num := A_Index
-		} until A_Index == 1000
-		DllCall('QueryPerformanceCounter', 'Int*', &counterAfter := 0)
+		; Get performance counter frequency
+		if !DllCall('QueryPerformanceFrequency', 'Int64*', &freq := 0){
+			throw Error('Failed to query performance frequency', -1)
+		}
+		; Take multiple samples for better accuracy
+		loop samples {
+			; Get start time
+			if !DllCall('QueryPerformanceCounter', 'Int64*', &counterBefore := 0){
+				throw Error('Failed to get initial counter', -1)
+			}
+			; Perform calibration workload
+			loop iterations {
+				; More realistic workload simulation
+				num := A_Index ** 2
+				num /= 2
+			}
+			
+			; Get end time
+			if !DllCall('QueryPerformanceCounter', 'Int64*', &counterAfter := 0){
+				throw Error('Failed to get final counter', -1)
+			}
+			; Calculate delay in microseconds
+			delayTime := ((counterAfter - counterBefore) / freq) * 1000000
+			delays.Push(delayTime)
+		}
 
-		delayTime := ((counterAfter - CounterBefore) / freq)
-		delayTime := delayTime  * 1000000 ;? Convert to milliseconds
+		; Remove outliers (highest and lowest)
+		delays.Sort()
+		if delays.Length > 2 {
+			delays.RemoveAt(1)  ; Remove lowest
+			delays.RemoveAt(delays.Length) ; Remove highest
+		}
+
+		; Calculate average delay
+		totalDelay := 0
+		for delay in delays{
+			totalDelay += delay
+		}
+
+		avgDelay := totalDelay / delays.Length
+
+		; Apply scaling factor based on system performance
+		scaledDelay := this.ScaleDelay(avgDelay)
+		scaledDelay := Round(scaledDelay)
+
+		; Cache the result to avoid frequent recalculations
+		this.cachedDelay := scaledDelay
+		; infos(scaledDelay)
+		return scaledDelay
+	}
+
+	/************************************************************************
+	* @description Scale delay time based on system performance factors
+	* @param {Number} rawDelay The calculated raw delay time
+	* @returns {Number} Scaled delay time
+	*************************************************************************/
+	static scaleDelay(rawDelay) {
+		; Get system metrics
+		try {
+			sysLoad := this.GetSystemLoad()
+			memLoad := this.GetMemoryLoad()
+			
+			; Adjust delay based on system conditions
+			scaleFactor := 1.0
+			
+			if (sysLoad > 80)
+				scaleFactor *= 1.5
+			else if (sysLoad < 20)
+				scaleFactor *= 0.8
+				
+			if (memLoad > 90)
+				scaleFactor *= 1.3
+				
+			; Apply scaling with bounds
+			scaledDelay := rawDelay * scaleFactor
+			return Min(Max(scaledDelay, 10), 200) ; Ensure reasonable bounds
+		}
+		catch {
+			return rawDelay ; Return unscaled on error
+		}
+	}
+
+	/************************************************************************
+	* @description Get current system CPU load
+	* @returns {Number} CPU load percentage
+	*************************************************************************/
+	static getSystemLoad() {
+		static pdh := DllCall("LoadLibrary", "Str", "pdh.dll", "Ptr")
+		static query := 0
 		
-		delaytime := Round(delayTime)
+		if !query {
+			DllCall("pdh\PdhOpenQuery", "Ptr", 0, "Ptr", 0, "Ptr*", &query := 0)
+			DllCall("pdh\PdhAddCounter", "Ptr", query, "Str", "\Processor(_Total)\% Processor Time", "Ptr", 0, "Ptr*", &counter := 0)
+		}
+		
+		DllCall("pdh\PdhCollectQueryData", "Ptr", query)
+		Sleep(100)
+		DllCall("pdh\PdhCollectQueryData", "Ptr", query)
+		
+		DllCall("pdh\PdhGetFormattedCounterValue", "Ptr", counter, "UInt", 0x00000100, "Ptr", 0, "Ptr*", &value := 0)
+		return Round(NumGet(value, "Double"))
+	}
 
-		return delayTime
+	/************************************************************************
+	* @description Get current system memory load
+	* @returns {Number} Memory usage percentage
+	*************************************************************************/
+	static getMemoryLoad() {
+		static memoryStatusEx := Buffer(64, 0)
+		NumPut("UInt", 64, memoryStatusEx)
+		
+		if DllCall("GlobalMemoryStatusEx", "Ptr", memoryStatusEx) {
+			return NumGet(memoryStatusEx, 4, "UInt")
+		}
+		return 50 ; Default if unable to get memory status
+	}
+
+	/************************************************************************
+	* @description Log error information for debugging
+	* @param {Error} err Error object to log
+	*************************************************************************/
+	static LogError(err) {
+		try {
+			FileAppend(
+				Format("{1}`n{2}`n{3}`n", 
+					FormatTime(, "yyyy-MM-dd HH:mm:ss"),
+					err.Message,
+					err.Stack
+				),
+				A_ScriptDir "\delay_errors.log"
+			)
+		}
 	}
 
 	static delayTime 	=> this.getdelayTime()
@@ -262,6 +537,7 @@ class Clip {
 	static shiftInsert => '{sc2A Down}{sc152}{sc2A Up}'
 	static ctrlV	   => '{sc1D Down}{sc2F}{sc1D Up}'
 
+	;; @method
 	/**
 	 * Universal send method handling both RTF and regular content
 	 * @param {String|Array|Map|Object|Class} input The content to send
@@ -278,49 +554,58 @@ class Clip {
 		tmRev := untilRevert
 		eChr := endChar
 		content := input
-		
 
-		(!IsSet(input)) ? input := this : input
-		; if (!IsSet(input)){
-		; 	input := this
-		; }
+		ReadyToRestore := false
+		GroupAdd('CtrlV', 'ahk_exe EXCEL.exe')
+		GroupAdd('CtrlV', 'ahk_exe VISIO.exe')
+
+		; (!IsSet(input)) ? input := this : input
+		if (!IsSet(input)){
+			input := this
+		}
 
 		; Handle backup and clear first
-		isClipReverted ? Clip.buclrClip(&prevClip) : 0
-		; if (isClipReverted){
-		; 	Clip.buclrClip(&prevClip)
-		; 	; prevClip := this.BackupAndClearClipboard()
-		; }
+		; isClipReverted ? Clip.buclrClip(&prevClip) : 0
+		if (isClipReverted){
+			; Clip.buclrClip(&prevClip)
+			prevClip := this.BackupAndClearClipboard()
+		}
 
 		; Process input based on type
 		content := input
 		if (this._IsRTFContent(content)) {
 			verifiedRTF := FormatConverter.IsRTF(content, true)
+			; infos(verifiedRTF)
 			this._SetClipboardRTF(verifiedRTF endChar)
 		}
 		else {
 			; Regular content handling
 			A_Clipboard := content endChar
 			; this._SetClipboard(content eChr)
-			this.WaitForClipboard(delay)
+			; this.WaitForClipboard(delay)
 		}
-
 		; Wait for clipboard and send
-		; Sleep(delay)
-		; Send('{sc2A Down}{sc152}{sc2A Up}') 		;! {Shift}{Insert}
-		Send(this.shiftinsert)
-		; Send(key.paste) ; Send('{sc1D Down}{sc2F}{sc1D Up}') 			;! {Control}{v}
-		; Send(this.ctrlV)
-
-		Sleep(delay)
+		Sleep(A_Delay)
+		If WinActive('ahk_group CtrlV') {
+			Send('{sc1D Down}{sc2F}{sc1D Up}')          ;! {Control}{v}
+			Sleep(A_Delay)
+			readyToRestore := true
+		}
+        else {
+			Send('{sc2A Down}{sc152}{sc2A Up}')         ;! {Shift}{Insert}
+			Sleep(A_Delay)
+			readyToRestore := true
+        }
+		
+		Sleep(A_Delay)
 
 		; Restore clipboard if needed
-		cRev ? this._SetClipboard(cPrev) : 0
-		; if (cRev) {
-		; 	this.ClearClipboard()
-		; 	A_Clipboard := cPrev
-		; 	this.WaitForClipboard()
-		; }
+		; cRev ? this._SetClipboard(cPrev) : 0
+		if (isClipReverted && readyToRestore) {
+			this.ClearClipboard()
+			A_Clipboard := prevClip
+			this.WaitForClipboard()
+		}
 
 		return content
 	}
@@ -539,7 +824,7 @@ class Clip {
 	}
 
 	static GetClipboardText(hData:=unset) {
-		; CF_UNICODETEXT := 13, CF_TEXT := 1
+		CF_UNICODETEXT := 13, CF_TEXT := 1
 		; switch {
 		; 	default: CF := CF_TEXT
 		; 	case TF ~= 'i)P' || TF ~= 'i)Plain'	|| TF == 1:
@@ -550,50 +835,61 @@ class Clip {
 		; }
 		; Infos(hData)
 		
-		if !(this.openClip) { ; if (!DllCall('OpenClipboard')) { ; if (!DllCall('OpenClipboard', 'Ptr', 0)) {
+		; if !this.openClip() {
+		if (!DllCall('OpenClipboard')) { ; if (!DllCall('OpenClipboard', 'Ptr', 0)) {
 			return ''
 		}
-		; if (hData == 0){
-		if !IsSet(hData){
-			hData := this.GetClipboardData() ; hData := DllCall('GetClipboardData', 'UInt', CF, 'Ptr')
+		if (hData == 0){
+		; if !IsSet(hData){
+			; hData := this.GetClipboardData()
+			hData := DllCall('GetClipboardData', 'UInt', CF_TEXT, 'Ptr')
 		}
 		if (hData == 0) {
-			this.CloseClipboard() ; DllCall('CloseClipboard')
+			; this.CloseClipboard()
+			DllCall('CloseClipboard')
 			return ''
 		}
 		
-		this.GlobalUnlock(hData) ; DllCall('GlobalUnlock', 'Ptr', hData)
+		; this.GlobalUnlock(hData)
+		DllCall('GlobalUnlock', 'Ptr', hData)
 		
 		pData := DllCall('GlobalLock', 'Ptr', hData, 'Ptr')
 
 		if (pData == 0) {
-			this.CloseClipboard() ; DllCall('CloseClipboard')
+			; this.CloseClipboard()
+			DllCall('CloseClipboard')
 			return ''
 		}
 
-		text := StrGet(pData, 'UTF-8')
+		txt := StrGet(pData, 'UTF-8')
 
-		; DllCall('GlobalUnlock', 'Ptr', hData)
-		this.GlobalUnlock(hData)
+		; this.GlobalUnlock(hData)
+		DllCall('GlobalUnlock', 'Ptr', hData)
 		this.CloseClipboard()
 
-		return text
+		return txt
 	}
-	; static hWndClip => this._hWndClip(&hWnd := unset)
-	; static _hWndClip(&hWnd := unset){
-	; 	return hWnd := unset
-	; }
 
 	
 	static opClipHwnd => (*) => this.openclipboardHWND()
 
-
-
-
-	static OpenClipboard(hWnd:=unset) => !IsSet(hWnd)
-			? DllCall('User32.dll\OpenClipboard', 'Ptr')
-			: DllCall('User32.dll\OpenClipboard', 'Ptr', hWnd)
-
+	/************************************************************************
+	 * @description Get the handle of the clipboard window
+	 * @example hWndClip := GetClipboardWindow()
+	 * @returns {Integer} The handle of the clipboard window
+	 * @returns {Integer} The handle of the clipboard window
+	 ***********************************************************************/
+	static OpenClipboard(hWnd:=unset) {
+		if !IsSet(hWnd) {
+			return DllCall('User32.dll\OpenClipboard', 'Ptr', 0)
+		}
+		else {
+			return DllCall('User32.dll\OpenClipboard', 'Ptr', hWnd)
+		}
+		throw OSError("Failed to open clipboard.", -1)
+		return false
+	}
+	; ---------------------------------------------------------------------------
 	static cOpen(hWnd:=unset) 	 => this.OpenClipboard(hWnd:=unset)
 	static openClip(hWnd:=unset) => this.OpenClipboard(hWnd:=unset)
 	static opClip(hWnd:=unset) 	 => this.OpenClipboard(hWnd:=unset)
@@ -609,10 +905,31 @@ class Clip {
 	static xClip() 	=> this.CloseClipboard()
 	static cClose() => this.CloseClipboard()
 	; ---------------------------------------------------------------------------
-	static globalUnlock(hData:=unset) => (!IsSet(hData)
-		? DllCall('Kernel32.dll\GlobalUnlock', 'Ptr')
-		: DllCall('Kernel32.dll\GlobalUnlock', 'Ptr', hData)
-	)
+
+	/**
+	 * Unlocks a global memory object.
+	 * @param {Ptr|Unset} hData - The handle to the global memory object. If unset, attempts to unlock the default memory object.
+	 * @returns {Boolean} True if the memory was successfully unlocked or not locked, False if an error occurred.
+	 * @throws {OSError} If the `GlobalUnlock` call fails.
+	 */
+	static globalUnlock(hData := unset) {
+		; Call GlobalUnlock with or without the handle
+		result := !IsSet(hData)
+			? DllCall("Kernel32.dll\GlobalUnlock", "Ptr")
+			: DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+
+		; Check for errors
+		if (result = 0 && A_LastError != 0) {
+			throw OSError(Format("Failed to unlock global memory. Error code: {1}", A_LastError), -1)
+		}
+
+		; Return true if successful or not locked
+		return true
+	}
+	; static globalUnlock(hData:=unset) => (!IsSet(hData)
+	; 	? DllCall('Kernel32.dll\GlobalUnlock', 'Ptr')
+	; 	: DllCall('Kernel32.dll\GlobalUnlock', 'Ptr', hData)
+	; )
 	static globUnlock(hData:=unset) => this.globalUnlock(hData:=unset)
 	static gUnlock(hData:=unset) => this.globalUnlock(hData:=unset)
 	; ---------------------------------------------------------------------------
@@ -845,7 +1162,7 @@ class Clip {
 }
 
 ; #Requires AutoHotkey v2+
-; ; #Include <Directives\__AE.v2>
+; ; #Include <Directives\__this.v2>
 ; #Include <Includes\ObjectTypeExtensions>
 
 ; class Clip {
@@ -866,7 +1183,7 @@ class Clip {
 
 ; 	/************************************************************************
 ; 	* @description Initialize the class with default settings
-; 	* @example AE class is Initiated
+; 	* @example this class is Initiated
 ; 	***********************************************************************/
 ; 	static __New() {
 ; 		this.DH(1)
@@ -875,7 +1192,7 @@ class Clip {
 
 ; 	/************************************************************************
 ; 	* @description Set SendMode, SendLevel, and BlockInput
-; 	* @example AE.SM_BISL(&SendModeObj, 1)
+; 	* @example this.SM_BISL(&SendModeObj, 1)
 ; 	***********************************************************************/
 ; 	static _SendMode_SendLevel_BlockInput(&SendModeObj?, n := 1) {
 ; 		this.SM(&SendModeObj)
@@ -885,7 +1202,7 @@ class Clip {
 ; 	static SM_BISL(&SendModeObj?, n := 1) => this._SendMode_SendLevel_BlockInput(&SendModeObj?, n:=1)
 ; 	/************************************************************************
 ; 	* @description Change SendMode and SetKeyDelay
-; 	* @example AE.SM(&SendModeObj)
+; 	* @example this.SM(&SendModeObj)
 ; 	* @var {Object} : SendModeObject,
 ; 	* @var {Integer} : s: A_SendMode,
 ; 			d: A_KeyDelay,
@@ -904,7 +1221,7 @@ class Clip {
 ; 	static SM(&SendModeObj?) => this._SendMode(&SendModeObj?)
 ; 		/************************************************************************
 ; 	* @description Set BlockInput and SendLevel
-; 	* @example AE.BISL(1)
+; 	* @example this.BISL(1)
 ; 	* @var {Integer} : Send_Level := A_SendLevel
 ; 	* @var {Integer} : Block_Input := bi := 0
 ; 	* @var {Integer} : n = send level increase number
@@ -922,7 +1239,7 @@ class Clip {
 ; 	; ---------------------------------------------------------------------------
 ; 		/************************************************************************
 ; 	* @description Set detection for hidden windows and text
-; 	* @example AE.DH(1)
+; 	* @example this.DH(1)
 ; 	***********************************************************************/
 ; 	static _DetectHidden_Text_Windows(n := 1) {
 ; 		DetectHiddenText(n)
@@ -933,7 +1250,7 @@ class Clip {
 
 ; 	/************************************************************************
 ; 	* @description Set various delay settings
-; 	* @example AE.SetDelays(-1)
+; 	* @example this.SetDelays(-1)
 ; 	* @var {Integer} : delay_key := d := n := -1
 ; 	* @var {Integer} : hold_time := delay_press := p := -1
 ; 	***********************************************************************/

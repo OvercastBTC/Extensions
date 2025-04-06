@@ -4,9 +4,12 @@
  * @author Descolada
  * @version 0.4 (05.09.23)
  * @created 08.27.22
- * @author OvercastBTC
+ * @author OvercastBTC (updated from Axlefublr)
  * @date 2024/12/05
  * @version 12.05.24
+ * @author Lazer_Made (updated by OvercastBTC)
+ * @date 2025/03/31
+ * @version 03.31.25
  ***********************************************************************/
 #Requires AutoHotkey v2.0+
 #SingleInstance Force
@@ -77,10 +80,13 @@ Class Array2 {
 		this.DefineProp('of', {call:__arr_of})
 	}
 
-	static Length() {
+	static _Length() {
 		arrObj := Array()
-		arrObj.Length()
+		arrObj.Length
 	}
+	; static _Length() => (arrObj := Array()) => arrObj.Length()
+
+	; static Length => (arrObj := Array()) => arrObj.Length()
 
 	static Push(v) {
 		arrObj := Array()
@@ -192,6 +198,7 @@ Class Array2 {
 		
 		if Type(this) = 'Array' {
 			params := elements
+			infos('Type(this) = "Array"')
 			return this.Unshift(elements*)
 		}
 		; Handle static call pattern
@@ -658,8 +665,8 @@ Class Array2 {
 	 */
 	static _ArrayToString(char := '`n') {
 		str := ''
-		for index, value in this {
-			if index = this.Length {
+		for value in this {
+			if A_Index = this.Length {
 				str .= value
 				break
 			}
@@ -671,7 +678,9 @@ Class Array2 {
 	/**
 	 * Alias for _ArrayToString
 	 */
-	static ToString(char?) => this._ArrayToString(char?)
+	static ToString(char?) 	=> this._ArrayToString(char?)
+	static ToStr(char?) 	=> this._ArrayToString(char?)
+	static Stringify(char?) => this._ArrayToString(char?)
 
 	/**
 	 * Checks if array contains a value
@@ -679,27 +688,36 @@ Class Array2 {
 	 * @returns {Any|False} The found value or False if not found
 	 */
 	static _ArrayHasValue(valueToFind) {
-		for index, value in this {
-			if (value = valueToFind) {
-				return value
+		for i, v in this {
+			if (v = valueToFind) {
+				return v
 			}
 		}
 		return false
 	}
 
 	/**
-	 * Alias for _ArrayHasValue
+	 * Checks if array contains a value
+	 * @param valueToFind The value to search for
+	 * @returns {Any|False} The found value or False if not found
 	 */
 	static HasValue(valueToFind) => this._ArrayHasValue(valueToFind)
 
 	/**
 	 * Safely push a value to array only if it doesn't exist
-	 * @param value The value to push
+	 * @param v The value to push
 	 * @throws {IndexError} If value already exists
 	 */
-	static SafePush(value) {
-		if !this.HasValue(value) {
-			this.Push(value)
+	static safePush(v) {
+		if Type(v) = 'Array' {
+			for value in v {
+				if !this.HasValue(value) {
+					this.Push(value)
+				}
+			}
+		}
+		if !this.HasValue(v) {
+			this.Push(v)
 		}
 	}
 
@@ -716,6 +734,15 @@ Class Array2 {
 		}
 		return arrayObj
 	}
+
+	/**
+	 * Generates an array of random numbers
+	 * @param indexes Number of elements to generate
+	 * @param variation Multiplier for maximum random value
+	 * @returns {Array}
+	 */
+
+	static generateRandom(indexes, variation := 7) => this.GenerateRandomArray(indexes, variation := 7)
 
 	/**
 	 * Generates a sequential array from 1 to indexes
@@ -1179,7 +1206,7 @@ class JS_Array {
 	 * @returns {Array} a shallow copy of the existing array on which it is called plus any included parameters as new values
 	 * {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/concat|MDN - concat()}
 	 */
-	static concat(arr*) {
+	static Concat(arr*) {
 		return this.push(arr*)
 	}
 
@@ -1206,7 +1233,7 @@ class JS_Array {
 	 * @returns {Array} Containing an array of key-value pairs for each index in the original array
 	 * {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/entries|MDN - entries()}
 	 */
-	static entries() {
+	static Entries() {
 		result := []
 		for index, value in this {
 			result.push([index, value])
@@ -1218,7 +1245,7 @@ class JS_Array {
 	 * @param callbackFn A function to execute for each element in the array. It should return a truthy value to indicate the element passes the test, and a falsy value otherwise
 	 * @returns {Boolean} true if every element satisfies the condition, else false
 	 */
-	static every(callbackFn) {
+	static Every(callbackFn) {
 		if (!HasMethod(callbackFn))
 			throw ValueError("Every: func must be a function", -1)
 		for value in this {
@@ -1233,7 +1260,7 @@ class JS_Array {
 	 * @param {Any} end One-based index at which to end filling, converted to an integer. fill() fills up to but not including end
 	 * @returns {Array} The modified array, filled with the value of the parameter insert
 	 */
-	static fill(insert, start := 1, end := this.length) {
+	static Fill(insert, start := 1, end := this.length) {
 		for index, value in this {
 			if index >= start && index < end {
 				this[index] := insert
@@ -1247,7 +1274,7 @@ class JS_Array {
 	 * @param function A function to execute for each element in the array. It should return a truthy value to keep the element in the resulting array, and a falsy value otherwise.
 	 * @returns {Array} 
 	 */
-	static filter(function) {
+	static Filter(function) {
 		result := []
 		for index, value in this {
 			try {
@@ -1271,7 +1298,7 @@ class JS_Array {
 	 * @example
 	 * [1,2,3,4].Find(item => (Mod(item, 3) == 0)) ; returns 3
 	 */
-	static find(function, start := 1) {
+	static Find(function, start := 1) {
 		for index, value in this {
 			if index >= start && function(value) {
 				return value
@@ -1310,13 +1337,13 @@ class JS_Array {
 			index--            
 		}
 		return 0
-/*         found := ''
-		for index, value in this {
-			if function(value) {
-				found := value
-			}
-		}
-		return found == '' ? 0 : found */
+	; found := ''
+	; 	for index, value in this {
+	; 		if function(value) {
+	; 			found := value
+	; 		}
+	; 	}
+	; 	return found == '' ? 0 : found
 	}
 	
 	/**
@@ -1341,17 +1368,17 @@ class JS_Array {
 	 * @param {Integer} depth The depth level specifying how deep a nested array structure should be flattened. Defaults to 1.
 	 * @returns {Array} A new array with the sub-array elements concatenated into it.
 	 */
-	static flat(depth := 1) {
+	static Flat(depth := 1) {
 		result := []
 		depth--
 		for index, value in this {
 			(value is Array) ? result.push(value*) : result.push(value)
 		}
-		return depth == 0 ? result : result.flat(depth) 
+		return depth == 0 ? result : result.Flat(depth) 
 	}
 
-	;same as calling this.map(callbackFn).flat()
-	static flatMap(function) => this.map(function).flat()
+	;same as calling this.map(callbackFn).Flat()
+	static flatMap(function) => this.map(function).Flat()
 
 	/**
 	 * Applies a function to each element in the array.
@@ -1377,7 +1404,7 @@ class JS_Array {
 	 * @example
 	 * [1,2,3,4].includes(item => (Mod(item, 3) == 0)) ; returns true
 	 */
-	static includes(search, start := 1) {
+	static Includes(search, start := 1) {
 		for index, value in this {
 			if index >= start && value == search {
 				return true
@@ -1434,7 +1461,7 @@ class JS_Array {
 	 * 
 	 * @returns {Array} returns a new array ~iterator object~ that contains the keys for each index in the array.
 	 */
-	static keys() {
+	static Keys() {
 		result := []
 		for index, value in this
 			result.push(index)
@@ -1463,7 +1490,7 @@ class JS_Array {
 	 * @param arrays Additional arrays to be accepted in the mapping function
 	 * @returns {Array} A new array with each element being the result of the callback function.
 	 */
-	static map(func, arrays*) {
+	static Map(func, arrays*) {
 		if !HasMethod(func)
 			throw ValueError("Map: func must be a function", -1)
 		for i, v in this {
@@ -1485,7 +1512,7 @@ class JS_Array {
 	 * @example
 	 * [1,2,3,4,5].Reduce((a,b) => (a+b)) ; returns 15 (the sum of all the numbers)
 	 */
-	static reduce(func, initialValue?) {
+	static Reduce(func, initialValue?) {
 		if !HasMethod(func)
 			throw ValueError("Reduce: func must be a function", -1)
 		len := this.Length + 1
@@ -1509,7 +1536,7 @@ class JS_Array {
 	 * @example
 	 * [1,2,3].Reverse() ; returns [3,2,1]
 	 */
-	static reverse() {
+	static Reverse() {
 		len := this.Length + 1, max := (len // 2), i := 0
 		while ++i <= max
 			this.swap(i, len - i)
@@ -1520,7 +1547,7 @@ class JS_Array {
 	 * @description Shifts all values to the left by 1 and decrements the length by 1, resulting in the first element being removed. This method mutates the original array. If the length property is 0, undefined is returned.
 	 * @returns {Array} 
 	 */
-	static shift() {
+	static Shift() {
 		newArray := []
 		for index, value in this {
 			if index = 1
@@ -1540,7 +1567,7 @@ class JS_Array {
 	 * @param step Optional: an integer specifying the incrementation. Default is 1.
 	 * @returns {Array}
 	 */
-	static slice(start:=1, end:=0, step:=1) {
+	static Slice(start:=1, end:=0, step:=1) {
 		len := this.length, i := start < 1 ? len + start : start, j := Min(end < 1 ? len + end : end, len), r := [], reverse := False
 		if len = 0
 			return []
@@ -1564,8 +1591,9 @@ class JS_Array {
 
 	static some(function) {
 		for value in this {
-			if function(value)
+			if function(value){
 				return true
+			}
 		}
 		return false
 	}
@@ -1587,7 +1615,7 @@ class JS_Array {
 	 *     If you have an array of objects, specify here the key by which contents the object will be sorted.
 	 * @returns {Array}
 	 */
-	static sort(optionsOrCallback:="N", key?) {
+	static Sort(optionsOrCallback:="N", key?) {
 		static sizeofFieldType := 16 ; Same on both 32-bit and 64-bit
 		if HasMethod(optionsOrCallback)
 			pCallback := CallbackCreate(CustomCompare.Bind(optionsOrCallback), "F Cdecl", 2), optionsOrCallback := ""
@@ -1612,11 +1640,33 @@ class JS_Array {
 			this := Unique(this)
 		return this
 
-		CustomCompare(compareFunc, pFieldType1, pFieldType2) => (ValueFromFieldType(pFieldType1, &fieldValue1), ValueFromFieldType(pFieldType2, &fieldValue2), compareFunc(fieldValue1, fieldValue2))
-		NumericCompare(pFieldType1, pFieldType2) => (ValueFromFieldType(pFieldType1, &fieldValue1), ValueFromFieldType(pFieldType2, &fieldValue2), (fieldValue1 > fieldValue2) - (fieldValue1 < fieldValue2))
-		NumericCompareKey(key, pFieldType1, pFieldType2) => (ValueFromFieldType(pFieldType1, &fieldValue1), ValueFromFieldType(pFieldType2, &fieldValue2), (f1 := fieldValue1.HasProp("__Item") ? fieldValue1[key] : fieldValue1.%key%), (f2 := fieldValue2.HasProp("__Item") ? fieldValue2[key] : fieldValue2.%key%), (f1 > f2) - (f1 < f2))
-		StringCompare(pFieldType1, pFieldType2, casesense := False) => (ValueFromFieldType(pFieldType1, &fieldValue1), ValueFromFieldType(pFieldType2, &fieldValue2), StrCompare(fieldValue1 "", fieldValue2 "", casesense))
-		StringCompareKey(key, pFieldType1, pFieldType2, casesense := False) => (ValueFromFieldType(pFieldType1, &fieldValue1), ValueFromFieldType(pFieldType2, &fieldValue2), StrCompare(fieldValue1.%key% "", fieldValue2.%key% "", casesense))
+		CustomCompare(compareFunc, pFieldType1, pFieldType2) => (
+			ValueFromFieldType(pFieldType1, &fieldValue1),
+			ValueFromFieldType(pFieldType2, &fieldValue2),
+			compareFunc(fieldValue1, fieldValue2)
+		)
+		NumericCompare(pFieldType1, pFieldType2) 			 => (
+			ValueFromFieldType(pFieldType1, &fieldValue1),
+			ValueFromFieldType(pFieldType2, &fieldValue2),
+			(fieldValue1 > fieldValue2) - (fieldValue1 < fieldValue2)
+		)
+		NumericCompareKey(key, pFieldType1, pFieldType2) 	 => (
+			ValueFromFieldType(pFieldType1, &fieldValue1),
+			ValueFromFieldType(pFieldType2, &fieldValue2),
+			(f1 := fieldValue1.HasProp("__Item") ? fieldValue1[key] : fieldValue1.%key%),
+			(f2 := fieldValue2.HasProp("__Item") ? fieldValue2[key] : fieldValue2.%key%),
+			(f1 > f2) - (f1 < f2)
+		)
+		StringCompare(pFieldType1, pFieldType2, casesense := False) => (
+			ValueFromFieldType(pFieldType1, &fieldValue1),
+			ValueFromFieldType(pFieldType2, &fieldValue2),
+			StrCompare(fieldValue1 "", fieldValue2 "", casesense)
+		)
+		StringCompareKey(key, pFieldType1, pFieldType2, casesense := False) => (
+			ValueFromFieldType(pFieldType1, &fieldValue1),
+			ValueFromFieldType(pFieldType2, &fieldValue2),
+			StrCompare(fieldValue1.%key% "", fieldValue2.%key% "", casesense)
+		)
 		RandomCompare(pFieldType1, pFieldType2) => (Random(0, 1) ? 1 : -1)
 
 		ValueFromFieldType(pFieldType, &fieldValue?) {
@@ -1757,37 +1807,6 @@ class JS_Array {
 		return this.length
 	}
 
-
-
-		/* result := []
-		itemArr := Array(items*)
-		other := Array(this*)
-		result.push(itemArr*)
-		result.push(other*)
-		MsgBox('result:' result.join())
-		this := result
-		MsgBox('this:' this.join())
-		return this.length */
-
-/*         result := []
-		for item in items {
-			result.push(item)
-		}
-		for thing in this {
-			result.push(thing)
-		}
-		MsgBox('this(1): ' this.join())
-		this := result
-		MsgBox('this(2): ' this.join())
-		return result */
-		;return this.length
-
-
-/*         result := [items*]
-		result.push(this*)
-		this := result
-		return this */
-
 	static values() {
 		result := []
 		for v in this
@@ -1835,23 +1854,23 @@ class JS_Array {
 		return this
 	}
 
-	/**
-	 * @author Descolada
-	 * Counts the number of occurrences of a value
-	 * @param value The value to count. Can also be a function.
-	 */
-	static count(value) {
-		count := 0
-		if HasMethod(value) {
-			for _, v in this
-				if value(v?)
-					count++
-		} else
-			for _, v in this
-				if v == value
-					count++
-		return count
-	}
+	; /**
+	;  * @author Descolada
+	;  * Counts the number of occurrences of a value
+	;  * @param value The value to count. Can also be a function.
+	;  */
+	; static count(value) {
+	; 	count := 0
+	; 	if HasMethod(value) {
+	; 		for _, v in this
+	; 			if value(v?)
+	; 				count++
+	; 	} else
+	; 		for _, v in this
+	; 			if v == value
+	; 				count++
+	; 	return count
+	; }
 
 	static _unimplemented() {
 		MsgBox('This functionality is not yet implemented.')
@@ -2224,27 +2243,61 @@ class UnshiftBenchmark {
 	}
 }
 
-:X?*C1:p.test::UnshiftBenchmark.Run(1000, 1000, 5000)
-; :X?*C1:p.test::{
-	; ; Test the implementation
-	; months := ["April", "May", "June", "July"]
-	; months.unshift("Jan", "Feb", "Mar")
-
-	; mon_tostring := months.ToString()
-	; mon_join := months.Join()
-	; mon .= 'months_tostring:`n' mon_tostring
-	; mon .= '`n'
-	; mon .= 'months_join:`n' mon_join
-	; x := months.Length
-
-	; infos(
-	; 	'[months]`n'
-	; 	mon
-	; 	'`n'
-	; 	'# of months: ' x)
-	; Run the benchmark with default settings
-	; UnshiftBenchmark.Run()
-
-	; For more detailed comparison with larger arrays
-; 	UnshiftBenchmark.Run(1000, 1000, 5000)
-; }
+/**
+ * @description Process options of various types into a standardized array
+ * @param {Any} options* Options of any type
+ * @returns {Array} Standardized array of options
+ */
+; static ProcessOptions(options*) {
+enumerateOptions(options*) {
+	processedOptions := []
+	
+	for option in options {
+		if (option = "")
+			continue
+			
+		switch Type(option) {
+			case "Array":
+				; Flatten arrays into the options list
+				for item in option
+					processedOptions.Push(item)
+			
+			case "Map":
+				; Convert maps to strings with key-value pairs
+				for key, value in option
+					processedOptions.Push(key ": " value)
+			
+			case "Object":
+				; Handle objects
+				if (option.HasOwnProp("__ToString") || HasMethod(option, "ToString"))
+					processedOptions.Push(String(option))
+				else {
+					; Get properties for selection
+					for propName in option.OwnProps() {
+						if !(propName ~= "^__")  ; Skip internal properties
+							processedOptions.Push(propName ": " option.%propName%)
+					}
+				}
+			
+			case "String":
+				; Check if it's a JSON string
+				if (option ~= "^\s*[\{\[]") {
+					try {
+						jsonObj := JSON.Parse(option)
+						return enumerateOptions(jsonObj)
+					} catch {
+						; Not valid JSON, treat as string
+						processedOptions.Push(option)
+					}
+				} else {
+					processedOptions.Push(option)
+				}
+			
+			default:
+				; For all other types, convert to string
+				processedOptions.Push(String(option))
+		}
+	}
+	
+	return processedOptions
+}

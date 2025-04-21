@@ -5,7 +5,7 @@
 ; This script automates the synchronization of multiple git repositories
 
 ; Define your repositories
-class GitRepo {
+class ogGitRepo {
 	
 	#Requires AutoHotkey v2.0+
 
@@ -20,8 +20,8 @@ class GitRepo {
 	}
 }
 ; ^+#r::GitRepoGui
-GitRepoGui
-Class GitRepoGui {
+ogGitRepoGui
+Class ogGitRepoGui {
 	; GUI class to manage the Git repository synchronization tool
 	__New() {
 		; 	this.myGui := Gui("AlwaysOnTop", "Git Repository Manager")

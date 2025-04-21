@@ -40,10 +40,91 @@ Map.Prototype.base := Map2
 
 class Map2 {
 
+	/**
+     * @description Get a property value using dot notation
+     * @param {String} key The property name
+     * @returns {Any} The corresponding value or empty string if not found
+     */
+	__Get(key) {
+		if this.HasKey(key)
+			return this[key]
+		return ""
+	}
+
+	/**
+     * @description Set a property value using dot notation
+     * @param {String} key The property name
+     * @param {Any} value The value to set
+     * @returns {Any} The set value
+     */
+	__Set(key, value) {
+		return this[key] := value
+	}
+
+	Has(keyvalue) {
+		If this.HasKey(keyvalue) {
+			return true
+		}
+		else if this.HasValue(keyvalue) {
+			return true
+		}
+		else if this.HasOwnProp(keyvalue) {
+			return true
+		}
+		else {
+			return false
+		}
+	}
+
+	static Has(keyvalue) {
+		If this.HasKey(keyvalue) {
+			return true
+		}
+		else if this.HasValue(keyvalue) {
+			return true
+		}
+		else if this.HasOwnProp(keyvalue) {
+			return true
+		}
+		else {
+			return false
+		}
+	}
+
+	/**
+	 * @description Get the length of the map
+	 * @returns {Number} The number of key-value pairs in the map
+	 */
+	static Length() {
+		return this.Count()  ; Assuming Count method is implemented
+	}
+
+	/**
+	 * @description Get the keys of the map as an array
+	 * @returns {Array} An array of keys in the map
+	 */
+	static Keys() {
+		keys := []
+		for k, _ in this {
+			keys.Push(k)
+		}
+		return keys
+	}
+	/**
+	 * @description Get the values of the map as an array
+	 * @returns {Array} An array of values in the map
+	 */
+	static Values() {
+		values := []
+		for _, v in this {
+			values.Push(v)
+		}
+		return values
+	}
 	static __New() {
 		; Add all Map2 methods to Array prototype
-		for methodName in Map2.OwnProps() {
-			if methodName != "__New" && HasMethod(Map2, methodName) {
+		for methodName in this.OwnProps() {
+			if methodName != "__New" && HasMethod(this, methodName) {
 				; Check if method already exists
 				if Map.Prototype.HasOwnProp(methodName) {
 					; Either skip, warn, or override based on your needs
@@ -52,7 +133,7 @@ class Map2 {
 					; Map.Prototype.DeleteProp(methodName)
 				}
 				Map.Prototype.DefineProp(methodName, {
-					Call: Map2.%methodName%
+					Call: this.%methodName%
 				})
 			}
 		}
@@ -65,12 +146,14 @@ class Map2 {
      * @returns {Map}
      */
     static Map(func, enums*) {
-        if !HasMethod(func)
+        if !HasMethod(func) {
             throw ValueError("Map: func must be a function", -1)
+		}
         for k, v in this {
             bf := func.Bind(k,v)
-            for _, vv in enums
+            for _, vv in enums {
                 bf := bf.Bind(vv.Has(k) ? vv[k] : unset)
+			}
             try bf := bf()
             this[k] := bf
         }
@@ -82,10 +165,12 @@ class Map2 {
      * @returns {Map}
      */
     static ForEach(func) {
-        if !HasMethod(func)
+        if !HasMethod(func) {
             throw ValueError("ForEach: func must be a function", -1)
-        for i, v in this
+		}
+        for i, v in this {
             func(v, i, this)
+        }
         return this
     }
     /**
@@ -94,13 +179,18 @@ class Map2 {
      * @returns {Map}
      */
     static Filter(func) {
-        if !HasMethod(func)
+        if !HasMethod(func) {
             throw ValueError("Filter: func must be a function", -1)
+		}
         r := Map()
-        for k, v in this
-            if func(k, v)
+        for k, v in this {
+            if func(k, v) {
                 r[k] := v
-        return this := r
+            }
+        }
+		this := r
+		; return r
+        return this
     }
     /**
      * Finds a value satisfying the provided function and returns its key.
@@ -110,8 +200,9 @@ class Map2 {
      * Map("a", 1, "b", 2, "c", 3).Find((v) => (Mod(v,2) == 0)) ; returns "b"
      */
     static Find(func, &match?) {
-        if !HasMethod(func)
+        if !HasMethod(func) {
             throw ValueError("Find: func must be a function", -1)
+		}
         for k, v in this {
             if func(v) {
                 match := v
@@ -123,19 +214,56 @@ class Map2 {
     /**
      * Counts the number of occurrences of a value
      * @param value The value to count. Can also be a function that accepts a value and evaluates to true/false.
+     * @returns {Number} The number of occurrences of the value in the map.
      */
-    ; static Count(value) {
-    ;     count := 0
-    ;     if HasMethod(value) {
-    ;         for _, v in this
-    ;             if value(v?)
-    ;                 count++
-    ;     } else
-    ;         for _, v in this
-    ;             if v == value
-    ;                 count++
-    ;     return count
-    ; }
+	static Count(value?) {
+		count := 0
+		if !IsSet(value) {
+			value := this
+		}
+		if HasMethod(value) {
+			for _, v in this {
+				if value(v?) {
+					count++
+				}
+			}
+		}
+		else {
+			for _, v in this {
+				if v == value {
+					count++
+				}
+			}
+		}
+		return count
+	}
+
+	/**
+	 * 
+	 * @param value The value to count. Can also be a function that accepts a value and evaluates to true/false.
+	 * @returns {Number} The number of occurrences of the value in the map.
+	 */
+	Count(value?) {
+		count := 0
+		if !IsSet(value) {
+			value := this
+		}
+		if HasMethod(value) {
+			for _, v in this {
+				if value(v?) {
+					count++
+				}
+			}
+		}
+		else {
+			for _, v in this {
+				if v == value {
+					count++
+				}
+			}
+		}
+		return count
+	}
 
     /**
      * Adds the contents of other enumerables to this one.
@@ -144,10 +272,12 @@ class Map2 {
      */
     static Extend(enums*) {
         for i, enum in enums {
-            if !HasMethod(enum, "__Enum")
+            if !HasMethod(enum, "__Enum") {
                 throw ValueError("Extend: argument " i " is not an iterable")
-            for k, v in enum
+            }
+            for k, v in enum {
                 this[k] := v
+			}
         }
         return this
     }
@@ -320,7 +450,12 @@ class Map2 {
         return false
 	}
 
-	static HasValue(valueToFind) => this._MapHasValue(valueToFind)
+	static HasValue(valueToFind) {
+		return this._MapHasValue(valueToFind)
+	}
+	HasValue(valueToFind) {
+		return Map2._MapHasValue(valueToFind)
+	}
 
 	static _MapHaskey(keyToFind) {
 		for k, value in this {
@@ -330,7 +465,118 @@ class Map2 {
 		}
 		return false
 	}
-	static HasKey(keyToFind) => this._MapHaskey(keyToFind)
+	static HasKey(keyToFind) {
+		return this._MapHaskey(keyToFind)
+	}
+	HasKey(keyToFind) {
+		return Map2._MapHaskey(keyToFind)
+	}
+	static GetKeys() {
+		keys := []
+		for k, _ in this {
+			keys.Push(k)
+		}
+		return keys
+	}
+	
+	static GetValues() {
+		values := []
+		for _, value in this {
+			values.Push(value)
+		}
+		return values
+	}
+	
 	; ---------------------------------------------------------------------------
 }
 
+; ====== Map with Dot Notation Support ======
+
+/**
+ * @class DotMap
+ * @description Extended Map class with dot notation support
+ * @extends Map
+ */
+class DotMap extends Map {
+    /**
+     * @constructor
+     * @param {Object|Array|Map} init Optional initial values
+     */
+    __New(init?) {
+        super.__New()
+        
+        if IsSet(init) {
+            if TypeChecker.IsObject(init) {
+                for key, value in init.OwnProps()
+                    this[key] := value
+            } else if TypeChecker.IsArray(init) {
+                Loop init.Length // 2
+                    this[init[A_Index*2-1]] := init[A_Index*2]
+            } else if TypeChecker.IsMap(init) {
+                for key, value in init
+                    this[key] := value
+            }
+        }
+    }
+    
+    /**
+     * @description Get a value using dot notation
+     * @param {String} key The key to get
+     * @returns {Any} The value
+     */
+    __Get(key) {
+		objMap := Map()
+		if this.Has(key) {
+			objMap := this[key]
+			if TypeChecker.IsObject(objMap) {
+				return objMap
+			} else {
+				return objMap
+			}
+		}
+		return false
+    }
+    
+    /**
+     * @description Set a value using dot notation
+     * @param {String} key The key to set
+     * @param {Any} value The value to set
+     */
+    __Set(key, value) {
+		objMap := Map()
+		if this.Has(key) {
+			objMap := this[key]
+			if TypeChecker.IsObject(objMap) {
+				objMap := objMap.__Set(key, value)
+				return objMap
+			} else if TypeChecker.IsArray(objMap) {
+				objMap := objMap.__Set(key, value)
+				return objMap
+			} else if TypeChecker.IsMap(objMap) {
+				objMap := objMap.__Set(key, value)
+				return objMap
+			}
+		}
+        return objMap.__Set(key, value)
+    }
+    
+    /**
+     * @description Convert to a standard object
+     * @returns {Object} Object representation
+     */
+    ToObject() {
+        obj := {}
+        for key, value in this
+            obj.%key% := value
+        return obj
+    }
+    
+    /**
+     * @description Create from a standard object
+     * @param {Object} obj Object to convert
+     * @returns {DotMap} New DotMap instance
+     */
+    static FromObject(obj) {
+        return DotMap(obj)
+    }
+}

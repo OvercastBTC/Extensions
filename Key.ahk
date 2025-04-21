@@ -79,7 +79,7 @@ class HotkeyProcessor {
 ; }
 
 class key {
-    class syntax extends key{
+    class syntax extends key {
         static down := " down"
         static up := " up"
         static lb := "{"
@@ -1394,7 +1394,17 @@ class key {
 	static bold := this.ctrldown this.b this.ctrlup
 	static italics := this.ctrldown this.i this.ctrlup
 	static underline := this.ctrldown this.u this.ctrlup
+	/** 
+	 * @property paste
+	 * @param {sc1D} 	; Simulates {control} using scan codes
+	 * @param {sc2F} 	; Simulates {v} using scan codes
+	 */
 	static paste := this.ctrldown this.v this.ctrlup
+	/** 
+	 * @property shiftinsert
+	 * @param {sc2A} 	; Simulates {shift} using scan codes
+	 * @param {sc152} 	; Simulates {insert} using scan codes
+	 */
 	static shiftinsert := this.shiftdown this.insert this.shiftup
 	static copy := this.ctrldown this.c this.ctrlup
 	static cut := this.ctrldown this.x this.ctrlup

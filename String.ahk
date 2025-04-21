@@ -2,22 +2,23 @@
 #Include <Includes/Basic>
 
 
-/*
-Name: String.ahk
-Version 0.13 (15.10.22)
-Github link: https://github.com/Descolada/AHK-v2-libraries/blob/main/Lib/String.ahk
-Created: 27.08.22
-Author: Descolada
-Credit:
+/**
+@Name: String.ahk
+@Version 0.13 (15.10.22)
+@Github link: https://github.com/Descolada/AHK-v2-libraries/blob/main/Lib/String.ahk
+@Created: 27.08.22
+@Author: Descolada
+@Credit:
 tidbit		--- Author of "String Things - Common String & Array Functions", from which
 				I copied/based a lot of methods
 Contributors to "String Things": AfterLemon, Bon, Lexikos, MasterFocus, Rseding91, Verdlin
 
-Description:
+@Description:
 A compilation of useful string methods. Also lets strings be treated as objects.
 
 These methods cannot be used as stand-alone. To do that, you must add another argument
 'string' to the function and replace all occurrences of 'this' with 'string'.
+@example
 .-==========================================================================-.
 | Methods                                                                    |
 |============================================================================|
@@ -64,6 +65,12 @@ These methods cannot be used as stand-alone. To do that, you must add another ar
 '-==========================================================================-'
 */
 
+; Join(sep, params*) {
+;     for index, param in params
+;         str .= param . sep
+;     return SubStr(str, 1, -StrLen(sep))
+; }
+
 class docProperties {
 	static Properties := {
 		FontFamily: 'Times New Roman',
@@ -76,10 +83,10 @@ class docProperties {
 		DefaultMargin: 0,
 		DefaultPadding: '0.5em 0',
 		StyleMappings: Map(
-			"strike", "\strike",
-			"super", "\super",
-			"sub", "\sub",
-			"bullet", "• ",
+			'strike', "\strike",
+			'super', "\super",
+			'sub', "\sub",
+			'bullet', "• ",
 			"align-left", "\ql",
 			"align-right", "\qr",
 			"align-center", "\qc",
@@ -88,304 +95,134 @@ class docProperties {
 	}
 }
 
-; class htmlHandler extends docProperties{
-
-; 	; static __New(text := '') {
-; 	; 	this.SetClipboardHTML(text)
-; 	; }
-
-; 	/**
-; 	 * @description Sets clipboard content as HTML format with enhanced error handling
-; 	 * @param {String} htmlText The HTML formatted text
-; 	 * @throws {Error} If clipboard operations fail
-; 	 */
-; 	static SetClipboardHTML(htmlText) {
-; 		; Register HTML format
-; 		static CF_HTML := DllCall("RegisterClipboardFormat", "Str", "HTML Format", "UInt")
-		
-; 		if (!CF_HTML)
-; 			throw Error("Failed to register HTML clipboard format", -1)
-		
-; 		; Header required for HTML clipboard format
-; 		header := "Version:0.9`r`n" 
-; 				. "StartHTML:00000097`r`n"
-; 				. "EndHTML:{:08d}`r`n"
-; 				. "StartFragment:00000134`r`n"
-; 				. "EndFragment:{:08d}`r`n"
-; 				. "<html><body><!--StartFragment-->{:s}<!--EndFragment--></body></html>"
-		
-; 		; Calculate fragment positions
-; 		fragmentEnd := 134 + StrLen(htmlText)
-; 		htmlEnd := fragmentEnd + 40  ; Length of closing tags
-		
-; 		; Format the complete HTML
-; 		htmlData := Format(header, htmlEnd, fragmentEnd, htmlText)
-		
-; 		; Open and clear clipboard with timeout handling
-; 		startTime := A_TickCount
-; 		while (!DllCall("OpenClipboard", "Ptr", A_ScriptHwnd)) {
-; 			if (A_TickCount - startTime > 1000)
-; 				throw Error("Failed to open clipboard", -1)
-; 			Sleep(10)
-; 		}
-		
-; 		DllCall("EmptyClipboard")
-		
-; 		; Allocate and copy HTML data
-; 		hGlobal := DllCall("GlobalAlloc", "UInt", 0x42, "Ptr", StrPut(htmlData, "UTF-8"))
-; 		if (!hGlobal)
-; 			throw Error("Failed to allocate memory for clipboard", -1)
-			
-; 		try {
-; 			pGlobal := DllCall("GlobalLock", "Ptr", hGlobal, "Ptr")
-; 			if (!pGlobal)
-; 				throw Error("Failed to lock global memory", -1)
-				
-; 			StrPut(htmlData, pGlobal, "UTF-8")
-; 			DllCall("GlobalUnlock", "Ptr", hGlobal)
-			
-; 			; Set clipboard data
-; 			if (!DllCall("SetClipboardData", "UInt", CF_HTML, "Ptr", hGlobal))
-; 				throw Error("Failed to set clipboard data", -1)
-; 		} catch Error as err {
-; 			; Cleanup on error
-; 			DllCall("GlobalFree", "Ptr", hGlobal)
-; 			DllCall("CloseClipboard")
-; 			throw err
-; 		}
-		
-; 		DllCall("CloseClipboard")
-; 		Clip.Sleep(clip.delayTime)  ; Small delay to ensure clipboard operations complete
-; 	}
-; }
-
-/**
- * @class RTFHandler
- * @description Core RTF handling functionality with improved structure and error handling
- */
-
-; class RTFHandler {
-; 	static Properties := {
-; 		FontFamily: "Times New Roman",
-; 		FontSize: 22,  ; RTF uses half-points
-; 		FontColor: "000000",
-; 		DefaultFont: "froman",
-; 		DefaultPrq: 2,
-; 		CharSet: 1252,
-; 		PageWidth: 12240,    ; From rtf_example.rtf
-; 		PageHeight: 15840,   ; From rtf_example.rtf
-; 		MarginLeft: 360,
-; 		MarginRight: 1080,
-; 		MarginTop: 720,
-; 		MarginBottom: 280,
-; 		StyleMappings: Map(
-; 			"strike", "\strike",
-; 			"super", "\super",
-; 			"sub", "\sub",
-; 			"bullet", "• ",
-; 			"align-left", "\ql",
-; 			"align-right", "\qr",
-; 			"align-center", "\qc",
-; 			"align-justify", "\qj"
-; 		)
-; 	}
-
-; 	/**
-; 	 * @description Generates comprehensive RTF header with extended options
-; 	 * @param {Object} options Optional settings to override defaults
-; 	 * @returns {String} Complete RTF header
-; 	 */
-; 	static GetHeader(options := {}) {
-; 		; Merge provided options with defaults
-; 		props := this.Properties
-; 		for key, value in options.OwnProps()
-; 			props.%key% := value
-
-; 		return Format('
-; 		(
-; 			{\rtf1\ansi\ansicpg{1}\deff0\nouicompat\deflang1033
-; 			{{\fonttbl{{
-; 				\f0\fbidis\{2}\fprq{3}\fcharset0 {4};}}
-; 				{{\f1\fbidis\{2}\fcharset0 {4};}}
-; 				{{\f2\fbidis\fnil\fcharset2 Wingdings;}}
-; 				{{\f3\fnil\fcharset0 {4};}}
-; 			}}
-; 			{{\colortbl;
-; 				\red0\green0\blue0;
-; 				\red106\green115\blue123;
-; 				\red255\green255\blue255;
-; 			}}
-; 			{{\stylesheet{{
-; 				\fs{5}\f0\sqformat\spriority1 Normal}}
-; 				{{\s1\li1909\f0\fs{5}\sbasedon0\sqformat\spriority1 Body Text}}
-; 				{{\s2\li1689\sb109\f1\fs{5}\b1\sbasedon0\sqformat\spriority1 Title}}
-; 				{{\s3\li1909\fi-239\f0\sbasedon0\sqformat\spriority1 List Paragraph}}
-; 				{{\s4\li124\f0\sbasedon0\sqformat\spriority1 Table Paragraph}}
-; 			}}
-; 			{{\*\generator AHK RTF Generator;}}
-; 			{{\info{{
-; 				\creatim\yr{6}\mo{7}\dy{8}\hr{9}\min{10}\sec{11}
-; 			}}}}
-; 			\jexpand\dntblnsbdb
-; 			\viewkind1
-; 			\noxlattoyen
-; 			\nospaceforul
-; 			\useltbaln
-; 			\paperw{12}\paperh{13}
-; 			\margl{14}\margr{15}\margt{16}\margb{17}
-; 			\widowctrl
-; 			\sectd\sbknone
-; 			\pard\plain
-; 		)',
-; 		props.CharSet,
-; 		props.DefaultFont,
-; 		props.DefaultPrq,
-; 		props.FontFamily,
-; 		props.FontSize,
-; 		A_Year,
-; 		A_Mon,
-; 		A_MDay,
-; 		A_Hour,
-; 		A_Min,
-; 		A_Sec,
-; 		props.PageWidth,
-; 		props.PageHeight,
-; 		props.MarginLeft,
-; 		props.MarginRight,
-; 		props.MarginTop,
-; 		props.MarginBottom)
-; 		; return Format('
-; 		; 	(
-; 		; 		{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033
-; 		; 		{{\fonttbl
-; 		; 			{{\f0\froman\fprq2\fcharset0 Times New Roman;}}
-; 		; 			{{\f1\fnil Times New Roman;}}
-; 		; 			{{\f2\fnil\fcharset2 Symbol;}}
-; 		; 		}}
-; 		; 		{{\colortbl ;\red0\green0\blue0;}}
-; 		; 		\viewkind4\uc1\pard\f0\fs22
-; 		; 	)')
-; 	}
-
-; 	/**
-; 	 * @description Creates a list table definition for RTF
-; 	 * @returns {String} RTF list table definition
-; 	 */
-; 	static GetListTableDef() {
-; 		return '
-; 		(
-; 			{\*\listtable{\list\listtemplateid2181
-; 				{\listlevel\levelnfc23\leveljc0\li1910\fi-241
-; 					{\leveltext\'01\uc1\u61548 ?;}
-; 					{\levelnumbers;}\f2\fs14\b0\i0}
-; 				{\listlevel\levelnfc23\leveljc0\li2808\fi-241
-; 					{\leveltext\'01\'95;}{\levelnumbers;}}
-; 				{\listlevel\levelnfc23\leveljc0\li3696\fi-241
-; 					{\leveltext\'01\'95;}{\levelnumbers;}}
-; 				\listid1026}
-; 			}
-; 			{\*\listoverridetable{\listoverride\listoverridecount0\listid1026\ls1}}
-; 		)'
-; 	}
-
-; 	/**
-; 	 * @description Sets clipboard content as RTF format with enhanced error handling
-; 	 * @param {String} rtfText The RTF formatted text
-; 	 * @throws {Error} If clipboard operations fail
-; 	 */
-; 	static SetClipboardRTF(rtfText) {
-; 		; Register RTF format if needed
-; 		static CF_RTF := DllCall("RegisterClipboardFormat", "Str", "Rich Text Format", "UInt")
-		
-; 		if (!CF_RTF)
-; 			throw Error("Failed to register RTF clipboard format", -1)
-		
-; 		; Open and clear clipboard with timeout handling
-; 		startTime := A_TickCount
-; 		while (!DllCall("OpenClipboard", "Ptr", A_ScriptHwnd)) {
-; 			if (A_TickCount - startTime > 1000)
-; 				throw Error("Failed to open clipboard", -1)
-; 			Sleep(10)
-; 		}
-		
-; 		DllCall("EmptyClipboard")
-		
-; 		; Allocate and copy RTF data
-; 		hGlobal := DllCall("GlobalAlloc", "UInt", 0x42, "Ptr", StrPut(rtfText, "UTF-8"))
-; 		if (!hGlobal)
-; 			throw Error("Failed to allocate memory for clipboard", -1)
-			
-; 		try {
-; 			pGlobal := DllCall("GlobalLock", "Ptr", hGlobal, "Ptr")
-; 			if (!pGlobal)
-; 				throw Error("Failed to lock global memory", -1)
-				
-; 			StrPut(rtfText, pGlobal, "UTF-8")
-; 			DllCall("GlobalUnlock", "Ptr", hGlobal)
-			
-; 			; Set clipboard data
-; 			if (!DllCall("SetClipboardData", "UInt", CF_RTF, "Ptr", hGlobal))
-; 				throw Error("Failed to set clipboard data", -1)
-; 		} catch Error as err {
-; 			; Cleanup on error
-; 			DllCall("GlobalFree", "Ptr", hGlobal)
-; 			DllCall("CloseClipboard")
-; 			throw err
-; 		}
-		
-; 		DllCall("CloseClipboard")
-; 		Sleep(50)  ; Small delay to ensure clipboard operations complete
-; 	}
-
-; }
-
+;@region rtfHandler extends docProperties
 class rtfHandler extends docProperties {
 
+	/**
+	 * Sets clipboard content as RTF format
+	 * @param {String} rtfText The RTF formatted text
+	 * @throws {OSError} If clipboard operations fail
+	 * @returns {Boolean} True if successful
+	 */
 	static SetClipboardRTF(rtfText) {
+		; Register RTF format if needed
 		static CF_RTF := DllCall('RegisterClipboardFormat', 'Str', 'Rich Text Format', 'UInt')
-		
-		if (!CF_RTF) {
-			throw Error('Failed to register RTF format', -1) 
+		if !CF_RTF {
+			throw OSError('Failed to register RTF clipboard format', -1)
 		}
-
-		startTime := A_TickCount
-		; while (!DllCall('OpenClipboard', 'Ptr', A_ScriptHwnd)) {
-		while (!DllCall('OpenClipboard', 'Ptr', 0)) {
-			if (A_TickCount - startTime > 1000) {
-				throw Error('Failed to open clipboard', -1)
+	
+		; Try to open clipboard with retry logic
+		maxAttempts := 5
+		attempt := 0
+		
+		while attempt < maxAttempts {
+			if DllCall('OpenClipboard', 'Ptr', 0) {
+				break
 			}
-			Sleep(10)
+			attempt++
+			if attempt = maxAttempts {
+				throw OSError('Failed to open clipboard after ' maxAttempts ' attempts', -1)
+			}
+			; Sleep(50)  ; Wait before next attempt
+			Sleep(A_Delay/2)  ; Wait before next attempt
 		}
-		
-		DllCall('EmptyClipboard')
-		
-		hGlobal := DllCall('GlobalAlloc', 'UInt', 0x42, 'Ptr', StrPut(rtfText, 'UTF-8'))
-		if (!hGlobal) {
-			throw Error('Failed to allocate memory for clipboard', -1)
-		}
-			
+	
 		try {
-			pGlobal := DllCall('GlobalLock', 'Ptr', hGlobal, 'Ptr')
-			if (!pGlobal) {
-				throw Error('Failed to lock global memory', -1)
+			; Clear clipboard
+			if !DllCall('EmptyClipboard') {
+				throw OSError('Failed to empty clipboard', -1)
 			}
-				
-			StrPut(rtfText, pGlobal, 'UTF-8')
-			DllCall('GlobalUnlock', 'Ptr', hGlobal)
 			
-			if (!DllCall('SetClipboardData', 'UInt', CF_RTF, 'Ptr', hGlobal)) {
-				throw Error('Failed to set clipboard data', -1)
+			; Allocate global memory
+			hGlobal := DllCall('GlobalAlloc', 'UInt', 0x42, 'Ptr', StrPut(rtfText, "UTF-8"))
+			if !hGlobal {
+				throw OSError('Failed to allocate memory', -1)
 			}
-		} catch Error as err {
-			DllCall('GlobalFree', 'Ptr', hGlobal)
-			DllCall('CloseClipboard')
-			throw err
+			
+			try {
+				; Lock and write to memory
+				pGlobal := DllCall('GlobalLock', 'Ptr', hGlobal, 'Ptr')
+				if !pGlobal {
+					throw OSError('Failed to lock memory', -1)
+				}
+				
+				StrPut(rtfText, pGlobal, "UTF-8")
+				
+				; Unlock - ignore return value, check A_LastError instead
+				DllCall('GlobalUnlock', 'Ptr', hGlobal)
+				if A_LastError && A_LastError != 0x0B7 { ; ERROR_INVALID_PARAMETER (already unlocked)
+					throw OSError('Failed to unlock memory', -1)
+				}
+				
+				; Set clipboard data
+				if !DllCall('SetClipboardData', 'UInt', CF_RTF, 'Ptr', hGlobal) {
+					throw OSError('Failed to set clipboard data', -1)
+				}
+				
+				; Ownership transferred to system, don't free the memory
+				hGlobal := 0
+				
+				return true
+			}
+			catch Error as e {
+				; Clean up on error
+				if hGlobal {
+					DllCall('GlobalFree', 'Ptr', hGlobal)
+				}
+				throw e
+			}
 		}
-		
-		DllCall('GlobalFree', 'Ptr', hGlobal)
-		DllCall('CloseClipboard')
-		Sleep(Clip.delayTime)
+		finally {
+			; Always close clipboard
+			DllCall('CloseClipboard')
+		}
 	}
+
+	; static SetClipboardRTF(rtfText) {
+	; 	static CF_RTF := DllCall('RegisterClipboardFormat', 'Str', 'Rich Text Format', 'UInt')
+		
+	; 	if (!CF_RTF) {
+	; 		throw Error('Failed to register RTF format', -1) 
+	; 	}
+
+	; 	startTime := A_TickCount
+	; 	; while (!DllCall('OpenClipboard', 'Ptr', A_ScriptHwnd)) {
+	; 	while (!DllCall('OpenClipboard', 'Ptr', 0)) {
+	; 		if (A_TickCount - startTime > 1000) {
+	; 			throw Error('Failed to open clipboard', -1)
+	; 		}
+	; 		Sleep(10)
+	; 	}
+		
+	; 	DllCall('EmptyClipboard')
+		
+	; 	hGlobal := DllCall('GlobalAlloc', 'UInt', 0x42, 'Ptr', StrPut(rtfText, 'UTF-8'))
+	; 	if (!hGlobal) {
+	; 		throw Error('Failed to allocate memory for clipboard', -1)
+	; 	}
+			
+	; 	try {
+	; 		pGlobal := DllCall('GlobalLock', 'Ptr', hGlobal, 'Ptr')
+	; 		if (!pGlobal) {
+	; 			throw Error('Failed to lock global memory', -1)
+	; 		}
+				
+	; 		StrPut(rtfText, pGlobal, 'UTF-8')
+	; 		DllCall('GlobalUnlock', 'Ptr', hGlobal)
+			
+	; 		if (!DllCall('SetClipboardData', 'UInt', CF_RTF, 'Ptr', hGlobal)) {
+	; 			throw Error('Failed to set clipboard data', -1)
+	; 		}
+	; 	} catch Error as err {
+	; 		DllCall('GlobalFree', 'Ptr', hGlobal)
+	; 		DllCall('CloseClipboard')
+	; 		throw err
+	; 	}
+		
+	; 	DllCall('GlobalFree', 'Ptr', hGlobal)
+	; 	DllCall('CloseClipboard')
+	; 	Sleep(Clip.delayTime)
+	; }
 
 	static GetHeader() {
 		props := this.Properties
@@ -401,7 +238,7 @@ class rtfHandler extends docProperties {
 		return "{\*\listtable{\list\listtemplateid2181{\listlevel\levelnfc23\leveljc0\li1910\fi-241{\leveltext\'01\uc1\u61548 ?;}{\levelnumbers;}\f2\fs14\b0\i0}{\listlevel\levelnfc23\leveljc0\li2808\fi-241{\leveltext\'01\'95;}{\levelnumbers;}}{\listlevel\levelnfc23\leveljc0\li3696\fi-241{\leveltext\'01\'95;}{\levelnumbers;}}\listid1026}}{\*\listoverridetable{\listoverride\listoverridecount0\listid1026\ls1}}"
 	}
 }
-
+;@region class markdownHandler
 class markdownHandler extends docProperties {
 
 	static ToRTF(markdown := '') {
@@ -443,67 +280,155 @@ class markdownHandler extends docProperties {
 
 		return text
 	}
+	/**
+	 * @description Process list formatting with improved structure
+	 * @param {String} text The text to process
+	 * @returns {String} Processed text with RTF list formatting
+	 */
 	static _ProcessLists(text) {
-
-		; RegEx pattern for bullet points - capture indentation level
-		bulletPattern := 'm)^([\s]*)(- |• )(.*)'  ; Groups: (1)indent (2)bullet (3)text
-		bulletPatternOnly := 'm)^([\s]*)(- |• )'
+		; Split text into lines for processing
+		lines := StrSplit(text, "`n")
+		processedLines := []
+		inList := false
+		listLevel := 0
 		
-		; RTF list format patterns with \'B7 bullet
-		firstLevelBullet := "\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li360 $3 \par"
-		
-		secondLevelBullet := "\pard{\listtext\f2\'B7\tab}\ls1\ilvl1\fi-360\li720\tx360\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\tx9360 $3 \par"
-		
-		arrText := arrMatch := []
-		t := match := ''
-		
-		arrText := StrSplit(text, '`n')
-		
-		; Collect bullet points
-		for t in arrtext {
-			if t ~= bulletPatternOnly {
-				arrMatch.Push(t)
-			}
-		}
-		
-		; Process each bullet point
-		for match in arrMatch {
-			index := arrText.IndexOf(match)
-			; Check if it's an indented bullet (second level)
-			if RegExMatch(match, bulletPattern, &m) && m[1] {  ; Has indentation
-				nText := RegExReplace(match, bulletPattern, secondLevelBullet)
-			} else {  ; First level bullet
-				nText := RegExReplace(match, bulletPattern, firstLevelBullet)
-			}
-			arrText.RemoveAt(index)
-			arrText.InsertAt(index, nText)
-		}
-	
-		text := ''
-		for each, value in arrText {
-			if value ~= "\\f2\\'B7\\tab" {
-				text .= value (A_Index < arrText.Length ? "`n" : '')
-			}
+		for i, line in lines {
+			; Check if this is a bullet point
+			if (RegExMatch(line, "^\s*[-*]\s+(.+)$", &match)) {
+				; Determine indentation level
+				indent := RegExMatch(line, "^(\s+)", &indentMatch) ? StrLen(indentMatch[1]) : 0
+				level := Floor(indent / 2)  ; Convert spaces to logical level
+				
+				; Start a new list if needed
+				if (!inList) {
+					inList := true
+					processedLines.Push("
+					(
+						{\*\listtable{\list\listtemplateid1{\listlevel\levelnfc23\leveljc0\levelfollow0{\leveltext\'01\u8226 ?;}{\levelnumbers;}\f2\fs20\cf0}{\listname ;}\listid1}}
+					)")
+					processedLines.Push("{\listoverride\listid1\listoverridecount0\ls1}")
+				}
+				
+				; Output RTF bullet formatting
+				if (level == 0) {
+					; First level bullet
+					processedLines.Push("{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-200\li200 " match[1] "}")
+				} else {
+					; Indented bullet (second level)
+					processedLines.Push("{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-200\li" (200 + level*200) " " match[1] "}")
+				}
+			} 
+			else if (RegExMatch(line, "^\s*(\d+)\.?\s+(.+)$", &match)) {
+				; Numbered list item
+				indent := RegExMatch(line, "^(\s+)", &indentMatch) ? StrLen(indentMatch[1]) : 0
+				level := Floor(indent / 2)
+				
+				if (!inList) {
+					inList := true
+					processedLines.Push("
+					(
+						{\*\listtable{\list\listtemplateid2{\listlevel\levelnfc0\leveljc0\levelfollow0{\leveltext\'02\'00.;}{\levelnumbers\'01;}\fi-200\li200}{\listname ;}\listid2}}
+					)")
+					processedLines.Push("{\listoverride\listid2\listoverridecount0\ls2}")
+				}
+				
+				; Output RTF numbered list formatting
+				if (level == 0) {
+					processedLines.Push("{" match[1] ".\tab} " match[2])
+				} else {
+					processedLines.Push("{\fi-200\li" (200 + level*200) " " match[1] ".\tab " match[2] "}")
+				}
+			} 
 			else {
-				code := "\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\tx9360\tx10080\f0\fs22 "
-				if A_Index == 1 {
-					text .= code value 
+				; Regular paragraph - end list if needed
+				if (inList) {
+					processedLines.Push("{\listtext\tab}")  ; End list
+					inList := false
 				}
-				else {
-					text .= code value (A_Index < arrText.Length ? "`n" : '')
-				}
+				processedLines.Push(line)
 			}
 		}
-
-		; Handle line breaks
-		text := RegExReplace(text, "\R\R+", "\par ")
-		text := RegExReplace(text, "(?<!\\par)\R", "\par ")
 		
-		; Clean up
-		text := RegExReplace(text, "\s+$", "")
-	
-		return text
+		; End any open list
+		if (inList) {
+			processedLines.Push("{\listtext\tab}")
+		}
+		
+		; Join lines back together with proper RTF line breaks
+		processedText := ""
+		for i, line in processedLines {
+			if (InStr(line, "{\*\listtable") || InStr(line, "{\listoverride")) {
+				processedText .= line  ; No line break for list definitions
+			} else if (InStr(line, "{\pntext") || InStr(line, "{\fi-")) {
+				processedText .= line "\par "  ; Line break after each list item
+			} else {
+				processedText .= line "\par "  ; Line break after regular paragraphs
+			}
+		}
+		
+		return processedText
 	}
+	; static _ProcessLists(text) {
+
+	; 	; RegEx pattern for bullet points - capture indentation level
+	; 	bulletPattern := 'm)^([\s]*)(- |• )(.*)'  ; Groups: (1)indent (2)bullet (3)text
+	; 	bulletPatternOnly := 'm)^([\s]*)(- |• )'
+		
+	; 	; RTF list format patterns with \'B7 bullet
+	; 	firstLevelBullet := "\pard{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li360 $3 \par"
+		
+	; 	secondLevelBullet := "\pard{\listtext\f2\'B7\tab}\ls1\ilvl1\fi-360\li720\tx360\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\tx9360 $3 \par"
+		
+	; 	arrText := arrMatch := []
+	; 	t := match := ''
+		
+	; 	arrText := StrSplit(text, '`n')
+		
+	; 	; Collect bullet points
+	; 	for t in arrtext {
+	; 		if t ~= bulletPatternOnly {
+	; 			arrMatch.Push(t)
+	; 		}
+	; 	}
+		
+	; 	; Process each bullet point
+	; 	for match in arrMatch {
+	; 		index := arrText.IndexOf(match)
+	; 		; Check if it's an indented bullet (second level)
+	; 		if RegExMatch(match, bulletPattern, &m) && m[1] {  ; Has indentation
+	; 			nText := RegExReplace(match, bulletPattern, secondLevelBullet)
+	; 		} else {  ; First level bullet
+	; 			nText := RegExReplace(match, bulletPattern, firstLevelBullet)
+	; 		}
+	; 		arrText.RemoveAt(index)
+	; 		arrText.InsertAt(index, nText)
+	; 	}
+	
+	; 	text := ''
+	; 	for each, value in arrText {
+	; 		if value ~= "\\f2\\'B7\\tab" {
+	; 			text .= value (A_Index < arrText.Length ? "`n" : '')
+	; 		}
+	; 		else {
+	; 			code := "\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\tx9360\tx10080\f0\fs22 "
+	; 			if A_Index == 1 {
+	; 				text .= code value 
+	; 			}
+	; 			else {
+	; 				text .= code value (A_Index < arrText.Length ? "`n" : '')
+	; 			}
+	; 		}
+	; 	}
+
+	; 	; Handle line breaks
+	; 	text := RegExReplace(text, "\R\R+", "\par ")
+	; 	text := RegExReplace(text, "(?<!\\par)\R", "\par ")
+		
+	; 	; Clean up
+	; 	text := RegExReplace(text, "\s+$", "")
+	
+	; 	return text
+	; }
 }
 
 class plainText {
@@ -547,11 +472,1565 @@ class plainText {
 	}
 }
 
+;@region class FormatConverter
 /**
  * @class FormatConverter
- * @description Enhanced converter between plain text, HTML, RTF, and Markdown formats
-*/
+ * @description Unified converter between various text formats with consistent API
+ * @version 2.1.0
+ * @author OvercastBTC (Adam Bacon)
+ * @date 2025-04-15
+ * @requires AutoHotkey v2.0+
+ */
+; class FormatConverter {
+;     /**
+;      * @description Common document properties used across all formats
+;      */
+;     static Properties := {
+;         FontFamily: 'Times New Roman',
+;         FontSize: 11,
+;         FontColor: '000000',
+;         CharSet: 1252,
+;         DefaultFont: 'froman',
+;         DefaultPrq: 2,
+;         LineHeight: 1.2,
+;         DefaultMargin: 0,
+;         DefaultPadding: '0.5em 0',
+;         StyleMappings: Map(
+;             "strike", "\strike",
+;             "super", "\super",
+;             "sub", "\sub",
+;             "bullet", "• ",
+;             "align-left", "\ql",
+;             "align-right", "\qr",
+;             "align-center", "\qc",
+;             "align-justify", "\qj"
+;         )
+;     }
 
+;     /**
+;      * @description Font size definitions for headers and text
+;      */
+;     static FontSizes := {
+;         Default: 22,     ; 11pt * 2
+;         h6: 24,          ; 12pt * 2
+;         h5: 26,          ; 13pt * 2
+;         h4: 28,          ; 14pt * 2
+;         h3: 30,          ; 15pt * 2
+;         h2: 32,          ; 16pt * 2
+;         h1: 34,          ; 17pt * 2
+;         List: []         ; Array for easy access [h6, h5, h4, h3, h2, h1]
+;     }
+
+;     ; Initialize the header sizes array
+;     static __New() {
+;         this.FontSizes.List := [this.FontSizes.h6, this.FontSizes.h5, this.FontSizes.h4, 
+;                                this.FontSizes.h3, this.FontSizes.h2, this.FontSizes.h1]
+;     }
+
+;     /**
+;      * @description Detects the format of provided text
+;      * @param {String} text Text to analyze
+;      * @returns {String} Detected format: "rtf", "html", "markdown", "json", or "plaintext"
+;      */
+;     static DetectFormat(text) {
+;         if (text == "")
+;             return "plaintext"
+            
+;         if RegExMatch(text, "i)^{\s*\\rtf1\b")
+;             return "rtf"
+;         if RegExMatch(text, "i)^<!DOCTYPE html|^<html|<[a-z]+>")
+;             return "html"
+;         if RegExMatch(text, "^#|^\*\*|^- |^\d+\. ")
+;             return "markdown"
+;         if RegExMatch(text, '^{[\s\n]*"')
+;             return "json"
+            
+;         return "plaintext"
+;     }
+
+;     /**
+;      * @description Converts text from one format to another
+;      * @param {String} text Text to convert
+;      * @param {String} targetFormat "rtf", "html", "plaintext", or "showcode"
+;      * @returns {String} Converted text
+;      */
+;     static Convert(text, targetFormat := "rtf") {
+;         sourceFormat := this.DetectFormat(text)
+        
+;         if (sourceFormat == targetFormat)
+;             return text
+            
+;         switch (targetFormat) {
+;             case "rtf":
+;                 switch (sourceFormat) {
+;                     case "plaintext": return this.PlainTextToRTF(text)
+;                     case "html": return this.HTMLToRTF(text)
+;                     case "markdown": return this.MarkdownToRTF(text)
+;                 }
+;             case "html":
+;                 switch (sourceFormat) {
+;                     case "plaintext": return this.PlainTextToHTML(text)
+;                     case "markdown": return this.MarkdownToHTML(text)
+;                     case "rtf": return this.RTFToHTML(text)
+;                 }
+;             case "plaintext":
+;                 return this.ExtractPlainText(text)
+;             case "showcode":
+;                 return this.ConvertToShowCode(text)
+;         }
+        
+;         return text
+;     }
+
+;     /**
+;      * @description Converts clipboard content to plain text
+;      * @returns {String} Plain text extracted from clipboard content
+;      */
+;     static ClipboardToPlainText() {
+;         clipContent := A_Clipboard
+;         return this.ExtractPlainText(clipContent)
+;     }
+
+;     /**
+;      * @description Converts clipboard content to plain text that preserves and shows the original markup
+;      * @returns {String} Content with visible markup
+;      */
+;     static ClipboardToShowCode() {
+;         clipContent := A_Clipboard
+;         return this.ConvertToShowCode(clipContent)
+;     }
+
+;     /**
+;      * @description Converts any format to plain text that shows the original markup
+;      * @param {String} text The text to convert
+;      * @returns {String} Content with visible markup
+;      */
+;     static ConvertToShowCode(text) {
+;         format := this.DetectFormat(text)
+        
+;         switch (format) {
+;             case "html":
+;                 ; Replace < and > with their visible representations
+;                 text := StrReplace(text, "<", "&lt;")
+;                 text := StrReplace(text, ">", "&gt;")
+;                 return text
+                
+;             case "rtf":
+;                 ; Convert to visible RTF code
+;                 text := RegExReplace(text, "\\", "\\\\")  ; Escape backslashes
+;                 return text
+                
+;             case "markdown":
+;                 ; Markdown is already readable, just return it
+;                 return text
+                
+;             case "json":
+;                 ; Make JSON more readable
+;                 try {
+;                     prettified := ""
+;                     indentLevel := 0
+;                     inString := false
+;                     escapeNext := false
+                    
+;                     for i, char in StrSplit(text) {
+;                         if (escapeNext) {
+;                             prettified .= char
+;                             escapeNext := false
+;                             continue
+;                         }
+                        
+;                         if (char == "\") {
+;                             prettified .= char
+;                             escapeNext := true
+;                             continue
+;                         }
+                        
+;                         if (char == '"' && !escapeNext) {
+;                             inString := !inString
+;                         }
+                        
+;                         if (!inString) {
+;                             if (char == "{" || char == "[") {
+;                                 indentLevel++
+;                                 prettified .= char "`n" this._GetIndent(indentLevel)
+;                             } else if (char == "}" || char == "]") {
+;                                 indentLevel--
+;                                 prettified .= "`n" this._GetIndent(indentLevel) char
+;                             } else if (char == ",") {
+;                                 prettified .= char "`n" this._GetIndent(indentLevel)
+;                             } else if (char == ":") {
+;                                 prettified .= char " "
+;                             } else {
+;                                 prettified .= char
+;                             }
+;                         } else {
+;                             prettified .= char
+;                         }
+;                     }
+                    
+;                     return prettified
+;                 } catch {
+;                     ; If parsing fails, return original
+;                     return text
+;                 }
+                
+;             default:
+;                 return text
+;         }
+;     }
+    
+;     /**
+;      * @description Helper method to create indentation for JSON formatting
+;      * @private
+;      * @param {Integer} level Indentation level
+;      * @returns {String} Indentation string
+;      */
+;     static _GetIndent(level) {
+;         indent := ""
+;         Loop level {
+;             indent .= "  "
+;         }
+;         return indent
+;     }
+
+;     /**
+;      * @description Converts plain text to HTML format
+;      * @param {String} text Plain text to convert
+;      * @returns {String} HTML formatted text
+;      */
+;     static PlainTextToHTML(text) {
+;         ; Escape HTML special characters
+;         text := StrReplace(text, "&", "&amp;")
+;         text := StrReplace(text, "<", "&lt;")
+;         text := StrReplace(text, ">", "&gt;")
+        
+;         ; Convert line breaks to <br> tags
+;         text := StrReplace(text, "`r`n", "<br>")
+;         text := StrReplace(text, "`n", "<br>")
+;         text := StrReplace(text, "`r", "<br>")
+        
+;         ; Wrap in HTML document structure
+;         html := '
+; 		(
+; 			<!DOCTYPE html>
+; 			<html>
+; 			<head>
+;             <meta charset=""UTF-8"">
+;             <title>Converted Document</title>
+;             </head>
+; 			<body>
+;             <p>" text "</p>
+;             </body>
+; 			</html>
+; 		)'
+                
+;         return html
+;     }
+    
+;     /**
+;      * @description Converts Markdown to HTML format
+;      * @param {String} markdown Markdown text to convert
+;      * @returns {String} HTML formatted text
+;      */
+;     static MarkdownToHTML(markdown) {
+; 		html := '
+; 		(
+; 			<!DOCTYPE html>
+; 			<html>
+; 			<head>
+; 			<meta charset="UTF-8">
+; 			<title>Converted Markdown</title>
+; 			<style>
+; 			body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+; 			h1, h2, h3, h4, h5, h6 { margin-top: 24px; margin-bottom: 16px; }
+; 			code { background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; }
+; 			blockquote { padding: 0 1em; color: #6a737d; border-left: 0.25em solid #dfe2e5; }
+; 			pre { background-color: #f6f8fa; padding: 16px; border-radius: 3px; overflow: auto; }
+; 			ul, ol { padding-left: 2em; }
+; 			</style>
+; 			</head>
+; 			<body>
+; 		)'
+        
+;         ; Process headers
+;         markdown := RegExReplace(markdown, "m)^# (.*?)$", "<h1>$1</h1>")
+;         markdown := RegExReplace(markdown, "m)^## (.*?)$", "<h2>$1</h2>")
+;         markdown := RegExReplace(markdown, "m)^### (.*?)$", "<h3>$1</h3>")
+;         markdown := RegExReplace(markdown, "m)^#### (.*?)$", "<h4>$1</h4>")
+;         markdown := RegExReplace(markdown, "m)^##### (.*?)$", "<h5>$1</h5>")
+;         markdown := RegExReplace(markdown, "m)^###### (.*?)$", "<h6>$1</h6>")
+        
+;         ; Process text formatting
+;         markdown := RegExReplace(markdown, "\*\*(.*?)\*\*", "<strong>$1</strong>")
+;         markdown := RegExReplace(markdown, "\*(.*?)\*", "<em>$1</em>")
+;         markdown := RegExReplace(markdown, "__(.*?)__", "<u>$1</u>")
+;         markdown := RegExReplace(markdown, "~~(.*?)~~", "<del>$1</del>")
+        
+;         ; Process lists
+;         listItems := []
+;         inList := false
+;         listType := ""
+        
+;         lines := StrSplit(markdown, "`n", "`r")
+;         processedLines := []
+        
+;         for i, line in lines {
+;             if (RegExMatch(line, "^\s*- (.+)$", &match)) {
+;                 if (!inList || listType != "ul") {
+;                     if (inList) {
+;                         processedLines.Push("</" listType ">")
+;                     }
+;                     processedLines.Push("<ul>")
+;                     inList := true
+;                     listType := "ul"
+;                 }
+;                 processedLines.Push("<li>" match[1] "</li>")
+;             } else if (RegExMatch(line, "^\s*(\d+)\. (.+)$", &match)) {
+;                 if (!inList || listType != "ol") {
+;                     if (inList) {
+;                         processedLines.Push("</" listType ">")
+;                     }
+;                     processedLines.Push("<ol>")
+;                     inList := true
+;                     listType := "ol"
+;                 }
+;                 processedLines.Push("<li>" match[2] "</li>")
+;             } else {
+;                 if (inList) {
+;                     processedLines.Push("</" listType ">")
+;                     inList := false
+;                 }
+                
+;                 ; Handle paragraph breaks
+;                 if (line == "") {
+;                     processedLines.Push("<br>")
+;                 } else {
+;                     processedLines.Push("<p>" line "</p>")
+;                 }
+;             }
+;         }
+        
+;         if (inList) {
+;             processedLines.Push("</" listType ">")
+;         }
+        
+;         html .= processedLines.Join("`n") "`n</body>`n</html>"
+;         return html
+;     }
+    
+;     /**
+;      * @description Converts RTF to HTML format
+;      * @param {String} rtf RTF text to convert
+;      * @returns {String} HTML formatted text
+;      */
+;     static RTFToHTML(rtf) {
+;         ; Extract plain text from RTF
+;         plainText := this.ExtractPlainTextFromRTF(rtf)
+        
+;         ; Convert plain text to HTML
+;         return this.PlainTextToHTML(plainText)
+;     }
+
+;     /**
+;      * @description Extracts plain text from formatted text
+;      * @param {String} text The formatted text
+;      * @returns {String} Plain text without formatting
+;      */
+;     static ExtractPlainText(text) {
+;         format := this.DetectFormat(text)
+        
+;         switch (format) {
+;             case "rtf":
+;                 return this.ExtractPlainTextFromRTF(text)
+;             case "html":
+;                 return this.ExtractPlainTextFromHTML(text)
+;             case "markdown":
+;                 return this.ExtractPlainTextFromMarkdown(text)
+;             case "json":
+;                 return this.ExtractPlainTextFromJSON(text)
+;             default:
+;                 return text
+;         }
+;     }
+    
+;     /**
+;      * @description Extracts plain text from HTML content
+;      * @param {String} html HTML text to process
+;      * @returns {String} Plain text without HTML tags
+;      */
+;     static ExtractPlainTextFromHTML(html) {
+;         ; Remove all HTML tags
+;         text := RegExReplace(html, "<[^>]+>", "")
+        
+;         ; Decode common HTML entities
+;         text := StrReplace(text, "&nbsp;", " ")  ; Ensure non-breaking spaces are handled
+;         text := StrReplace(text, "&lt;", "<")    ; Decode less than
+;         text := StrReplace(text, "&gt;", ">")    ; Decode greater than
+;         text := StrReplace(text, "&amp;", "&")
+;         text := StrReplace(text, "&quot;", '""')
+;         text := StrReplace(text, "&apos;", "'")
+;         text := StrReplace(text, "&copy;", "©")
+;         text := StrReplace(text, "&reg;", "®")
+        
+;         ; Replace <br>, <p>, etc. with line breaks
+;         text := RegExReplace(text, "</?(br|p|div|h[1-6]|li)[^>]*>", "`n")
+        
+;         ; Normalize whitespace
+;         text := RegExReplace(text, "\s+", " ")
+;         text := RegExReplace(text, "^\s+|\s+$", "")
+;         text := RegExReplace(text, "\n\s*\n", "`n`n")
+        
+;         return text
+;     }
+    
+;     /**
+;      * @description Extracts plain text from Markdown content
+;      * @param {String} markdown Markdown text to process
+;      * @returns {String} Plain text without Markdown formatting
+;      */
+;     static ExtractPlainTextFromMarkdown(markdown) {
+;         ; Remove headers
+;         text := RegExReplace(markdown, "m)^#{1,6}\s+", "")
+        
+;         ; Remove formatting marks
+;         text := RegExReplace(text, "\*\*([^*]+?)\*\*", "$1")  ; Bold
+;         text := RegExReplace(text, "\*([^*]+?)\*", "$1")      ; Italic
+;         text := RegExReplace(text, "__([^_]+?)__", "$1")      ; Underline
+;         text := RegExReplace(text, "_([^_]+?)_", "$1")        ; Italic with underscore
+;         text := RegExReplace(text, "~~([^~]+?)~~", "$1")      ; Strikethrough
+        
+;         ; Remove bullet points and numbering
+;         text := RegExReplace(text, "m)^\s*[-*]\s+", "")       ; Bullets
+;         text := RegExReplace(text, "m)^\s*\d+\.\s+", "")      ; Numbers
+        
+;         ; Remove links, images
+;         text := RegExReplace(text, "!\[([^\]]*)\]\([^)]*\)", "$1")  ; Images
+;         text := RegExReplace(text, "\[([^\]]*)\]\([^)]*\)", "$1")   ; Links
+        
+;         ; Remove code blocks
+; 		text := RegExReplace(text, "````[^``]*````", "")        ; Code blocks
+; 		text := RegExReplace(text, "``([^``]+)``", "$1")        ; Inline code
+		
+; 		return text
+;     }
+    
+;     /**
+;      * @description Extracts plain text from JSON content
+;      * @param {String} json JSON text to process
+;      * @returns {String} Plain text representation of JSON
+;      */
+;     static ExtractPlainTextFromJSON(json) {
+;         try {
+;             ; Simple approach - just return the JSON as is
+;             ; For a more sophisticated approach, a proper JSON parser would be needed
+;             return json
+;         } catch {
+;             return json
+;         }
+;     }
+
+;     /**
+;      * @description Extracts plain text from RTF content
+;      * @param {String} rtfText RTF formatted text
+;      * @returns {String} Plain text extracted from RTF
+;      */
+;     static ExtractPlainTextFromRTF(rtfText) {
+;         plainText := rtfText
+        
+;         ; Remove RTF header and commands
+;         plainText := RegExReplace(plainText, "^\{\\rtf1.*?\\pard", "")
+;         plainText := RegExReplace(plainText, "\\[a-z]+[0-9]*\s?", "")
+;         plainText := RegExReplace(plainText, "\\'[0-9a-f]{2}", "")  ; Remove escaped characters
+        
+;         ; Handle special characters
+;         plainText := StrReplace(plainText, "\par", "`n")  ; Replace paragraph breaks with newlines
+;         plainText := StrReplace(plainText, "\line", "`n")  ; Replace line breaks with newlines
+;         plainText := StrReplace(plainText, "\tab", "`t")  ; Replace tabs
+        
+;         ; Remove braces and cleanup
+;         plainText := RegExReplace(plainText, "[{}]", "")
+;         plainText := RegExReplace(plainText, "\\$", "")  ; Remove trailing backslashes
+        
+;         ; Remove multiple line breaks and whitespace
+;         plainText := RegExReplace(plainText, "\n\s*\n", "`n`n")
+;         plainText := RegExReplace(plainText, "^\s+|\s+$", "")
+        
+;         return Trim(plainText)
+;     }
+
+; 	/**
+; 	 * @description Verify if text is valid RTF and fix if needed
+; 	 * @param {String} text Text to verify
+; 	 * @param {Boolean} fixIfNeeded Whether to fix malformed RTF
+; 	 * @returns {Object} Result with isRTF flag and fixed text
+; 	 */
+; 	static VerifyRTF(text, fixIfNeeded := false) {
+; 		isRTF := RegExMatch(text, "i)^{\s*\\rtf1\b") ? true : false
+; 		result := { isRTF: isRTF, text: text }
+		
+; 		if (isRTF && fixIfNeeded) {
+; 			; Ensure proper RTF structure
+; 			if (!RegExMatch(text, "}$")) {
+; 				result.text := text . "}"
+; 			}
+			
+; 			; Ensure proper font table
+; 			if (!RegExMatch(text, "\\fonttbl")) {
+; 				result.text := RegExReplace(result.text, 
+; 					"({\\rtf1[^{]*)", 
+; 					"$1{\\fonttbl{\\f0\\froman\\fprq2\\fcharset0 Times New Roman;}}")
+; 			}
+			
+; 			; Ensure proper color table
+; 			if (!RegExMatch(text, "\\colortbl")) {
+; 				result.text := RegExReplace(result.text, 
+; 					"({\\rtf1[^{]*(?:{\\fonttbl[^}]*})?)", 
+; 					'
+; 					(
+; 						$1{\\colortbl ;\\red0\\green0\\blue0;}
+; 					)')
+; 			}
+; 		}
+		
+; 		return result
+; 	}
+
+;     /**
+;      * @description Check if content is RTF and auto-fix if requested
+;      * @param {String} content The content to check
+;      * @param {Boolean} autoFix Whether to fix malformed RTF
+;      * @returns {String|Boolean} Fixed RTF if autoFix is true, otherwise boolean result
+;      */
+;     static IsRTF(content, autoFix := false) {
+;         result := this.VerifyRTF(content, autoFix)
+;         return autoFix ? result.text : result.isRTF
+;     }
+
+;     /**
+;      * @description Generate standard RTF header
+;      * @returns {String} RTF header with font and color tables
+;      */
+;     static GetRTFHeader() {
+;         props := this.Properties
+;         return Format('{\rtf1\ansi\ansicpg{1}\deff0\nouicompat\deflang1033{{\fonttbl{{\f0\{2}\fprq{3}\fcharset0 {4};}}}}{{\colortbl;\red0\green0\blue0;}}\viewkind4\uc1\pard\cf1\f0\fs{5}',
+;             props.CharSet,
+;             props.DefaultFont,
+;             props.DefaultPrq,
+;             props.FontFamily,
+;             props.FontSize * 2)
+;     }
+
+;     /**
+;      * @description Generate RTF list table definition
+;      * @returns {String} RTF list table definition
+;      */
+;     static GetRTFListTableDef() {
+;         return "{\*\listtable{\list\listtemplateid2181{\listlevel\levelnfc23\leveljc0\li1910\fi-241{\leveltext\'01\uc1\u61548 ?;}{\levelnumbers;}\f2\fs14\b0\i0}{\listlevel\levelnfc23\leveljc0\li2808\fi-241{\leveltext\'01\'95;}{\levelnumbers;}}{\listlevel\levelnfc23\leveljc0\li3696\fi-241{\leveltext\'01\'95;}{\levelnumbers;}}\listid1026}}{\*\listoverridetable{\listoverride\listoverridecount0\listid1026\ls1}}"
+;     }
+
+;     /**
+;      * @description Convert plain text to RTF format
+;      * @param {String} text Plain text to convert
+;      * @returns {String} RTF formatted text
+;      */
+;     static PlainTextToRTF(text) {
+;         ; Start with standard RTF header
+;         rtf := this.GetRTFHeader()
+        
+;         ; Escape special characters
+;         text := RegExReplace(text, "([\\{}\n\r])", "\\$1")
+;         text := StrReplace(text, "\n", "\par ")
+        
+;         ; Add text and close
+;         rtf .= text . "}"
+        
+;         return rtf
+;     }
+
+;     /**
+;      * @description Convert HTML to RTF format
+;      * @param {String} html HTML text to convert
+;      * @returns {String} RTF formatted text
+;      */
+;     static HTMLToRTF(html) {
+;         ; Handle empty input
+;         if (!IsSet(html) || html = '')
+;             return ''
+            
+;         ; Start with header
+;         rtf := this.GetRTFHeader()
+
+;         ; Pre-process line breaks for consistent handling
+;         html := StrReplace(html, "`n", "\line ")
+        
+;         ; Handle both <b> and <strong> tags with proper spacing
+;         html := RegExReplace(html, '<(b|bold|strong)[^>]*>', '\b ')
+;         html := RegExReplace(html, '</(b|bold|strong)>', ' \b0 ')
+        
+;         ; Handle other formatting tags with proper spacing
+;         html := RegExReplace(html, '<br[^>]*>|<BR[^>]*>', '\line ')
+;         html := RegExReplace(html, '<p[^>]*>', '\par ')
+;         html := RegExReplace(html, '</p>', '\par\par ')
+;         html := RegExReplace(html, '<(i|italics|em)[^>]*>', '\i ')
+;         html := RegExReplace(html, '</(i|italics|em)>', ' \i0 ')
+;         html := RegExReplace(html, '<u[^>]*>', '\ul ')
+;         html := RegExReplace(html, '</u>', ' \ul0 ')
+;         html := RegExReplace(html, '<s[^>]*>|<strike[^>]*>|<del[^>]*>', '\strike ')
+;         html := RegExReplace(html, '</s>|</strike>|</del>', ' \strike0 ')
+
+;         ; Process HTML lists
+;         html := this._ProcessHTMLLists(html)
+        
+;         ; Remove any remaining HTML tags
+;         html := RegExReplace(html, '<[^>]+>', '')
+        
+;         ; Add processed content and close RTF
+;         rtf .= html . '}'
+        
+;         return rtf
+;     }
+
+;     /**
+;      * @description Process HTML lists with proper RTF formatting
+;      * @param {String} text HTML text to process
+;      * @returns {String} Text with RTF list formatting
+;      */
+;     static _ProcessHTMLLists(text) {
+;         ; Convert unordered lists
+;         text := RegExReplace(text, '<ul[^>]*>', '{\pard\plain\s3\ls1\ilvl0\nooverflow\nocwrap\lnbrkrule\li1909\fi-239\sl240\slmult1 ')
+;         text := RegExReplace(text, '</ul>', '\par}')
+        
+;         ; Convert list items with proper bullets
+;         text := RegExReplace(text, '<li[^>]*>', "{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li360 ")
+;         text := RegExReplace(text, '</li>', '\par')
+        
+;         ; Handle ordered lists
+;         text := RegExReplace(text, '<ol[^>]*>', '{\pard\plain\s4\ls2\ilvl0\nooverflow\nocwrap\lnbrkrule\li1909\fi-239\sl240\slmult1 ')
+;         text := RegExReplace(text, '</ol>', '\par}')
+
+;         return text
+;     }
+
+;     /**
+;      * @description Convert Markdown to RTF format
+;      * @param {String} markdown Markdown text to convert
+;      * @returns {String} RTF formatted text
+;      */
+;     static MarkdownToRTF(markdown) {
+;         ; Handle empty input
+;         if (!IsSet(markdown) || markdown = '') {
+;             return ''
+;         }
+        
+;         ; Initialize RTF document with proper header
+;         rtf := this.GetRTFHeader()
+;         rtf .= this.GetRTFListTableDef()
+        
+;         ; Process markdown text formatting
+;         text := this._ProcessTextFormatting(markdown)
+        
+;         ; Process lists
+;         text := this._ProcessLists(text)
+        
+;         ; Add processed content and close RTF document
+;         rtf .= text . "}"
+        
+;         return rtf
+;     }
+
+;     /**
+;      * @description Process text formatting from markdown to RTF
+;      * @param {String} text Markdown text to process
+;      * @returns {String} Text with RTF formatting
+;      */
+;     static _ProcessTextFormatting(text) {
+;         ; Bold handling with non-greedy matching
+;         text := RegExReplace(text, "\*\*([^*]+?)\*\*", "\b $1\b0 ")
+        
+;         ; Italic handling with improved patterns
+;         text := RegExReplace(text, "(?<![*])\*([^*]+?)\*(?![*])", "\i $1\i0 ")
+;         text := RegExReplace(text, "(?<![_])_([^_]+?)_(?![_])", "\i $1\i0 ")
+        
+;         ; Strikethrough
+;         text := RegExReplace(text, "~~([^~]+?)~~", "\strike $1\strike0 ")
+
+;         ; Underline with multiple patterns
+;         text := RegExReplace(text, "__([^_]+?)__", "\ul $1\ul0 ")
+;         text := RegExReplace(text, "~([^~]+?)~", "\ul $1\ul0 ")
+        
+;         ; Headers processing
+;         text := RegExReplace(text, "m)^#{6}\s+(.+)$", "\par\b\fs16 $1\b0\par ")
+;         text := RegExReplace(text, "m)^#{5}\s+(.+)$", "\par\b\fs18 $1\b0\par ")
+;         text := RegExReplace(text, "m)^#{4}\s+(.+)$", "\par\b\fs20 $1\b0\par ")
+;         text := RegExReplace(text, "m)^#{3}\s+(.+)$", "\par\b\fs22 $1\b0\par ")
+;         text := RegExReplace(text, "m)^#{2}\s+(.+)$", "\par\b\fs24 $1\b0\par ")
+;         text := RegExReplace(text, "m)^#{1}\s+(.+)$", "\par\b\fs26 $1\b0\par ")
+        
+;         ; Special characters
+;         text := StrReplace(text, "°", "\'b0")
+        
+;         return text
+;     }
+
+;     /**
+;      * @description Process list formatting from markdown to RTF
+;      * @param {String} text Markdown text to process
+;      * @returns {String} Text with RTF list formatting
+;      */
+;     static _ProcessLists(text) {
+;         ; Split text into lines for processing
+;         lines := StrSplit(text, "`n")
+;         processedLines := []
+;         inList := false
+;         listLevel := 0
+        
+;         for i, line in lines {
+;             ; Check if this is a bullet point
+;             if (RegExMatch(line, "^\s*[-*]\s+(.+)$", &match)) {
+;                 ; Determine indentation level
+;                 indent := RegExMatch(line, "^(\s+)", &indentMatch) ? StrLen(indentMatch[1]) : 0
+;                 level := Floor(indent / 2)  ; Convert spaces to logical level
+                
+;                 ; Start a new list if needed
+;                 if (!inList) {
+;                     inList := true
+;                     processedLines.Push('
+; 					(
+; 						{\*\listtable{\list\listtemplateid1{\listlevel\levelnfc23\leveljc0\levelfollow0{\leveltext\'01\u8226 ?;}{\levelnumbers;}\f2\fs20\cf0}{\listname ;}\listid1}}
+; 					)')
+;                     processedLines.Push("{\listoverride\listid1\listoverridecount0\ls1}")
+;                 }
+                
+;                 ; Output RTF bullet formatting
+;                 if (level == 0) {
+;                     ; First level bullet
+;                     processedLines.Push("{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-200\li200 " match[1] "}")
+;                 } else {
+;                     ; Indented bullet (second level)
+;                     processedLines.Push("{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-200\li" (200 + level*200) " " match[1] "}")
+;                 }
+;             } 
+;             else if (RegExMatch(line, "^\s*(\d+)\.?\s+(.+)$", &match)) {
+;                 ; Numbered list item
+;                 indent := RegExMatch(line, "^(\s+)", &indentMatch) ? StrLen(indentMatch[1]) : 0
+;                 level := Floor(indent / 2)
+                
+;                 if (!inList) {
+;                     inList := true
+;                     processedLines.Push('
+; 					(
+; 						{\*\listtable{\list\listtemplateid2{\listlevel\levelnfc0\leveljc0\levelfollow0{\leveltext\'02\'00.;}{\levelnumbers\'01;}\fi-200\li200}{\listname ;}\listid2}}
+; 					)')
+;                     processedLines.Push("{\listoverride\listid2\listoverridecount0\ls2}")
+;                 }
+                
+;                 ; Output RTF numbered list formatting
+;                 if (level == 0) {
+;                     processedLines.Push("{" match[1] ".\tab} " match[2])
+;                 } else {
+;                     processedLines.Push("{\fi-200\li" (200 + level*200) " " match[1] ".\tab " match[2] "}")
+;                 }
+;             } 
+;             else {
+;                 ; Regular paragraph - end list if needed
+;                 if (inList) {
+;                     processedLines.Push("{\listtext\tab}")  ; End list
+;                     inList := false
+;                 }
+;                 processedLines.Push(line)
+;             }
+;         }
+        
+;         ; End any open list
+;         if (inList) {
+;             processedLines.Push("{\listtext\tab}")
+;         }
+        
+;         ; Join lines back together with proper RTF line breaks
+;         processedText := ""
+;         for i, line in processedLines {
+;             if (InStr(line, "{\*\listtable") || InStr(line, "{\listoverride")) {
+;                 processedText .= line  ; No line break for list definitions
+;             } else if (InStr(line, "{\pntext") || InStr(line, "{\fi-")) {
+;                 processedText .= line "\par "  ; Line break after each list item
+;             } else {
+;                 processedText .= line "\par "  ; Line break after regular paragraphs
+;             }
+;         }
+        
+;         ; Clean up redundant paragraph marks
+;         processedText := RegExReplace(processedText, "\\par\s*\\par", "\\par ")
+        
+;         return processedText
+;     }
+
+;     /**
+;      * @description Create RTF with proper font settings
+;      * @param {String} text The text content
+;      * @param {String} fontFamily Font family name (optional)
+;      * @param {Integer} fontSize Font size (optional)
+;      * @returns {String} RTF with specified formatting
+;      */
+;     static ApplyFontStyle(text, fontFamily := "", fontSize := "") {
+;         props := this.Properties
+        
+;         rtf := this.GetRTFHeader()
+        
+;         ; Add custom font settings if provided
+;         if (fontSize != "")
+;             rtf .= "\fs" fontSize
+;         if (fontFamily != "")
+;             rtf .= "\fname " fontFamily
+            
+;         ; Add text and close
+;         rtf .= " " text "\n}"
+        
+;         return rtf
+;     }
+
+;     /**
+;      * @description Process and standardize RTF content
+;      * @param {String} rtf RTF content to process
+;      * @param {Boolean} standardize Whether to standardize the content
+;      * @returns {String} Processed RTF content
+;      */
+;     static RTFtoRTF(rtf, standardize := true) {
+;         if (!rtf) {
+;             return ''
+;         }
+        
+;         ; Verify and process RTF content
+;         verifiedRTF := this.VerifyRTF(rtf)
+        
+;         ; Return original if not RTF and standardization not requested
+;         if (!verifiedRTF.isRTF && !standardize) {
+;             return rtf
+;         }
+        
+;         ; Start with standard header and list table
+;         standardRtf := this.GetRTFHeader()
+;         standardRtf .= this.GetRTFListTableDef()
+        
+;         ; Extract content after headers
+;         text := verifiedRTF.text
+;         if (RegExMatch(rtf, "\\viewkind4\\uc1.*?({[^{]+}|[^{]+)$", &match))
+;             text := match[1]
+            
+;         ; Clean up content
+;         text := RegExReplace(text, "^\s*{*\s*", "")  ; Remove leading braces/spaces
+;         text := RegExReplace(text, "\s*}*\s*$", "")  ; Remove trailing braces/spaces
+        
+;         ; Process line breaks
+;         text := StrReplace(text, "`r`n", "\line")
+;         text := StrReplace(text, "`r", "\line")
+        
+;         ; Process lists to maintain proper structure
+;         text := this._ProcessRTFLists(text)
+        
+;         ; Return assembled RTF
+;         return standardRtf . text . "}"
+;     }
+
+;     /**
+;      * @description Process RTF lists to maintain proper structure
+;      * @param {String} text RTF text to process
+;      * @returns {String} Text with proper RTF list structure
+;      */
+;     static _ProcessRTFLists(text) {
+;         ; Convert basic bullets to properly formatted list items
+;         text := RegExReplace(text, 
+;             "\\bullet\s+", 
+;             "{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li360 ")
+        
+;         ; Handle list levels
+;         text := RegExReplace(text, 
+;             "(?<=\\pard)\\plain\\s3\\ls1\\ilvl([0-9])\\nooverflow\\nocwrap\\lnbrkrule", 
+;             "\plain\s3\ls1\ilvl$1\nooverflow\nocwrap\lnbrkrule\li1909\fi-239")
+
+;         return text
+;     }
+    
+;     /**
+;      * @description Sets clipboard content as RTF format
+;      * @param {String} rtfText The RTF formatted text
+;      * @throws {OSError} If clipboard operations fail
+;      * @returns {Boolean} True if successful
+;      */
+;     static SetClipboardRTF(rtfText) {
+;         ; Register RTF format if needed
+;         static CF_RTF := DllCall("RegisterClipboardFormat", "Str", "Rich Text Format", "UInt")
+;         if (!CF_RTF) {
+;             throw OSError("Failed to register RTF clipboard format", -1)
+;         }
+    
+;         ; Try to open clipboard with retry logic
+;         maxAttempts := 5
+;         attempt := 0
+        
+;         while (attempt < maxAttempts) {
+;             if (DllCall("OpenClipboard", "Ptr", 0)) {
+;                 break
+;             }
+;             attempt++
+;             if (attempt = maxAttempts) {
+;                 throw OSError("Failed to open clipboard after " maxAttempts " attempts", -1)
+;             }
+;             Sleep(50)  ; Wait before next attempt
+;         }
+    
+;         try {
+;             ; Clear clipboard
+;             if (!DllCall("EmptyClipboard")) {
+;                 throw OSError("Failed to empty clipboard", -1)
+;             }
+            
+;             ; Allocate global memory
+;             hGlobal := DllCall("GlobalAlloc", "UInt", 0x42, "Ptr", StrPut(rtfText, "UTF-8"))
+;             if (!hGlobal) {
+;                 throw OSError("Failed to allocate memory", -1)
+;             }
+            
+;             try {
+;                 ; Lock and write to memory
+;                 pGlobal := DllCall("GlobalLock", "Ptr", hGlobal, "Ptr")
+;                 if (!pGlobal) {
+;                     throw OSError("Failed to lock memory", -1)
+;                 }
+                
+;                 StrPut(rtfText, pGlobal, "UTF-8")
+                
+;                 ; Unlock - ignore return value, check A_LastError instead
+;                 DllCall("GlobalUnlock", "Ptr", hGlobal)
+;                 if (A_LastError && A_LastError != 0x0B7) { ; ERROR_INVALID_PARAMETER (already unlocked)
+;                     throw OSError("Failed to unlock memory", -1)
+;                 }
+                
+;                 ; Set clipboard data
+;                 if (!DllCall("SetClipboardData", "UInt", CF_RTF, "Ptr", hGlobal)) {
+;                     throw OSError("Failed to set clipboard data", -1)
+;                 }
+                
+;                 ; Ownership transferred to system, don't free the memory
+;                 hGlobal := 0
+                
+;                 return true
+;             }
+;             catch Error as e {
+;                 ; Clean up on error
+;                 if (hGlobal) {
+;                     DllCall("GlobalFree", "Ptr", hGlobal)
+;                 }
+;                 throw e
+;             }
+;         }
+;         finally {
+;             ; Always close clipboard
+;             DllCall("CloseClipboard")
+;         }
+;     }
+    
+;     /**
+;      * @description Send RTF formatted text to the active window via clipboard
+;      * @param {String} rtfText RTF text to send
+;      * @param {String} endChar Optional ending character(s)
+;      * @returns {Boolean} True if successful
+;      */
+;     static SendRTF(rtfText, endChar := "") {
+;         ; Save current clipboard content
+;         prevClip := ClipboardAll()
+        
+;         try {
+;             ; Set RTF to clipboard
+;             this.SetClipboardRTF(rtfText)
+            
+;             ; Wait for clipboard content to be set
+;             Sleep(50)
+            
+;             ; Send paste command to active window
+;             SendInput("^v" endChar)
+            
+;             ; Wait for paste to complete
+;             Sleep(50)
+            
+;             return true
+;         }
+;         catch Error as e {
+;             MsgBox("Error sending RTF: " e.Message, "Error", 16)
+;             return false
+;         }
+;         finally {
+;             ; Restore previous clipboard content
+;             A_Clipboard := prevClip
+;         }
+;     }
+    
+;     /**
+;      * @description Sets plain text in the clipboard
+;      * @param {String} text Text to set in clipboard
+;      * @returns {Boolean} True if successful
+;      */
+;     static SetPlainText(text := "") {
+;         static CF_TEXT := 1
+        
+;         if (!text)
+;             text := ""
+        
+;         if (DllCall("OpenClipboard", "Ptr", 0)) {
+;             DllCall("EmptyClipboard")
+;             hMem := DllCall("GlobalAlloc", "UInt", 0x42, "Ptr", StrPut(text, "UTF-8"))
+;             pMem := DllCall("GlobalLock", "Ptr", hMem)
+;             StrPut(text, pMem, "UTF-8")
+;             DllCall("GlobalUnlock", "Ptr", hMem)
+;             DllCall("SetClipboardData", "UInt", CF_TEXT, "Ptr", hMem)
+;             DllCall("CloseClipboard")
+;             return true
+;         }
+;         return false
+;     }
+    
+;     /**
+;      * @description Send WM_PASTE message to a control
+;      * @param {Integer} controlHwnd Control handle
+;      * @returns {Integer} Result of SendMessage call
+;      */
+;     static SendPasteMessage(controlHwnd) {
+;         static WM_PASTE := 0x0302
+;         return DllCall("SendMessage", "Ptr", controlHwnd, "UInt", WM_PASTE, "Ptr", 0, "Ptr", 0)
+;     }
+    
+;     /**
+;      * @description Send EM_PASTESPECIAL message to a control
+;      * @param {Integer} controlHwnd Control handle
+;      * @param {Integer} format Format identifier (1 = CF_TEXT)
+;      * @returns {Integer} Result of SendMessage call
+;      */
+;     static SendPasteSpecialMessage(controlHwnd, format := 1) {
+;         static EM_PASTESPECIAL := 0x0440
+;         return DllCall("SendMessage", "Ptr", controlHwnd, "UInt", EM_PASTESPECIAL, "Ptr", format, "Ptr", 0)
+;     }
+; }
+
+; class FormatConverter {
+;     /**
+;      * @description Common document properties used across all formats
+;      */
+;     static Properties := {
+;         FontFamily: 'Times New Roman',
+;         FontSize: 11,
+;         FontColor: '000000',
+;         CharSet: 1252,
+;         DefaultFont: 'froman',
+;         DefaultPrq: 2,
+;         LineHeight: 1.2,
+;         DefaultMargin: 0,
+;         DefaultPadding: '0.5em 0',
+;         StyleMappings: Map(
+;             "strike", "\strike",
+;             "super", "\super",
+;             "sub", "\sub",
+;             "bullet", "• ",
+;             "align-left", "\ql",
+;             "align-right", "\qr",
+;             "align-center", "\qc",
+;             "align-justify", "\qj"
+;         )
+;     }
+
+;     /**
+;      * @description Font size definitions for headers and text
+;      */
+;     static FontSizes := {
+;         Default: 22,     ; 11pt * 2
+;         h6: 24,          ; 12pt * 2
+;         h5: 26,          ; 13pt * 2
+;         h4: 28,          ; 14pt * 2
+;         h3: 30,          ; 15pt * 2
+;         h2: 32,          ; 16pt * 2
+;         h1: 34,          ; 17pt * 2
+;         List: []         ; Array for easy access [h6, h5, h4, h3, h2, h1]
+;     }
+
+;     ; Initialize the header sizes array
+;     static __New() {
+;         this.FontSizes.List := [this.FontSizes.h6, this.FontSizes.h5, this.FontSizes.h4, 
+;                                this.FontSizes.h3, this.FontSizes.h2, this.FontSizes.h1]
+;     }
+
+;     /**
+;      * @description Detects the format of provided text
+;      * @param {String} text Text to analyze
+;      * @returns {String} Detected format: "rtf", "html", "markdown", "json", or "plaintext"
+;      */
+;     static DetectFormat(text) {
+;         if (text == "")
+;             return "plaintext"
+            
+;         if RegExMatch(text, "i)^{\s*\\rtf1\b")
+;             return "rtf"
+;         if RegExMatch(text, "i)^<!DOCTYPE html|^<html")
+;             return "html"
+;         if RegExMatch(text, "^#|^\*\*|^- ")
+;             return "markdown"
+;         if RegExMatch(text, '^{[\s\n]*""')
+;             return "json"
+            
+;         return "plaintext"
+;     }
+
+;     /**
+;      * @description Converts text from one format to another
+;      * @param {String} text Text to convert
+;      * @param {String} targetFormat "rtf", "html", or "plaintext"
+;      * @returns {String} Converted text
+;      */
+;     static Convert(text, targetFormat := "rtf") {
+;         sourceFormat := this.DetectFormat(text)
+        
+;         if (sourceFormat == targetFormat)
+;             return text
+            
+;         switch (targetFormat) {
+;             case "rtf":
+;                 switch (sourceFormat) {
+;                     case "plaintext": return this.PlainTextToRTF(text)
+;                     case "html": return this.HTMLToRTF(text)
+;                     case "markdown": return this.MarkdownToRTF(text)
+;                 }
+;             case "html":
+;                 ; Future implementation
+;                 return text
+;             case "plaintext":
+;                 return this.ExtractPlainText(text)
+;         }
+        
+;         return text
+;     }
+
+;     /**
+;      * @description Extracts plain text from formatted text
+;      * @param {String} text The formatted text
+;      * @returns {String} Plain text without formatting
+;      */
+;     static ExtractPlainText(text) {
+;         format := this.DetectFormat(text)
+        
+;         switch (format) {
+;             case "rtf":
+;                 return this.ExtractPlainTextFromRTF(text)
+;             case "html":
+;                 return RegExReplace(text, "<[^>]+>", "")
+;             case "markdown":
+;                 ; Simple markdown stripping
+;                 text := RegExReplace(text, "#{1,6}\s+", "")  ; Headers
+;                 text := RegExReplace(text, "\*\*([^*]+?)\*\*", "$1")  ; Bold
+;                 text := RegExReplace(text, "\*([^*]+?)\*", "$1")  ; Italic
+;                 text := RegExReplace(text, "~~([^~]+?)~~", "$1")  ; Strikethrough
+;                 text := RegExReplace(text, "^\s*[-*]\s+", "")  ; Bullets
+;                 return text
+;             default:
+;                 return text
+;         }
+;     }
+
+;     /**
+;      * @description Extracts plain text from RTF content
+;      * @param {String} rtfText RTF formatted text
+;      * @returns {String} Plain text extracted from RTF
+;      */
+;     static ExtractPlainTextFromRTF(rtfText) {
+;         plainText := rtfText
+;         plainText := RegExReplace(plainText, "^\{\\rtf1.*?\\par", "")  ; Remove RTF header
+;         plainText := RegExReplace(plainText, "\\[a-z]+", "")  ; Remove RTF commands
+;         plainText := RegExReplace(plainText, "\\'[0-9a-f]{2}", "")  ; Remove escaped characters
+;         plainText := StrReplace(plainText, "\par", "`n")  ; Replace paragraph breaks with newlines
+;         plainText := StrReplace(plainText, "}", "")  ; Remove closing brace
+;         return Trim(plainText)
+;     }
+
+;     /**
+;      * @description Verify if text is valid RTF and fix if needed
+;      * @param {String} text Text to verify
+;      * @param {Boolean} fixIfNeeded Whether to fix malformed RTF
+;      * @returns {Object} Result with isRTF flag and fixed text
+;      */
+;     static VerifyRTF(text, fixIfNeeded := false) {
+;         isRTF := RegExMatch(text, "i)^{\s*\\rtf1\b") ? true : false
+;         result := { isRTF: isRTF, text: text }
+        
+;         if (isRTF && fixIfNeeded) {
+;             ; Ensure proper RTF structure
+;             if (!RegExMatch(text, "}$")) {
+;                 result.text := text . "}"
+;             }
+            
+;             ; Ensure proper font table
+;             if (!RegExMatch(text, "\\fonttbl")) {
+;                 result.text := RegExReplace(result.text, 
+;                     "({\\rtf1[^{]*)", 
+;                     "$1{\\fonttbl{\\f0\\froman\\fprq2\\fcharset0 Times New Roman;}}")
+;             }
+            
+;             ; Ensure proper color table
+;             if (!RegExMatch(text, "\\colortbl")) {
+;                 result.text := RegExReplace(result.text, 
+;                     "({\\rtf1[^{]*(?:{\\fonttbl[^}]*})?)", 
+;                     "$1{\\colortbl ;\\red0\\green0\\blue0;}")
+;             }
+;         }
+        
+;         return result
+;     }
+
+;     /**
+;      * @description Check if content is RTF and auto-fix if requested
+;      * @param {String} content The content to check
+;      * @param {Boolean} autoFix Whether to fix malformed RTF
+;      * @returns {String|Boolean} Fixed RTF if autoFix is true, otherwise boolean result
+;      */
+;     static IsRTF(content, autoFix := false) {
+;         result := this.VerifyRTF(content, autoFix)
+;         return autoFix ? result.text : result.isRTF
+;     }
+
+;     /**
+;      * @description Generate standard RTF header
+;      * @returns {String} RTF header with font and color tables
+;      */
+;     static GetRTFHeader() {
+;         props := this.Properties
+;         return Format('{\rtf1\ansi\ansicpg{1}\deff0\nouicompat\deflang1033{{\fonttbl{{\f0\{2}\fprq{3}\fcharset0 {4};}}}}{{\colortbl;\red0\green0\blue0;}}\viewkind4\uc1\pard\cf1\f0\fs{5}',
+;             props.CharSet,
+;             props.DefaultFont,
+;             props.DefaultPrq,
+;             props.FontFamily,
+;             props.FontSize * 2)
+;     }
+
+;     /**
+;      * @description Generate RTF list table definition
+;      * @returns {String} RTF list table definition
+;      */
+;     static GetRTFListTableDef() {
+;         return "{\*\listtable{\list\listtemplateid2181{\listlevel\levelnfc23\leveljc0\li1910\fi-241{\leveltext\'01\uc1\u61548 ?;}{\levelnumbers;}\f2\fs14\b0\i0}{\listlevel\levelnfc23\leveljc0\li2808\fi-241{\leveltext\'01\'95;}{\levelnumbers;}}{\listlevel\levelnfc23\leveljc0\li3696\fi-241{\leveltext\'01\'95;}{\levelnumbers;}}\listid1026}}{\*\listoverridetable{\listoverride\listoverridecount0\listid1026\ls1}}"
+;     }
+
+;     /**
+;      * @description Convert plain text to RTF format
+;      * @param {String} text Plain text to convert
+;      * @returns {String} RTF formatted text
+;      */
+;     static PlainTextToRTF(text) {
+;         ; Start with standard RTF header
+;         rtf := this.GetRTFHeader()
+        
+;         ; Escape special characters
+;         text := RegExReplace(text, "([\\{}\n\r])", "\\$1")
+;         text := StrReplace(text, "\n", "\par ")
+        
+;         ; Add text and close
+;         rtf .= text . "}"
+        
+;         return rtf
+;     }
+
+;     /**
+;      * @description Convert HTML to RTF format
+;      * @param {String} html HTML text to convert
+;      * @returns {String} RTF formatted text
+;      */
+;     static HTMLToRTF(html) {
+;         ; Handle empty input
+;         if (!IsSet(html) || html = '')
+;             return ''
+            
+;         ; Start with header
+;         rtf := this.GetRTFHeader()
+
+;         ; Pre-process line breaks for consistent handling
+;         html := StrReplace(html, "`n", "\line ")
+        
+;         ; Handle both <b> and <strong> tags with proper spacing
+;         html := RegExReplace(html, '<(b|bold|strong)[^>]*>', '\b ')
+;         html := RegExReplace(html, '</(b|bold|strong)>', ' \b0 ')
+        
+;         ; Handle other formatting tags with proper spacing
+;         html := RegExReplace(html, '<br[^>]*>|<BR[^>]*>', '\line ')
+;         html := RegExReplace(html, '<p[^>]*>', '\par ')
+;         html := RegExReplace(html, '</p>', '\par\par ')
+;         html := RegExReplace(html, '<(i|italics|em)[^>]*>', '\i ')
+;         html := RegExReplace(html, '</(i|italics|em)>', ' \i0 ')
+;         html := RegExReplace(html, '<u[^>]*>', '\ul ')
+;         html := RegExReplace(html, '</u>', ' \ul0 ')
+;         html := RegExReplace(html, '<s[^>]*>|<strike[^>]*>|<del[^>]*>', '\strike ')
+;         html := RegExReplace(html, '</s>|</strike>|</del>', ' \strike0 ')
+
+;         ; Process HTML lists
+;         html := this._ProcessHTMLLists(html)
+        
+;         ; Remove any remaining HTML tags
+;         html := RegExReplace(html, '<[^>]+>', '')
+        
+;         ; Add processed content and close RTF
+;         rtf .= html . '}'
+        
+;         return rtf
+;     }
+
+;     /**
+;      * @description Process HTML lists with proper RTF formatting
+;      * @param {String} text HTML text to process
+;      * @returns {String} Text with RTF list formatting
+;      */
+;     static _ProcessHTMLLists(text) {
+;         ; Convert unordered lists
+;         text := RegExReplace(text, '<ul[^>]*>', '{\pard\plain\s3\ls1\ilvl0\nooverflow\nocwrap\lnbrkrule\li1909\fi-239\sl240\slmult1 ')
+;         text := RegExReplace(text, '</ul>', '\par}')
+        
+;         ; Convert list items with proper bullets
+;         text := RegExReplace(text, '<li[^>]*>', "{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li360 ")
+;         text := RegExReplace(text, '</li>', '\par')
+        
+;         ; Handle ordered lists
+;         text := RegExReplace(text, '<ol[^>]*>', '{\pard\plain\s4\ls2\ilvl0\nooverflow\nocwrap\lnbrkrule\li1909\fi-239\sl240\slmult1 ')
+;         text := RegExReplace(text, '</ol>', '\par}')
+
+;         return text
+;     }
+
+;     /**
+;      * @description Convert Markdown to RTF format
+;      * @param {String} markdown Markdown text to convert
+;      * @returns {String} RTF formatted text
+;      */
+;     static MarkdownToRTF(markdown) {
+;         ; Handle empty input
+;         if (!IsSet(markdown) || markdown = '') {
+;             return ''
+;         }
+        
+;         ; Initialize RTF document with proper header
+;         rtf := this.GetRTFHeader()
+;         rtf .= this.GetRTFListTableDef()
+        
+;         ; Process markdown text formatting
+;         text := this._ProcessTextFormatting(markdown)
+        
+;         ; Process lists
+;         text := this._ProcessLists(text)
+        
+;         ; Add processed content and close RTF document
+;         rtf .= text . "}"
+        
+;         return rtf
+;     }
+
+;     /**
+;      * @description Process text formatting from markdown to RTF
+;      * @param {String} text Markdown text to process
+;      * @returns {String} Text with RTF formatting
+;      */
+;     static _ProcessTextFormatting(text) {
+;         ; Bold handling with non-greedy matching
+;         text := RegExReplace(text, "\*\*([^*]+?)\*\*", "\b $1\b0 ")
+        
+;         ; Italic handling with improved patterns
+;         text := RegExReplace(text, "(?<![*])\*([^*]+?)\*(?![*])", "\i $1\i0 ")
+;         text := RegExReplace(text, "(?<![_])_([^_]+?)_(?![_])", "\i $1\i0 ")
+        
+;         ; Strikethrough
+;         text := RegExReplace(text, "~~([^~]+?)~~", "\strike $1\strike0 ")
+
+;         ; Underline with multiple patterns
+;         text := RegExReplace(text, "__([^_]+?)__", "\ul $1\ul0 ")
+;         text := RegExReplace(text, "~([^~]+?)~", "\ul $1\ul0 ")
+        
+;         ; Headers processing
+;         text := RegExReplace(text, "m)^#{6}\s+(.+)$", "\par\b\fs16 $1\b0\par ")
+;         text := RegExReplace(text, "m)^#{5}\s+(.+)$", "\par\b\fs18 $1\b0\par ")
+;         text := RegExReplace(text, "m)^#{4}\s+(.+)$", "\par\b\fs20 $1\b0\par ")
+;         text := RegExReplace(text, "m)^#{3}\s+(.+)$", "\par\b\fs22 $1\b0\par ")
+;         text := RegExReplace(text, "m)^#{2}\s+(.+)$", "\par\b\fs24 $1\b0\par ")
+;         text := RegExReplace(text, "m)^#{1}\s+(.+)$", "\par\b\fs26 $1\b0\par ")
+        
+;         ; Special characters
+;         text := StrReplace(text, "°", "\'b0")
+        
+;         return text
+;     }
+
+;     /**
+;      * @description Process list formatting from markdown to RTF
+;      * @param {String} text Markdown text to process
+;      * @returns {String} Text with RTF list formatting
+;      */
+;     static _ProcessLists(text) {
+;         ; Split text into lines for processing
+;         lines := StrSplit(text, "`n")
+;         processedLines := []
+;         inList := false
+;         listLevel := 0
+        
+;         for i, line in lines {
+;             ; Check if this is a bullet point
+;             if (RegExMatch(line, "^\s*[-*]\s+(.+)$", &match)) {
+;                 ; Determine indentation level
+;                 indent := RegExMatch(line, "^(\s+)", &indentMatch) ? StrLen(indentMatch[1]) : 0
+;                 level := Floor(indent / 2)  ; Convert spaces to logical level
+                
+;                 ; Start a new list if needed
+;                 if (!inList) {
+;                     inList := true
+;                     processedLines.Push("{\*\listtable{\list\listtemplateid1{\listlevel\levelnfc23\leveljc0\levelfollow0{\leveltext\'01\u8226 ?;}{\levelnumbers;}\f2\fs20\cf0}{\listname ;}\listid1}}")
+;                     processedLines.Push("{\listoverride\listid1\listoverridecount0\ls1}")
+;                 }
+                
+;                 ; Output RTF bullet formatting
+;                 if (level == 0) {
+;                     ; First level bullet
+;                     processedLines.Push("{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-200\li200 " match[1] "}")
+;                 } else {
+;                     ; Indented bullet (second level)
+;                     processedLines.Push("{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-200\li" (200 + level*200) " " match[1] "}")
+;                 }
+;             } 
+;             else if (RegExMatch(line, "^\s*(\d+)\.?\s+(.+)$", &match)) {
+;                 ; Numbered list item
+;                 indent := RegExMatch(line, "^(\s+)", &indentMatch) ? StrLen(indentMatch[1]) : 0
+;                 level := Floor(indent / 2)
+                
+;                 if (!inList) {
+;                     inList := true
+;                     processedLines.Push("{\*\listtable{\list\listtemplateid2{\listlevel\levelnfc0\leveljc0\levelfollow0{\leveltext\'02\'00.;}{\levelnumbers\'01;}\fi-200\li200}{\listname ;}\listid2}}")
+;                     processedLines.Push("{\listoverride\listid2\listoverridecount0\ls2}")
+;                 }
+                
+;                 ; Output RTF numbered list formatting
+;                 if (level == 0) {
+;                     processedLines.Push("{" match[1] ".\tab} " match[2])
+;                 } else {
+;                     processedLines.Push("{\fi-200\li" (200 + level*200) " " match[1] ".\tab " match[2] "}")
+;                 }
+;             } 
+;             else {
+;                 ; Regular paragraph - end list if needed
+;                 if (inList) {
+;                     processedLines.Push("{\listtext\tab}")  ; End list
+;                     inList := false
+;                 }
+;                 processedLines.Push(line)
+;             }
+;         }
+        
+;         ; End any open list
+;         if (inList) {
+;             processedLines.Push("{\listtext\tab}")
+;         }
+        
+;         ; Join lines back together with proper RTF line breaks
+;         processedText := ""
+;         for i, line in processedLines {
+;             if (InStr(line, "{\*\listtable") || InStr(line, "{\listoverride")) {
+;                 processedText .= line  ; No line break for list definitions
+;             } else if (InStr(line, "{\pntext") || InStr(line, "{\fi-")) {
+;                 processedText .= line "\par "  ; Line break after each list item
+;             } else {
+;                 processedText .= line "\par "  ; Line break after regular paragraphs
+;             }
+;         }
+        
+;         ; Clean up redundant paragraph marks
+;         processedText := RegExReplace(processedText, "\\par\s*\\par", "\\par ")
+        
+;         return processedText
+;     }
+
+;     /**
+;      * @description Create RTF with proper font settings
+;      * @param {String} text The text content
+;      * @param {String} fontFamily Font family name (optional)
+;      * @param {Integer} fontSize Font size (optional)
+;      * @returns {String} RTF with specified formatting
+;      */
+;     static ApplyFontStyle(text, fontFamily := "", fontSize := "") {
+;         props := this.Properties
+        
+;         rtf := this.GetRTFHeader()
+        
+;         ; Add custom font settings if provided
+;         if (fontSize != "")
+;             rtf .= "\fs" fontSize
+;         if (fontFamily != "")
+;             rtf .= "\fname " fontFamily
+            
+;         ; Add text and close
+;         rtf .= " " text "\n}"
+        
+;         return rtf
+;     }
+
+;     /**
+;      * @description Process and standardize RTF content
+;      * @param {String} rtf RTF content to process
+;      * @param {Boolean} standardize Whether to standardize the content
+;      * @returns {String} Processed RTF content
+;      */
+;     static RTFtoRTF(rtf, standardize := true) {
+;         if (!rtf) {
+;             return ''
+;         }
+        
+;         ; Verify and process RTF content
+;         verifiedRTF := this.VerifyRTF(rtf)
+        
+;         ; Return original if not RTF and standardization not requested
+;         if (!verifiedRTF.isRTF && !standardize) {
+;             return rtf
+;         }
+        
+;         ; Start with standard header and list table
+;         standardRtf := this.GetRTFHeader()
+;         standardRtf .= this.GetRTFListTableDef()
+        
+;         ; Extract content after headers
+;         text := verifiedRTF.text
+;         if (RegExMatch(rtf, "\\viewkind4\\uc1.*?({[^{]+}|[^{]+)$", &match))
+;             text := match[1]
+            
+;         ; Clean up content
+;         text := RegExReplace(text, "^\s*{*\s*", "")  ; Remove leading braces/spaces
+;         text := RegExReplace(text, "\s*}*\s*$", "")  ; Remove trailing braces/spaces
+        
+;         ; Process line breaks
+;         text := StrReplace(text, "`r`n", "\line")
+;         text := StrReplace(text, "`r", "\line")
+        
+;         ; Process lists to maintain proper structure
+;         text := this._ProcessRTFLists(text)
+        
+;         ; Return assembled RTF
+;         return standardRtf . text . "}"
+;     }
+
+;     /**
+;      * @description Process RTF lists to maintain proper structure
+;      * @param {String} text RTF text to process
+;      * @returns {String} Text with proper RTF list structure
+;      */
+;     static _ProcessRTFLists(text) {
+;         ; Convert basic bullets to properly formatted list items
+;         text := RegExReplace(text, 
+;             "\\bullet\s+", 
+;             "{\pntext\f2\'B7\tab}{\*\pn\pnlvlblt\pnf2\pnindent0{\pntxtb\'B7}}\fi-360\li360 ")
+        
+;         ; Handle list levels
+;         text := RegExReplace(text, 
+;             "(?<=\\pard)\\plain\\s3\\ls1\\ilvl([0-9])\\nooverflow\\nocwrap\\lnbrkrule", 
+;             "\plain\s3\ls1\ilvl$1\nooverflow\nocwrap\lnbrkrule\li1909\fi-239")
+
+;         return text
+;     }
+; }
+;@region class FormatConverter
 class FormatConverter {
 	
 	class RTFFormat {
@@ -1011,24 +2490,58 @@ class FormatConverter {
 	*/
 
 }
+;@endregion
 
-
+;@region class String2
 String.Prototype := String2
 
 class String2 {
 
+	static Initialized := false
+
+    ; Shared initialization method
+    static Initialize() {
+        if (this.Initialized)
+            return
+        
+        ; Add String2 methods and properties into String object
+        __ObjDefineProp := Object.Prototype.DefineProp
+        for __String2_Prop in String2.OwnProps() {
+            if !(__String2_Prop ~= "__Init|__Item|Prototype|Length|Initialized") {
+                if HasMethod(String2, __String2_Prop)
+                    __ObjDefineProp(String.Prototype, __String2_Prop, {call:String2.%__String2_Prop%})
+            }
+        }
+        __ObjDefineProp(String.Prototype, "__Item", {get:(args*)=>String2.__Item[args*]})
+        __ObjDefineProp(String.Prototype, "Length", {get:(arg)=>String2.Length(arg)})
+        __ObjDefineProp(String.Prototype, "WLength",{get:(arg)=>String2.WLength(arg)})
+		__ObjDefineProp(String.Prototype,"MarkdownToRTF", {
+			Call: (self) => FormatConverter.MarkdownToRTF(self)
+		})
+		
+		__ObjDefineProp(String.Prototype, "HTMLToRTF", {
+			Call: (self) => FormatConverter.HTMLToRTF(self)
+		})
+        this.Initialized := true
+    }
+
+	; static __New() {
+	; 	; Add String2 methods and properties into String object
+	; 	__ObjDefineProp := Object.Prototype.DefineProp
+	; 	for __String2_Prop in String2.OwnProps() {
+	; 		if !(__String2_Prop ~= "__Init|__Item|Prototype|Length") {
+	; 			if HasMethod(String2, __String2_Prop)
+	; 				__ObjDefineProp(String.Prototype, __String2_Prop, {call:String2.%__String2_Prop%})
+	; 		}
+	; 	}
+	; 	__ObjDefineProp(String.Prototype, "__Item", {get:(args*)=>String2.__Item[args*]})
+	; 	__ObjDefineProp(String.Prototype, "Length", {get:(arg)	=>String2.Length(arg)})
+	; 	__ObjDefineProp(String.Prototype, "WLength",{get:(arg)	=>String2.WLength(arg)})
+	; }
+
+	; Static constructor
 	static __New() {
-		; Add String2 methods and properties into String object
-		__ObjDefineProp := Object.Prototype.DefineProp
-		for __String2_Prop in String2.OwnProps() {
-			if !(__String2_Prop ~= "__Init|__Item|Prototype|Length") {
-				if HasMethod(String2, __String2_Prop)
-					__ObjDefineProp(String.Prototype, __String2_Prop, {call:String2.%__String2_Prop%})
-			}
-		}
-		__ObjDefineProp(String.Prototype, "__Item", {get:(args*)=>String2.__Item[args*]})
-		__ObjDefineProp(String.Prototype, "Length", {get:(arg)	=>String2.Length(arg)})
-		__ObjDefineProp(String.Prototype, "WLength",{get:(arg)	=>String2.WLength(arg)})
+		this.Initialize()
 	}
 
 	/**
@@ -1036,17 +2549,175 @@ class String2 {
      * @param {Any} input The value to convert
      */
 	__New(input?) {
+
+		; Ensure initialization happens
+        String2.Initialize()
+
 		if !IsSet(input){
-			input := ""
+			input := this
 		}
+		else if IsSet(input) {
+			if Type(input) == 'String' {
+				this := String2.ToString(input)
+			}
+			else if Type(this) == 'String' {
+				this := String2.ToString(this)
+			}
+			else if Type(this) == 'Object' {
+				this := String2.ToString(this)
+			}
+			else if Type(this) == 'Array' {
+				this := String2.ToString(this)
+			}
+			else if Type(this) == 'Number' {
+				this := String2.ToString(this)
+			}
+			else if Type(this) == 'Boolean' {
+				this := String2.ToString(this)
+			}
+			else if Type(this) == 'Date' {
+				this := String2.ToString(this)
+			}
+		}
+
 		; Use existing ToString logic for conversion
-		this.value := String2.ToString(input)
-		return this.value
+		return this
 	}
-	; static Send(input?){
-	; 	; (Type(this) == 'String' && IsSet(this) && this != '')
-	; 	Type(this) == 'String'? Clip.Send(this)	: Clip.Send(input)
-	; }
+
+	static Send(input?) {
+		; (Type(this) == 'String' && IsSet(this) && this != '')
+		Type(this) == 'String' ? Clip.Send(this) : Clip.Send(input)
+	}
+
+	/**
+	 * @description Efficiently sends text using message-based approach with verification
+	 * @param {String} text Text to send (uses this if called on instance)
+	 * @param {Object|String|Integer} params Optional parameters (endChar, timeout, method)
+	 * @returns {Boolean} True if sending was successful
+	 * @throws {Error} If sending fails and throwOnError is true
+	 * @example
+	 * ; Static call
+	 * String2.SendMessage("Hello World")
+	 * ; Instance call
+	 * "Hello World".SendMessage()
+	 * ; With options
+	 * "Hello".SendMessage({endChar: "`n", timeout: 1000, method: "WM_SETTEXT"})
+	 */
+	static SendMessage(text := "", params*) {
+		; Initialize configuration with defaults
+		config := {
+			endChar: "",               ; Optional ending character
+			timeout: 1000,             ; Timeout in milliseconds
+			method: "WM_PASTE",        ; Method: WM_PASTE, WM_SETTEXT, EM_REPLACESEL
+			throwOnError: false,       ; Whether to throw on error
+			retryCount: 3,             ; Number of retries
+			retryDelay: 50             ; Delay between retries in ms
+		}
+		
+		; Use 'this' as text if no text provided and this is a string
+		if (text = "" && Type(this) == "String"){
+			text := this
+		}
+		else if (text = ""){
+			throw ValueError("No text provided", -1)
+		}
+		; Process parameters
+		for param in params {
+			if IsObject(param) {
+				; Handle object parameters
+				for key, value in param.OwnProps()
+					config.%key% := value
+			} else if Type(param) == "String" {
+				; Handle string parameter as endChar
+				config.endChar := param
+			} else if Type(param) == "Integer" {
+				; Handle integer parameter as timeout
+				config.timeout := param
+			}
+		}
+		
+		; Append ending character if specified
+		if (config.endChar)
+			text .= config.endChar
+		
+		; Get focused control
+		hCtl := ControlGetFocus("A")
+		if (!hCtl) {
+			if (config.throwOnError)
+				throw Error("No focused control", -1)
+			return false
+		}
+		
+		; Select appropriate message constant
+		static WM_PASTE := 0x0302, EM_REPLACESEL := 0x00C2, WM_SETTEXT := 0x000C
+		
+		msgID := %config.method%
+		
+		; Prepare parameters based on message type
+		if (config.method == "WM_PASTE") {
+			; Backup clipboard content
+			prevClip := ClipboardAll()
+			A_Clipboard := text
+			
+			; Wait for clipboard
+			startTime := A_TickCount
+			while (ClipboardAll() != text) {
+				if (A_TickCount - startTime > config.timeout) {
+					A_Clipboard := prevClip
+					if (config.throwOnError)
+						throw Error("Clipboard timeout", -1)
+					return false
+				}
+				Sleep(10)
+			}
+			
+			; Send message with retry
+			success := false
+			loop config.retryCount {
+				result := SendMessage(msgID, 0, 0, hCtl)
+				if (result) {
+					success := true
+					break
+				}
+				Sleep(config.retryDelay)
+			}
+			
+			; Restore clipboard
+			A_Clipboard := prevClip
+			return success
+		}
+		else if (config.method == "EM_REPLACESEL") {
+			; Send with retry
+			success := false
+			loop config.retryCount {
+				result := SendMessage(msgID, 1, StrPtr(text), hCtl)
+				if (result) {
+					success := true
+					break
+				}
+				Sleep(config.retryDelay)
+			}
+			return success
+		}
+		else if (config.method == "WM_SETTEXT") {
+			; Send with retry
+			success := false
+			loop config.retryCount {
+				result := SendMessage(msgID, 0, StrPtr(text), hCtl)
+				if (result) {
+					success := true
+					break
+				}
+				Sleep(config.retryDelay)
+			}
+			return success
+		}
+		
+		; Unknown method
+		if (config.throwOnError)
+			throw Error("Unknown method: " config.method, -1)
+		return false
+	}
 
 	static MarkdownToRTF(t := this) => FormatConverter.MarkdownToRTF(this)
 	static rtf(text:=''){
@@ -1064,7 +2735,7 @@ class String2 {
 			return FormatConverter.MarkdownToRTF(text)
 		}
 		; Plain text - convert to RTF
-		return FormatConverter.RTFFormat.ApplyFontStyle(text, FormatConverter.RTFFormat.Properties.FontFamily)
+		return FormatConverter.PlainTextToRTF(text)
 	
 	}
 
@@ -1077,9 +2748,9 @@ class String2 {
      * @returns {String} String representation of input
      */
 	static ToString(input?) {
-		if !IsSet(input)
+		if !IsSet(input){
 			input := this
-
+		}
 		; Check input type and call appropriate conversion
 		switch Type(input) {
 			case "Object", "Map", "Array":
@@ -1099,6 +2770,8 @@ class String2 {
 				return String(input)
 		}
 	}
+
+	static Join(input?) => this.ToString(input?)
 	
 	/**
 	 * @description Internal method to convert objects to string
@@ -1772,10 +3445,10 @@ class String2 {
 		n := StrLen(t)
 		d := Array()
 	
-		Loop m+1{
+		Loop m+1 {
 			d.Push([A_Index-1])
 		}
-		Loop n{
+		Loop n {
 			d[1].Push(A_Index)
 		}
 	
@@ -2126,127 +3799,6 @@ FileExt(filename) {
 	return ext
 }
 
-class Unicode {
-
-	static Symbols := Map(
-
-		" ",                        0x0020,
-		"zwj",                      0x200D,
-		"varsel16",                 0xFE0F,
-		"female sign",              0x2640,  ; ♀
-		"pleading",                 0x1F97A, ; 🥺
-		"yum",                      0x1F60B, ; 😋
-		"exploding head",           0x1F92F, ; 🤯
-		"smirk cat",                0x1F63C, ; 😼
-		"sunglasses",               0x1F60E, ; 😎
-		"sob",                      0x1F62D, ; 😭
-		"face with monocle",        0x1F9D0, ; 🧐
-		"flushed",                  0x1F633, ; 😳
-		"face with raised eyebrow", 0x1F928, ; 🤨
-		"purple heart",             0x1F49C, ; 💜
-		"skull",                    0x1F480, ; 💀
-		"rolling eyes",             0x1F644, ; 🙄
-		"thinking",                 0x1F914, ; 🤔
-		"weary",                    0x1F629, ; 😩
-		"woozy",                    0x1F974, ; 🥴
-		"finger left",              0x1F448, ; 👈
-		"finger right",             0x1F449, ; 👉
-		"drooling",                 0x1F924, ; 🤤
-		"eggplant",                 0x1F346, ; 🍆
-		"smiling imp",              0x1F608, ; 😈
-		"fearful",                  0x1F628, ; 😨
-		"middle dot",               0x00B7,  ; ·
-		"long dash",                0x2014,  ; —
-		"sun",                      0x2600,  ; ☀
-		"cloud",                    0x2601,  ; ☁
-		"nerd",                     0x1F913, ; 🤓
-		"handshake",                0x1F91D, ; 🤝
-		"shrug",                    0x1F937, ; 🤷
-		"clap",                     0x1F44F, ; 👏
-		"amogus",                   0x0D9E,  ; ඞ
-		"confetti",                 0x1F389, ; 🎉
-		"eyes",                     0x1F440, ; 👀
-		"sneezing face",            0x1F927, ; 🤧
-		"grimacing",                0x1F62C, ; 😬
-		"crossed out",              0x1F635, ; 😵
-		"dizzy",                    0x1F4AB, ; 💫
-		"face with hearts",         0x1F970, ; 🥰
-		"innocent",                 0x1F607, ; 😇
-		"scarf",                    0x1F9E3, ; 🧣
-		"sparkles",                 0x2728,  ; ✨
-		"relieved",                 0x1F60C, ; 😌
-		"knot",                     0x1FAA2, ;
-		"comet",                    0x2604,  ; ☄️varsel16
-		"panda",                    0x1F43C, ; 🐼
-		"bamboo",                   0x1F38D, ; 🎍
-		"muscle",                   0x1F4AA, ; 💪
-		"scale",                    0x2696,  ; ⚖varsel16
-		"alien",                    0x1F47D, ; 👽
-		"badminton",                0x1F3F8, ; 🏸
-		"clipboard",                0x1F4CB, ; 📋
-		"lobster",                  0x1F99E, ; 🦞
-		"rosette",                  0x1F3F5, ; 🏵varsel16
-		"gem",                      0x1F48E, ; 💎
-		"firecracker",              0x1F9E8, ; 🧨
-		"athletic shoe",            0x1F45F, ; 👟
-		"fish",                     0x1F41F, ; 🐟
-		"satellite",                0x1F6F0, ; 🛰varsel16
-		"statue of liberty",        0x1F5FD, ; 🗽
-		"tropical fish",            0x1F420, ; 🐠
-		"penguin",                  0x1F427, ; 🐧
-		"kiwi",                     0x1F95D, ; 🥝
-		"archery",                  0x1F3F9, ; 🏹
-		"shell",                    0x1F41A, ; 🐚
-		"shrimp",                   0x1F990, ; 🦐
-		"broom",                    0x1F9F9, ; 🧹
-		"ocean",                    0x1F30A, ; 🌊
-		"wolf",                     0x1F43A, ; 🐺
-		"paperclip",                0x1F4CE, ; 📎
-		"nail polish",              0x1F485, ; 💅
-		"shell top arc",            0x256D,  ; ╭
-		"shell horizontal",         0x2500,  ; ─
-		"shell bottom arc",         0x2570,  ; ╰
-		"shell middle line",        0x2502,  ; │
-		"cat",                      0x1F408, ; 🐈
-		"chicken",                  0x1F414, ; 🐔
-		"parrot",                   0x1F99C, ; 🦜
-		"cricket",                  0x1F997, ; 🦗
-		"glowing star",             0x1F31F, ; 🌟
-		"ship",                     0x1F6A2, ; 🚢
-
-	)
-
-	/**
-	* Sends a unicode character using the Send function by using the character's predefined name
-	* @param name *String* The predefined name of the character
-	* @param endingChar *String* The string to append to the character. For example, a space or a newline
-	*/
-	static Send(symbols*) {
-		output := ''
-		for index, symbol in symbols{
-			output .= Chr(this.Symbols[symbol])
-		}
-		if symbols.Length > 1{
-			Clip.Send(output)
-		}
-		else{
-			SendText(output)
-		}
-	}
-
-	static DynamicSend() {
-		output := ''
-		if !input := CleanInputBox().WaitForInput(){
-			return
-		}
-		symbols := StrSplit(input, ",")
-		for index, symbol in symbols {
-			output .= Chr(this.Symbols.Choose(symbol))
-		}
-		Clip.Send(output)
-	}
-
-}
 ; #Include <Directives\__AE.v2>
 ; #Requires AutoHotkey v2+
 ; OnError(LogError)
@@ -2470,9 +4022,80 @@ class StringConversionTests extends TestSuite {
 
 ; Infos(Obj.ToString())
 
-#Requires AutoHotkey v2.0+
-#SingleInstance Force
-#Include <Includes/Basic>
+;! ┌──────────────────────────────────────────────────────────────────────────────┐
+;! │							Critical Section								  │
+;! └──────────────────────────────────────────────────────────────────────────────┘
+;!!! Critical operations and warnings
+
+;? ┌──────────────────────────────────────────────────────────────────────────────┐
+;? │							Implementation Notes							  │
+;? └──────────────────────────────────────────────────────────────────────────────┘
+;? Discussion points and implementation details
+
+;* ┌──────────────────────────────────────────────────────────────────────────────┐
+;* │							Class Documentation							   	  │
+;* └──────────────────────────────────────────────────────────────────────────────┘
+;@class 
+
+;+ ┌──────────────────────────────────────────────────────────────────────────────┐
+;+ │							Feature Section								   	  │
+;+ └──────────────────────────────────────────────────────────────────────────────┘
+;+ New features and enhancements
+
+;--- ┌──────────────────────────────────────────────────────────────────────────────┐
+;--- │							Section Divider								   		│
+;--- └──────────────────────────────────────────────────────────────────────────────┘
+;--- Separates major code sections
+
+;=== ┌──────────────────────────────────────────────────────────────────────────────┐
+;=== │							Important Section								    │
+;=== └──────────────────────────────────────────────────────────────────────────────┘
+;=== Highlights critical code sections
+
+;TODO ┌──────────────────────────────────────────────────────────────────────────────┐
+;TODO │							Pending Tasks									     │
+;TODO └──────────────────────────────────────────────────────────────────────────────┘
+;TODO List of tasks to be completed
+
+;FIXME ┌──────────────────────────────────────────────────────────────────────────────┐
+;FIXME │							Bug Fixes									      │
+;FIXME └──────────────────────────────────────────────────────────────────────────────┘
+;FIXME Required fixes and known issues
+
+;NOTE ┌──────────────────────────────────────────────────────────────────────────────┐
+;NOTE │							Important Notes								   		 │
+;NOTE └──────────────────────────────────────────────────────────────────────────────┘
+;NOTE Additional context and important information
+
+;HACK ┌──────────────────────────────────────────────────────────────────────────────┐
+;HACK │							Temporary Solutions							   		 │
+;HACK └──────────────────────────────────────────────────────────────────────────────┘
+;HACK Temporary workarounds that need proper implementation
+
+;// ┌──────────────────────────────────────────────────────────────────────────────┐
+;// │							Deprecated Section							   	   │
+;// └──────────────────────────────────────────────────────────────────────────────┘
+;// Deprecated code marked for removal
+
+;@method ┌──────────────────────────────────────────────────────────────────────────────┐
+;@method │							Method Documentation						   		│
+;@method └──────────────────────────────────────────────────────────────────────────────┘
+;@param {Type} name Description
+;@returns {Type} Description
+;@throws {Error} Description
+
+;@function ┌──────────────────────────────────────────────────────────────────────────────┐
+;@function │							Function Documentation						   	  │
+;@function └──────────────────────────────────────────────────────────────────────────────┘
+;@param {Type} name Description
+;@returns {Type} Description
+;@throws {Error} Description
+
+;@property ┌──────────────────────────────────────────────────────────────────────────────┐
+;@property │							Property Definitions						   	  │
+;@property └──────────────────────────────────────────────────────────────────────────────┘
+;@property {Type} name Description
+
 ; ; Shift+Ctrl+f
 ; +^f::convertbrand()
 
@@ -3207,15 +4830,16 @@ findtheglobal(){
 	arrNeedle := [n1, n2, n3]
 
 	Clip.SM()
-	Clip.BakClr(&cBak)
+	Clipboard.BackupAll(&cBak)
+	Clipboard.Clear()
 	Send(key.SelectAll key.copy)
 
-	Clip.Sleep()
+	Sleep(A_Delay)
 
 	theText := A_Clipboard
 
 	if A_Clipboard = '' {
-		Clip.Sleep(10)
+		Sleep(A_Delay/10)
 	}
 
 	; for each, value in arrNeedle {
@@ -3664,3 +5288,5 @@ class FillStr {
         return this[Width - StrLen(Str)] Str
     }
 }
+
+

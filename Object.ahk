@@ -1,5 +1,5 @@
 #Requires AutoHotkey v2.0+
-#Include <Includes\ObjectTypeExtensions>
+#Include <Includes\Extensions>
 
 /*
 	Github: https://github.com/Nich-Cebolla/AutoHotkey-LibV2/blob/main/Get.ahk

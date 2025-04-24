@@ -5622,6 +5622,45 @@ License: MIT
 class GuiResizer {
 ; class _GuiResizer {
 	static Last := ''
+	
+	/**
+	 * @description Initializes default properties for the resizer
+	 * This method sets up the default properties needed by the resizer
+	 */
+	InitializeProperties() {
+		; Set default properties
+		this.Properties := {
+			X: "number",
+			Y: "number",
+			W: "number",
+			H: "number",
+			XP: "number",
+			YP: "number",
+			WP: "number",
+			HP: "number",
+			MinX: "number",
+			MaxX: "number",
+			MinY: "number",
+			MaxY: "number",
+			MinW: "number",
+			MaxW: "number",
+			MinH: "number",
+			MaxH: "number",
+			Mode: "string",
+			Cleanup: "boolean",
+			AnchorIn: "boolean"
+		}
+		
+		; Initialize property values
+		for prop, type in this.Properties {
+			switch type {
+				case "number": this.%prop% := 0
+				case "boolean": this.%prop% := false
+				default: this.%prop% := ""
+			}
+		}
+	}
+	
 	/**
 		* @description - Creates a callback function to be used with
 		* `Gui.Prototype.OnEvent('Size', Callback)`. This function requires a bit of preparation. See

@@ -2089,7 +2089,7 @@ class UnshiftBenchmark {
 	static Run(iterations := 1000, arraySize := 100, elementsToAdd := 3) {
 		results := Map()
 		elements := template := []
-		trayNotify(Type(this) ' ' A_ThisFunc, 'Benchmark started.')
+		TrayTip(Type(this) ' ' A_ThisFunc, 'Benchmark started.')
 
 		; Setup test array template
 		Loop arraySize {

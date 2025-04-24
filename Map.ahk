@@ -1,4 +1,3 @@
-
 /*
 	Name: Map.ahk
 	Version 0.1 (05.09.23)

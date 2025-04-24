@@ -4729,141 +4729,141 @@ class Infos {
 *    - Owner: Owner window handle
 * @returns {String} The button clicked: "OK", "Cancel", "Yes", "No", "Retry", "Abort", or "Ignore"
 */
-MsgBox(params*) {
-	; Parse parameters based on MsgBox standard
-	text := "", title := "", options := "OKCancel", owner := "" ; Default to OKCancel
-	result := ""
+; MsgBox(params*) {
+; 	; Parse parameters based on MsgBox standard
+; 	text := "", title := "", options := "OKCancel", owner := "" ; Default to OKCancel
+; 	result := ""
 	
-	; Check if first parameter is text or options
-	if (params.Length >= 1) {
-		if (params[1] is Integer) || (InStr("OKCancel,YesNo,YesNoCancel,RetryCancel,AbortRetryIgnore", params[1])) {
-			options := params[1]
-		} else {
-			text := params[1]
-		}
-	}
+; 	; Check if first parameter is text or options
+; 	if (params.Length >= 1) {
+; 		if (params[1] is Integer) || (InStr("OKCancel,YesNo,YesNoCancel,RetryCancel,AbortRetryIgnore", params[1])) {
+; 			options := params[1]
+; 		} else {
+; 			text := params[1]
+; 		}
+; 	}
 	
-	; Check additional parameters
-	if (params.Length >= 2) {
-		if (options != "OKCancel") { ; Only use params[2] as text if explicit options given
-			text := params[2] 
-			if (params.Length >= 3)
-				title := params[3]
-		} else {
-			title := params[2]
-			if (params.Length >= 3)
-				options := params[3]
-		}
-	}
+; 	; Check additional parameters
+; 	if (params.Length >= 2) {
+; 		if (options != "OKCancel") { ; Only use params[2] as text if explicit options given
+; 			text := params[2] 
+; 			if (params.Length >= 3)
+; 				title := params[3]
+; 		} else {
+; 			title := params[2]
+; 			if (params.Length >= 3)
+; 				options := params[3]
+; 		}
+; 	}
 	
-	; Check for owner window
-	if (params.Length >= 4) {
-		owner := params[4]
-	}
+; 	; Check for owner window
+; 	if (params.Length >= 4) {
+; 		owner := params[4]
+; 	}
 
-	; Create GUI with Gui2 enhancements
-	mbGui := Gui("+AlwaysOnTop +Owner" owner)
-	mbGui.Title := title ? title : "Message"
+; 	; Create GUI with Gui2 enhancements
+; 	mbGui := Gui("+AlwaysOnTop +Owner" owner)
+; 	mbGui.Title := title ? title : "Message"
 	
-	; Apply Gui2 styling
-	mbGui.MakeFontNicer(10, GuiColors.VSCode.TextNormal)
+; 	; Apply Gui2 styling
+; 	mbGui.MakeFontNicer(10, StrReplace(GuiColors.VSCode.TextNormal, '#, 0x'))
 	
-	; Calculate text metrics
-	textWidth := 400 ; Default width
+; 	; Calculate text metrics
+; 	textWidth := 400 ; Default width
 	
-	; Calculate text dimensions based on content
-	lineCount := 1
+; 	; Calculate text dimensions based on content
+; 	lineCount := 1
 	
-	; Count actual newlines in text
-	if (InStr(text, "`n")) {
-		lineCount := StrSplit(text, "`n", "`r").Length
-	}
+; 	; Count actual newlines in text
+; 	if (InStr(text, "`n")) {
+; 		lineCount := StrSplit(text, "`n", "`r").Length
+; 	}
 	
-	; Estimate average character width (~8px per char at size 10)
-	avgCharWidth := 8
+; 	; Estimate average character width (~8px per char at size 10)
+; 	avgCharWidth := 8
 	
-	; Estimate if text will wrap
-	maxLineLength := 0
-	totalTextLength := StrLen(text)
+; 	; Estimate if text will wrap
+; 	maxLineLength := 0
+; 	totalTextLength := StrLen(text)
 	
-	; Get longest line
-	if (lineCount > 1) {
-		lines := StrSplit(text, "`n", "`r")
-		for line in lines {
-			maxLineLength := Max(maxLineLength, StrLen(line))
-		}
-	} else {
-		maxLineLength := totalTextLength
-	}
+; 	; Get longest line
+; 	if (lineCount > 1) {
+; 		lines := StrSplit(text, "`n", "`r")
+; 		for line in lines {
+; 			maxLineLength := Max(maxLineLength, StrLen(line))
+; 		}
+; 	} else {
+; 		maxLineLength := totalTextLength
+; 	}
 	
-	; Adjust width for very long text
-	if (maxLineLength > 50) {
-		textWidth := Min(800, 20 + maxLineLength * avgCharWidth)
-	}
+; 	; Adjust width for very long text
+; 	if (maxLineLength > 50) {
+; 		textWidth := Min(800, 20 + maxLineLength * avgCharWidth)
+; 	}
 	
-	; Estimate text height based on line count and wrap
-	estWrappedLines := Ceil((maxLineLength * avgCharWidth) / textWidth)
-	totalLines := Max(lineCount, estWrappedLines)
+; 	; Estimate text height based on line count and wrap
+; 	estWrappedLines := Ceil((maxLineLength * avgCharWidth) / textWidth)
+; 	totalLines := Max(lineCount, estWrappedLines)
 	
-	; Calculate edit box height (height per line ~20px at size 10)
-	lineHeight := 20
-	boxHeight := Max(60, totalLines * lineHeight)
+; 	; Calculate edit box height (height per line ~20px at size 10)
+; 	lineHeight := 20
+; 	boxHeight := Max(60, totalLines * lineHeight)
 	
-	; Add edit control for selectable text with calculated dimensions
-	label := mbGui.AddEdit("w" textWidth " h" boxHeight " ReadOnly -E0x200 Center", text)
+; 	; Add edit control for selectable text with calculated dimensions
+; 	label := mbGui.AddEdit("w" textWidth " h" boxHeight " ReadOnly -E0x200 Center", text)
 	
-	; Parse button options using ButtonRow helper class
-	buttons := ButtonRow.ParseButtons(options)
+; 	; Parse button options using ButtonRow helper class
+; 	buttons := ButtonRow.ParseButtons(options)
 	
-	; Use GuiButtonProperties to calculate button width based on text
-	buttonWidth := mbGui.SetButtonWidth(buttons)
-	spacing := 10
+; 	; Use GuiButtonProperties to calculate button width based on text
+; 	buttonWidth := mbGui.SetButtonWidth(buttons)
+; 	spacing := 10
 	
-	; Calculate total width needed for buttons
-	totalButtonWidth := (buttons.Length * buttonWidth) + ((buttons.Length - 1) * spacing)
-	mbWidth := Max(textWidth + 20, totalButtonWidth + 40)
+; 	; Calculate total width needed for buttons
+; 	totalButtonWidth := (buttons.Length * buttonWidth) + ((buttons.Length - 1) * spacing)
+; 	mbWidth := Max(textWidth + 20, totalButtonWidth + 40)
 	
-	; Position buttons below text
-	startX := (mbWidth - totalButtonWidth) / 2
-	label.GetPos(&lX, &lY, &lW, &lH)
-	startY := lY + lH + 10
+; 	; Position buttons below text
+; 	startX := (mbWidth - totalButtonWidth) / 2
+; 	label.GetPos(&lX, &lY, &lW, &lH)
+; 	startY := lY + lH + 10
 	
-	; Add buttons with click handlers
-	for index, buttonText in buttons {
-		x := startX + ((index - 1) * (buttonWidth + spacing))
-		btn := mbGui.AddButton(Format("x{1} y{2} w{3}", x, startY, buttonWidth), buttonText)
-		btn.OnEvent("Click", GuiClickHandler)
-	}
+; 	; Add buttons with click handlers
+; 	for index, buttonText in buttons {
+; 		x := startX + ((index - 1) * (buttonWidth + spacing))
+; 		btn := mbGui.AddButton(Format("x{1} y{2} w{3}", x, startY, buttonWidth), buttonText)
+; 		btn.OnEvent("Click", GuiClickHandler)
+; 	}
 
-	; Show GUI centered
-	mbGui.Show("w" mbWidth " AutoSize Center")
+; 	; Show GUI centered
+; 	mbGui.Show("w" mbWidth " AutoSize Center")
 	
-	; Register close event handler
-	mbGui.OnEvent("Close", (*) => (result := "Cancel"))
+; 	; Register close event handler
+; 	mbGui.OnEvent("Close", (*) => (result := "Cancel"))
 	
-	; Wait for result
-	while !result {
-		Sleep(10)
-		if !WinExist(mbGui.Hwnd) {
-			result := "Cancel"  ; Handle window closed via X button
-			break
-		}
-	}
+; 	; Wait for result
+; 	while !result {
+; 		Sleep(10)
+; 		if !WinExist(mbGui.Hwnd) {
+; 			result := "Cancel"  ; Handle window closed via X button
+; 			break
+; 		}
+; 	}
 
-	; Clean up
-	try mbGui.Destroy()
-	catch Error as e {
-		; Ignore errors if GUI is already destroyed
-		ErrorLogger.Log("MsgBox cleanup error (ignorable): " e.Message, false)
-	}
+; 	; Clean up
+; 	try mbGui.Destroy()
+; 	catch Error as e {
+; 		; Ignore errors if GUI is already destroyed
+; 		ErrorLogger.Log("MsgBox cleanup error (ignorable): " e.Message, false)
+; 	}
 	
-	return result
+; 	return result
 
-	GuiClickHandler(ctrl, *) {
-		result := ctrl.Text
-		mbGui.Hide()
-	}
-}
+; 	GuiClickHandler(ctrl, *) {
+; 		result := ctrl.Text
+; 		mbGui.Hide()
+; 	}
+; }
 
 ; /**
 ; * Enhanced MsgBox with return value tracking

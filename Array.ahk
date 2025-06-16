@@ -13,6 +13,7 @@
  ***********************************************************************/
 #Requires AutoHotkey v2.0+
 #SingleInstance Force
+#Include <Includes/Basic>
 /**
  * @example
 	Array.Slice(start:=1, end:=0, step:=1)  => Returns a section of the array from 'start' to 'end', 
@@ -91,6 +92,47 @@ Class Array2 {
 	static Push(v) {
 		arrObj := Array()
 		arrObj.Push(v)
+	}
+
+	/**
+	 * @method Print
+	 * @description Prints the array contents using the specified output method
+	 * @param {String} [method="infos"] - Output method: "infos", "outputdebug", "msgbox", or "tooltip"
+	 * @param {String} [title="Array2 Contents"] - Optional title for the output
+	 * @param {Boolean} [includeIndex=true] - Whether to include array indices
+	 * @returns {Array2} This instance for method chaining
+	 */
+	static Print(method := "infos", title := "Array2 Contents", includeIndex := true) {
+		msg := title "`n`n"
+		
+		; Build the message with array contents
+		Loop this.Length {
+			i := A_Index - 1  ; Zero-based index to match array access
+			v := this[i]
+			
+			if (includeIndex)
+				msg .= "[" i "] " v "`n"
+			else
+				msg .= v "`n"
+		}
+		
+		; Output based on selected method
+		switch (method) {
+			case "infos":
+				Infos(msg)
+			case "outputdebug":
+				OutputDebug(msg)
+			case "msgbox":
+				MsgBox(msg)
+			case "tooltip":
+				ToolTip(msg)
+				; Auto-clear tooltip after 5 seconds to avoid it staying on screen
+				SetTimer(() => ToolTip(), -5000)
+			default:
+				Infos(msg) ; Default to Infos if invalid method specified
+		}
+		
+		return this ; Return this for method chaining
 	}
 
 	/**
@@ -583,8 +625,9 @@ Class Array2 {
 		if !HasMethod(func)
 			throw ValueError("Find: func must be a function", -1)
 		for i, v in this {
-			if i < start
+			if i < start {
 				continue
+			}
 			if func(v) {
 				match := v
 				return i
@@ -601,8 +644,9 @@ Class Array2 {
 	 */
 	static Reverse() {
 		len := this.Length + 1, max := (len // 2), i := 0
-		while ++i <= max
+		while ++i <= max {
 			this.Swap(i, len - i)
+		}
 		return this
 	}
 
@@ -614,31 +658,59 @@ Class Array2 {
 	static Count(value) {
 		count := 0
 		if HasMethod(value) {
-			for _, v in this
-				if value(v?)
+			for _, v in this {
+				if value(v?) {
 					count++
+				}
+			}
 		} else
-			for _, v in this
-				if v == value
+			for _, v in this {
+				if v == value{
 					count++
+				}
+		}
 		return count
 	}
 
 	/**
-	 * Turns a nested array into a one-level array
-	 * @returns {Array}
+	 * Turns a nested array into a one-level array.
+	 * @param {Integer} depth Optional: The maximum recursion depth. Default is 1.
+	 * @returns {Array} A new flattened array
+	 * @throws {TypeError} If a Map is encountered
 	 * @example
 	 * [1,[2,[3]]].Flat() ; returns [1,2,3]
 	 */
-	static Flat() {
-		r := []
-		for v in this {
-			if Type(v) = "Array"
-				r.Extend(v.Flat())
-			else
-				r.Push(v)
+	static Flat(depth := 1) {
+		result := []
+		this._FlattenHelper(this, result, 1, depth)
+		return result
+	}
+
+	/**
+	 * @private
+	 * @description Helper function to recursively flatten arrays
+	 * @param {Any} item The item to process
+	 * @param {Array} target The result array
+	 * @param {Integer} currentDepth Current recursion depth
+	 * @param {Integer} maxDepth Maximum recursion depth
+	 */
+	_FlattenHelper(item, target, currentDepth, maxDepth) {
+		if (currentDepth <= maxDepth && IsArray(item)) {
+			for v in item {
+				this._FlattenHelper(v, target, currentDepth + 1, maxDepth)
+			}
+		} 
+		else if (currentDepth <= maxDepth && IsObject(item) && item.HasProp("Length") && HasMethod(item, "__Enum") && !(item is Map)) {
+			for v in item {
+				this._FlattenHelper(v, target, currentDepth + 1, maxDepth)
+			}
 		}
-		return this := r
+		else if (item is Map) {
+			throw TypeError("Flat: Map objects cannot be flattened", -1)
+		}
+		else {
+			target.Push(item)
+		}
 	}
 
 	/**
@@ -658,29 +730,64 @@ Class Array2 {
 		return this
 	}
 
-	/**
-	 * Converts array to string with custom delimiter
-	 * @param char Optional: delimiter character. Default is newline.
-	 * @returns {String}
-	 */
-	static _ArrayToString(char := '`n') {
-		str := ''
-		for value in this {
-			if A_Index = this.Length {
-				str .= value
-				break
-			}
-			str .= value char
-		}
-		return str
+	static Append(enums*) {
+		return this.Extend(enums*)
 	}
 
-	/**
-	 * Alias for _ArrayToString
-	 */
-	static ToString(char?) 	=> this._ArrayToString(char?)
-	static ToStr(char?) 	=> this._ArrayToString(char?)
-	static Stringify(char?) => this._ArrayToString(char?)
+	; /**
+	;  * Converts to string with custom delimiter
+	;  * @param char Optional: delimiter character. Default is newline.
+	;  * @returns {String}
+	;  */
+	; static _ToString(delim := "`n") {
+	; 	value := k := str := ''
+	; 	for k, value in this {
+	; 		; Use Any2 methods for type checking
+	; 		if ((IsObject(k) && IsArray(k)||IsMap(k)||IsClass(k)) && !IsString(k) && !IsNumber(k)) {
+	; 			; Try to convert object key to string
+	; 			if HasMethod(k, "ToString") {
+	; 				k := k.ToString()
+	; 			}
+	; 			; else {
+	; 			; 	k := "[Object]"
+	; 			; }
+	; 		}
+			
+	; 		if ((IsObject(value) && IsArray(value)||IsMap(value)||IsClass(value)) && !IsString(value) && !IsNumber(value)) {
+	; 			; Try to convert object value to string
+	; 			if HasMethod(value, "ToString") {
+	; 				value := value.ToString()
+	; 			}
+	; 			; else {
+	; 			; 	value := "[Object]"
+	; 			; }
+	; 		}
+			
+	; 		str .= k ' : ' value delim
+	; 	}
+
+	; 	str := RTrim(str, delim)
+
+	; 	return str
+	; }
+	
+	; static ToString(delim?) {
+	; 	textObject := this._ToString(delim?)
+	; 	; if IsNotString(textObject) || IsNotNumber(textObject) {
+	; 	; 	Infos('Failed to convert to string. `n' A_LastError)
+	; 	; }
+	; 	return textObject
+	; }
+
+	; /**
+	;  * Alias for _ToString
+	;  */
+	; static ToStr(delim?){
+	; 	return this._ToString(delim?)
+	; }
+	; static Stringify(delim?){
+	; 	return this._ToString(delim?)
+	; }
 
 	/**
 	 * Checks if array contains a value
@@ -701,24 +808,48 @@ Class Array2 {
 	 * @param valueToFind The value to search for
 	 * @returns {Any|False} The found value or False if not found
 	 */
-	static HasValue(valueToFind) => this._ArrayHasValue(valueToFind)
+	static HasValue(valueToFind) {
+		return this._ArrayHasValue(valueToFind)
+	}
+
+	/**
+	 * Checks if array contains a value matching a regex pattern
+	 * @param {String|RegEx} pattern - The regex pattern to match against array values
+	 * @returns {Any|False} The first matching value or False if no matches found
+	 * @example
+	 * arr := ["test123", "example", "hello"]
+	 * arr.HasValueRegEx("\d+")  ; Returns "test123" since it contains digits
+	 */
+	static HasValueRegEx(pattern) {
+		for i, v in this {
+			if IsString(v) && v ~= pattern {
+				return v
+			}
+		}
+		return false
+	}
 
 	/**
 	 * Safely push a value to array only if it doesn't exist
 	 * @param v The value to push
 	 * @throws {IndexError} If value already exists
 	 */
-	static safePush(v) {
-		if Type(v) = 'Array' {
-			for value in v {
-				if !this.HasValue(value) {
-					this.Push(value)
+	static safePush(obj*) {
+		k := value := ''
+		arrObj := []
+		if !IsSet(obj){
+			arrObj := this
+		}
+		for k, value in obj {
+			if IsArray(value) {
+				for v in value {
+					if !arrObj.HasValue(v) {
+						arrObj.Push(v)
+					}
 				}
 			}
 		}
-		if !this.HasValue(v) {
-			this.Push(v)
-		}
+		return arrObj
 	}
 
 	/**
@@ -742,7 +873,9 @@ Class Array2 {
 	 * @returns {Array}
 	 */
 
-	static generateRandom(indexes, variation := 7) => this.GenerateRandomArray(indexes, variation := 7)
+	static generateRandom(indexes, variation := 7) {
+		return	this.GenerateRandomArray(indexes, variation := 7)
+	}
 
 	/**
 	 * Generates a sequential array from 1 to indexes
@@ -810,19 +943,21 @@ Class Array2 {
 		Loop this.Length - 1 {
 			swaps := 0
 			for key, value in this {
-				if value = this[finishedIndex]
+				if value = this[finishedIndex] {
 					break
-				if value <= this[key + 1]
+				}
+				if value <= this[key + 1] {
 					continue
-
+				}
 				firstComp := this[key]
 				secondComp := this[key + 1]
 				this[key] := secondComp
 				this[key + 1] := firstComp
 				swaps++
 			}
-			if !swaps
+			if !swaps {
 				break
+			}
 			finishedIndex--
 		}
 		return this
@@ -840,10 +975,12 @@ Class Array2 {
 			NewMinInts := 0
 
 			for key, value in this {
-				if key < sortedIndex
+				if key < sortedIndex {
 					continue
-				if key = sortedIndex
+				}
+				if key = sortedIndex {
 					min := {key:key, value:value}
+				}
 				else if min.value > value {
 					min := {key:key, value:value}
 					NewMinInts++
@@ -868,8 +1005,9 @@ Class Array2 {
 	 */
 	static InsertionSort() {
 		for key, value in this {
-			if key = 1
+			if key = 1 {
 				continue
+			}
 			temp := value
 			prevIndex := 0
 			While key + prevIndex - 1 >= 1 && temp < this[key + prevIndex - 1] {
@@ -2243,61 +2381,3 @@ class UnshiftBenchmark {
 	}
 }
 
-/**
- * @description Process options of various types into a standardized array
- * @param {Any} options* Options of any type
- * @returns {Array} Standardized array of options
- */
-; static ProcessOptions(options*) {
-enumerateOptions(options*) {
-	processedOptions := []
-	
-	for option in options {
-		if (option = "")
-			continue
-			
-		switch Type(option) {
-			case "Array":
-				; Flatten arrays into the options list
-				for item in option
-					processedOptions.Push(item)
-			
-			case "Map":
-				; Convert maps to strings with key-value pairs
-				for key, value in option
-					processedOptions.Push(key ": " value)
-			
-			case "Object":
-				; Handle objects
-				if (option.HasOwnProp("__ToString") || HasMethod(option, "ToString"))
-					processedOptions.Push(String(option))
-				else {
-					; Get properties for selection
-					for propName in option.OwnProps() {
-						if !(propName ~= "^__")  ; Skip internal properties
-							processedOptions.Push(propName ": " option.%propName%)
-					}
-				}
-			
-			case "String":
-				; Check if it's a JSON string
-				if (option ~= "^\s*[\{\[]") {
-					try {
-						jsonObj := JSON.Parse(option)
-						return enumerateOptions(jsonObj)
-					} catch {
-						; Not valid JSON, treat as string
-						processedOptions.Push(option)
-					}
-				} else {
-					processedOptions.Push(option)
-				}
-			
-			default:
-				; For all other types, convert to string
-				processedOptions.Push(String(option))
-		}
-	}
-	
-	return processedOptions
-}

@@ -9,7 +9,10 @@
  ***********************************************************************/
 
 #Requires AutoHotkey v2.0+
+
 #Include <Includes\Basic>
+#Include <Extensions\Pipe>
+
 
 ;@region Detect Hidden
 /**
@@ -114,91 +117,6 @@ class DH {
 		return this
 	}
 }
-; /**
-;  * @class DH
-;  * @description Utility class for managing detection of hidden windows and text.
-;  * @version 1.0.0
-;  * @author OvercastBTC
-;  * @date 2025-04-23
-;  * @requires AutoHotkey v2.0+
-;  * @license MIT
-;  *
-;  * @example
-;  * ; Set both to true
-;  * DH()
-;  * ; Set both to false
-;  * DH(false)
-;  * ; Set individually
-;  * DH.Text(true)
-;  * DH.Windows(false)
-;  */
-; class DH {
-; 	#Requires AutoHotkey v2.0+
-
-; 	/**
-; 	 * @constructor
-; 	 * @param {Boolean} detect Whether to detect hidden elements (default: true)
-; 	 * @returns {Object} The current instance for method chaining
-; 	 */
-; 	__New(detect := true) {
-; 		DH.Set(detect)
-; 		return this
-; 	}
-
-; 	/**
-; 	 * @static
-; 	 * @description Static constructor alternative
-; 	 * @param {Boolean} detect Whether to detect hidden elements (default: true)
-; 	 */
-; 	static __New(detect := true) {
-; 		this.Set(detect)
-; 	}
-
-; 	/**
-; 	 * @static
-; 	 * @description Sets detection for both hidden windows and text
-; 	 * @param {Boolean} detect Whether to detect hidden elements
-; 	 * @returns {Object} The class for method chaining
-; 	 */
-; 	static Set(detect := true) {
-; 		this.Text(detect)
-; 		this.Windows(detect)
-; 		return this
-; 	}
-
-; 	/**
-; 	 * @static
-; 	 * @description Sets detection for hidden text
-; 	 * @param {Boolean} detect Whether to detect hidden text
-; 	 * @returns {Object} The class for method chaining
-; 	 */
-; 	static Text(detect := true) {
-; 		DetectHiddenText(detect)
-; 		return this
-; 	}
-
-; 	/**
-; 	 * @static
-; 	 * @description Sets detection for hidden windows
-; 	 * @param {Boolean} detect Whether to detect hidden windows
-; 	 * @returns {Object} The class for method chaining
-; 	 */
-; 	static Windows(detect := true) {
-; 		DetectHiddenWindows(detect)
-; 		return this
-; 	}
-
-; 	/**
-; 	 * @description Gets current detection state
-; 	 * @returns {Object} Object with Text and Windows properties
-; 	 */
-; 	static GetState() {
-; 		return {
-; 			Text: A_DetectHiddenText,
-; 			Windows: A_DetectHiddenWindows
-; 		}
-; 	}
-; }
 ; @endregion Detect Hidden
 ; ---------------------------------------------------------------------------
 ;@region class SM
@@ -525,186 +443,6 @@ class BISL {
 		return this
 	}
 }
-
-; ---------------------------------------------------------------------------
-; /**
-;  * @class BISL
-;  * @description Advanced utility class for managing BlockInput and SendLevel settings.
-;  * @version 1.1.0
-;  * @author OvercastBTC
-;  * @date 2025-04-23
-;  * @requires AutoHotkey v2.0+
-;  * @license MIT
-;  *
-;  * @example
-;  * ; Save current state and block input with sendlevel 1
-;  * state := BISL(1)
-;  * ; Restore previous settings
-;  * BISL.Restore(state)
-;  * ; Just change BlockInput
-;  * BISL.Block(true)
-;  */
-; class BISL {
-; 	#Requires AutoHotkey v2.0+
-
-; 	/**
-; 	 * @property {Object} DefaultSettings
-; 	 * @description Default settings for BlockInput and SendLevel
-; 	 */
-; 	static DefaultSettings := {
-; 		SendLevel: 0,
-; 		BlockInput: false
-; 	}
-
-; 	/**
-; 	 * @constructor
-; 	 * @param {Integer|Object} params SendLevel or settings object
-; 	 * @param {Boolean} block Whether to block input
-; 	 * @returns {Object} Previous settings before changes
-; 	 */
-; 	__New(params?, block?) {
-; 		return BISL.Apply(params?, block?)
-; 	}
-
-; 	/**
-; 	 * @static
-; 	 * @description Static constructor alternative
-; 	 * @param {Integer|Object} params SendLevel or settings object
-; 	 * @param {Boolean} block Whether to block input
-; 	 * @returns {Object} Previous settings before changes
-; 	 */
-; 	static __New(params?, block?) {
-; 		return this.Apply(params?, block?)
-; 	}
-
-; 	/**
-; 	 * @static
-; 	 * @description Applies BlockInput and SendLevel settings
-; 	 * @param {Integer|Object} params SendLevel or settings object
-; 	 * @param {Boolean} block Whether to block input
-; 	 * @returns {Object} Previous settings for later restoration
-; 	 */
-; 	static Apply(params?, block?) {
-; 		; Capture current settings
-; 		prevSettings := {
-; 			SendLevel: A_SendLevel,
-; 			BlockInput: false
-; 		}
-
-; 		; Handle number parameter as SendLevel
-; 		if (IsSet(params) && params is Integer) {
-; 			this.Level(params)
-			
-; 			; Handle optional block parameter when first param is a number
-; 			if (IsSet(block) && block is Integer) {
-; 				this.Block(!!block)
-; 			}
-			
-; 			return prevSettings
-; 		}
-
-; 		; Apply default settings if no params
-; 		if (!IsSet(params)) {
-; 			this.Level(this.DefaultSettings.SendLevel)
-; 			this.Block(this.DefaultSettings.BlockInput)
-; 			return prevSettings
-; 		}
-
-; 		; Apply settings from object
-; 		if (params is Object) {
-; 			; Support different property naming styles
-; 			if (params.HasOwnProp("SendLevel") || params.HasOwnProp("sl"))
-; 				this.Level(params.HasOwnProp("SendLevel") ? params.SendLevel : params.sl)
-			
-; 			if (params.HasOwnProp("BlockInput") || params.HasOwnProp("bi"))
-; 				this.Block(params.HasOwnProp("BlockInput") ? params.BlockInput : params.bi)
-; 		}
-
-; 		return prevSettings
-; 	}
-
-; 	/**
-; 	 * @static
-; 	 * @description Sets just the SendLevel
-; 	 * @param {Integer} level The SendLevel to set
-; 	 * @returns {Object} The class for method chaining
-; 	 */
-; 	static Level(level := 0) {
-; 		; Reset to zero first as recommended
-; 		SendLevel(0)
-		
-; 		; Apply the new level with safe value handling
-; 		if (IsInteger(level)) {
-; 			if (level < 0)
-; 				level := 0
-			
-; 			; Avoid going beyond 100 (AHK limit) by doubling if already at limit
-; 			if (level >= 100)
-; 				level := level + 1
-				
-; 			SendLevel(level)
-; 		}
-		
-; 		return this
-; 	}
-
-; 	/**
-; 	 * @static
-; 	 * @description Sets just the BlockInput state
-; 	 * @param {Boolean|Integer} block Whether to block input (true/false or 1/0)
-; 	 * @returns {Object} The class for method chaining
-; 	 */
-; 	static Block(block := true) {
-; 		block := !!block
-; 		BlockInput(block)
-; 		this.UpdateBlockState(block)
-; 		return this
-; 	}
-
-; 	/**
-; 	 * @static
-; 	 * @description Restores BlockInput and SendLevel from an object
-; 	 * @param {Object} settings Settings object to restore from
-; 	 * @returns {Object} The class for method chaining
-; 	 */
-; 	static Restore(settings) {
-; 		if (!IsSet(settings) || !IsObject(settings)) {
-; 			settings := this.DefaultSettings
-; 		}
-		
-; 		; Support different property naming styles
-; 		if (settings.HasOwnProp("SendLevel") || settings.HasOwnProp("sl"))
-; 			this.Level(settings.HasOwnProp("SendLevel") ? settings.SendLevel : settings.sl)
-		
-; 		if (settings.HasOwnProp("BlockInput") || settings.HasOwnProp("bi"))
-; 			this.Block(settings.HasOwnProp("BlockInput") ? settings.BlockInput : settings.bi)
-			
-; 		return this
-; 	}
-	
-; 	/**
-; 	 * @description Gets current BlockInput and SendLevel settings
-; 	 * @returns {Object} Object with current settings
-; 	 */
-; 	static GetState() {
-; 		static currentBlockState := false
-; 		return {
-; 			SendLevel: A_SendLevel,
-; 			BlockInput: currentBlockState
-; 		}
-; 	}
-		
-; 	/**
-; 	 * @static
-; 	 * @description Updates the tracked BlockInput state
-; 	 * @param {Boolean} state The new state
-; 	 * @returns {Void}
-; 	 */
-; 	static UpdateBlockState(state) {
-; 		static currentBlockState := false
-; 		currentBlockState := state
-; 	}
-; }
 ; @endregion BISL
 ; ---------------------------------------------------------------------------
 ; @region SM_BISL
@@ -1135,8 +873,9 @@ class Clip {
 	static CopyToClipboard() {
 		static WM_COPY := 0x0301
 		hCtl := this.hCtl()
-		if hCtl
+		if hCtl{
 			DllCall('SendMessage', 'Ptr', hCtl, 'UInt', WM_COPY, 'Ptr', 0, 'Ptr', 0)
+		}
 		this._LogUsage("CopyToClipboard", Map("hCtl", hCtl))
 	}
 
@@ -1274,8 +1013,8 @@ class Clip {
 		; 			Sleep(10)
 		; 		} until Clipboard.GetSequenceNumber != initialSeq
 		; 		Sleep(A_Delay)
-		; 		; Send(key.paste)
-		; 		Send(key.shiftinsert)
+		; 		; Send(keys.paste)
+		; 		Send(keys.shiftinsert)
 		; 		sent := true
 		; 		if (endChar != "")
 		; 			Send(endChar)
@@ -1304,7 +1043,9 @@ class Clip {
 		; No persistent resources, but included for standards.
 	}
 }
-
+; @endregion Clip
+; ----------------------------------------------------------------------------
+; @region Conversions
 ^!c:: ; Ctrl+Alt+C to convert to CSV
 {
 	csvData := Clipboard.ToCSV()
@@ -1332,7 +1073,24 @@ class Clip {
 	A_Clipboard := jsonData
 	MsgBox("CSV data converted to JSON format")
 }
-
+#HotIf !WinActive(VSCode.exe)
+^+r:: ; Ctrl+Shift+R to convert RTF to HTML
+{
+	rtfData := Clipboard._SetClipboardRTF(A_Clipboard)
+	MsgBox("RTF data converted to RTF format")
+}
+^+m:: ; Ctrl+Shift+M to convert Markdown to RTF
+{
+	mdtext := FormatConverter.MarkdownToRTF(A_Clipboard)
+	mdData := Clipboard._SetClipboardRTF(mdtext)
+	MsgBox("HTML data converted to RTF format")
+}
+#HotIf
+; ----------------------------------------------------------------------------
+; @endregion Format Conversion Hotkeys
+; ----------------------------------------------------------------------------
+; @region Clipboard Class
+; ----------------------------------------------------------------------------
 /**
  * @class Clipboard
  * @description Provides advanced clipboard manipulation and introspection methods for AHK v2.
@@ -1363,13 +1121,14 @@ class Clip {
  *   ; ... do something ...
  *   Clipboard.RestoreAll(backup)
  */
-;@region class Clipboard
+
 class Clipboard {
 
 	#Requires AutoHotkey v2.0+
 	static _logFile := A_ScriptDir "\clip_usage_log.json"
 	static _usageLog := []
 
+	; @region Open()
 	/**
 	 * @description Opens the clipboard with retry logic.
 	 * @param {Integer} maxAttempts Maximum number of attempts to open the clipboard.
@@ -1388,7 +1147,13 @@ class Clipboard {
 		}
 		throw OSError('Failed to open clipboard after ' maxAttempts ' attempts', -1)
 	}
-
+	; @endregion Open()
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; @region Clear()
 	/**
 	 * @description Empties the clipboard.
 	 * @throws {OSError} If the clipboard cannot be emptied.
@@ -1396,18 +1161,14 @@ class Clipboard {
 	 */
 	static Clear() {
 		return !!DllCall('User32.dll\EmptyClipboard')
-		; if !DllCall('User32.dll\EmptyClipboard') {
-		; 	loop {
-		; 		Sleep(A_Delay/10)
-		; 	} until this.IsNotBusy && (DllCall('User32.dll\EmptyClipboard') || A_Index ~= A_Delay || A_Clipboard = '')
-		; }
-		; else {
-		; 	throw OSError('Failed to empty clipboard', -1)
-		; }
-		; return true
-		; A_Clipboard := ''
 	}
-
+	; @endregion Clear()
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; @region Close()
 	/**
 	 * @description Closes the clipboard.
 	 * @returns {Boolean} True if successful.
@@ -1415,15 +1176,41 @@ class Clipboard {
 	static Close() {
 		return !!DllCall('User32.dll\CloseClipboard')
 	}
-
-	static _IsRTFContent(content) {
-		return FormatConverter.VerifyRTF(content).isRTF
-	}
-
+	; @endregion Close()
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; @region _IsHTMLContent
 	static _IsHTMLContent(content) {
+		; Simple HTML detection logic - check for common HTML tags
+		; return RegExMatch(content, "i)^\s*<(!DOCTYPE|html|head|body|div)")
 		return FormatConverter.VerifyHTML(content).isHTML
 	}
-
+	
+	; @endregion _IsHTMLContent
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; @region _IsRTFContent
+	static _IsRTFContent(content:=unset) {
+		!IsSet(content) ? contect := this : content
+		return FormatConverter.VerifyRTF(content).isRTF
+	}
+	; @endregion _IsRTFContent
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region _SetClipboardRTF()
+	/**
+	 * @description Set the clipboard content to RTF format.
+	 * @param rtfText 
+	 */
 	static _SetClipboardRTF(rtfText) {
 		; Register RTF format if needed
 		static CF_RTF := DllCall("RegisterClipboardFormat", "Str", "Rich Text Format", "UInt")
@@ -1443,16 +1230,147 @@ class Clipboard {
 		DllCall("SetClipboardData", "UInt", CF_RTF, "Ptr", hGlobal)
 		DllCall("CloseClipboard")
 		; this.Sleep()
+		return true
 	}
-
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	;@region ToRTF()
+	/**
+	 * @description Converts current clipboard content to RTF format using existing converters
+	 * @param {Boolean} standardize Whether to standardize existing RTF content
+	 * @param {Boolean} setClipboard Whether to set converted RTF back to clipboard
+	 * @param {String} sourceFormat Force a specific source format detection
+	 * @returns {String} RTF formatted text
+	 */
+	static ToRTF(standardize := true, setClipboard := true, sourceFormat := "") {
+		; Get current clipboard content and detect format
+		clipText := ""
+		detectedFormat := ""
+		
+		; Use enhanced format detection if no source format specified
+		if (!sourceFormat) {
+			detectedFormat := FormatConverter.DetectClipboardFormat()
+			
+			; Get content based on detected format using existing methods
+			switch (detectedFormat) {
+				case "rtf":
+					clipText := this.GetRTF()
+				case "html": 
+					clipText := this.GetHTML()
+				case "csv":
+					clipText := this.GetCSV()
+				case "tsv":
+					clipText := this.GetTSV()
+				case "unicode", "text":
+					clipText := this.GetUnicode()
+					; Re-analyze the text content for more specific format detection
+					if (clipText) {
+						detectedFormat := FormatConverter.DetectFormat(clipText, false)
+					}
+				default:
+					; Fallback to Unicode text
+					clipText := this.GetUnicode()
+					if (clipText) {
+						detectedFormat := FormatConverter.DetectFormat(clipText, false)
+					}
+			}
+		} else {
+			; Use forced source format
+			detectedFormat := sourceFormat
+			switch (sourceFormat) {
+				case "rtf":
+					clipText := this.GetRTF()
+				case "html":
+					clipText := this.GetHTML()
+				case "csv":
+					clipText := this.GetCSV()
+				case "tsv":
+					clipText := this.GetTSV()
+				default:
+					clipText := this.GetUnicode()
+			}
+		}
+		
+		if (!clipText) {
+			return ""
+		}
+		
+		; Convert based on detected format using existing converters
+		rtfContent := ""
+		switch (detectedFormat) {
+			case "rtf":
+				rtfContent := standardize ? FormatConverter.RTFtoRTF(clipText, true) : clipText
+			case "html":
+				rtfContent := FormatConverter.HTMLToRTF(clipText)
+			case "markdown":
+				rtfContent := FormatConverter.MarkdownToRTF(clipText)
+			case "csv", "tsv":
+				; Convert structured data to RTF using existing method
+				rtfContent := FormatConverter.toRTF(clipText)
+			default:
+				; Plain text or unknown format
+				rtfContent := FormatConverter.toRTF(clipText)
+		}
+		
+		; Set back to clipboard if requested using existing method
+		if (setClipboard && rtfContent) {
+			this.Set.RTF(rtfContent)
+		}
+		
+		this._LogUsage("ToRTF", Map(
+			"standardize", standardize, 
+			"setClipboard", setClipboard,
+			"sourceFormat", detectedFormat
+		), rtfContent)
+		
+		return rtfContent
+	}
+	; @endregion ToRTF()
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; @region winclipSetRTF()
+	; static winclipSetRTF(rtfText) {
+	; 	wClip := WinClip()
+	; 	if (this._IsRTFContent(rtfText)) {
+	; 		wClip.SetRTF(rtfText)
+	; 	} else {
+	; 		throw OSError("Invalid RTF content", -1)
+	; 	}
+	; }
+	; @endregion winclipSetRTF()
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; @region SetRTF()
+	static SetRTF(rtfText) {
+		; return this.winclipSetRTF(rtfText)
+		return this._SetClipboardRTF(rtfText)
+	}
+	; @endregion SetRTF()
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; -----------------------------------------------------------------------------
+	; @region BackupAndClearClipboard()
 	/**
 	 * @description Backup the entire clipboard using ClipboardAll()
 	 * @returns {ClipboardAll} The backup of the clipboard.
 	 */
 	static BackupAndClearClipboard(&backup?) {
-		backup := this.BackupAll()
+		backup := this.Backup()
 		this.Clear()
 		return backup
+	}
+
+	/**
+	 * @description {helper method} Backup and clear the clipboard.
+	 * @returns {ClipboardAll} The backup of the clipboard from BackupAndClearClipboard()
+	 */
+	static BackupAndClear(&backup?) {
+		return this.BackupAndClearClipboard(&backup?)
 	}
 
 	;@region Send()
@@ -1467,56 +1385,51 @@ class Clipboard {
 
 	static Send(input?, endChar := '', isClipReverted := true, untilRevert := 500, delay := A_Delay) {
 
-		cPrev := pClip := prevClip := ''
-		cRev := revClip := isClipReverted
-		tmRev := untilRevert
-		eChr := endChar
-		content := input
+		prevClip := ''
 
 		ReadyToRestore := false
 		GroupAdd('CtrlV', 'ahk_exe EXCEL.exe')
 		GroupAdd('CtrlV', 'ahk_exe VISIO.exe')
 		GroupAdd('CtrlV', 'ahk_exe OUTLOOK.exe') ;? maybe?
 
-		; (!IsSet(input)) ? input := this : input
 		if (!IsSet(input)){
 			input := this
 		}
 
 		; Handle backup and clear first
 		if (isClipReverted){
-			prevClip := this.BackupAndClearClipboard()
+			prevClip := this.BackupAndClear()
 		}
-
+		input._IsRTFContent()
 		; Process input based on type
-		content := input
-		if (this._IsRTFContent(content)) {
-			verifiedRTF := FormatConverter.IsRTF(content, true)
+		if (this._IsRTFContent(input)) {
+			; verifiedRTF := FormatConverter.IsRTF(input, true)
 			; infos(verifiedRTF)
-			this._SetClipboardRTF(verifiedRTF endChar)
+			; this._SetClipboardRTF(verifiedRTF endChar)
+			this._SetClipboardRTF(input endChar)
 		}
 		else {
 			; Regular content handling
-			A_Clipboard := content endChar
+			A_Clipboard := input endChar
 			; this.Wait()
 		}
 		; Wait for clipboard and send
-		Sleep(A_Delay)
+		; Sleep(A_Delay)
 
-		Send(key.paste)
+		Send(keys.paste)
 		Sleep(A_Delay)
 		readyToRestore := true
 		; If WinActive('ahk_group CtrlV') {
 		; 	; Send('{sc1D Down}{sc2F}{sc1D Up}')          ;! {Control}{v}
-		; 	Send(key.paste)
+		; 	Send(keys.paste)
 		; 	Sleep(A_Delay)
 		; 	readyToRestore := true
 		; }
 		; else {
 		; 	; Send('{sc2A Down}{sc152}{sc2A Up}')         ;! {Shift}{Insert}
-		; 	Send(key.shiftinsert)
+		; 	Send(keys.shiftinsert)
 		; 	Sleep(A_Delay)
-		; 	readyToRestore := true
+		; 	readyToRestore := true°
 		; }
 		
 		Sleep(A_Delay)
@@ -1528,82 +1441,8 @@ class Clipboard {
 			this.Wait()
 		}
 
-		return content
+		return input
 	}
-	; static Send(input?, endChar := '', revertClip := true, untilRevert := 500) {
-	; 	; Infos('[' A_ThisFunc ']')
-	; 	seqNumInitial := verifiedRTF := unset
-
-	; 	ReadyToRestore := false
-	; 	GroupAdd('CtrlV', 'ahk_exe EXCEL.exe')
-	; 	GroupAdd('CtrlV', 'ahk_exe VISIO.exe')
-	; 	GroupAdd('CtrlV', 'ahk_exe OUTLOOK.exe')
-
-	; 	if (!IsSet(input)){
-	; 		input := this
-	; 	}
-
-	; 	; Handle backup and clear first
-	; 	if (revertClip){
-	; 		this.BackupAll(&cBak)
-	; 	}
-
-	; 	this.Clear()
-
-	; 	seqNumInitial := this.Get.SequenceNumber
-
-	; 	loop {
-	; 		Sleep(A_Delay/10)
-	; 	} until this.IsNotBusy || A_Index ~= A_Delay
-
-	; 	; Infos('IsRTF: ' (FormatConverter.VerifyRTF(input)).isRTF)
-		
-	; 	; Process input based on type
-	; 	if (FormatConverter.VerifyRTF(input)) {
-	; 		; Infos('IsRTF')
-	; 		verifiedRTF := FormatConverter.IsRTF(input, true)
-	; 		this.Set.RTF(verifiedRTF endChar)  ; Updated to include endChar as a parameter
-	; 	}
-	; 	else {
-	; 		; Regular content handling
-	; 		A_Clipboard := input endChar
-	; 		; this.Set.Plain(input endChar)
-	; 	}
-	; 	loop {
-	; 		; Wait for clipboard and send
-	; 		Sleep(A_Delay/10)
-	; 	} until seqNumInitial != this.Get.SequenceNumber && this.IsNotBusy
-
-	; 	If WinActive('ahk_group CtrlV') {
-	; 		; Send('{sc1D Down}{sc2F}{sc1D Up}')          ;! {Control}{v}
-	; 		Send(key.paste)          ;! {Control}{v}
-	; 		Sleep(A_Delay)
-	; 		readyToRestore := true
-	; 	}
-	;     else {
-	; 		; Send('{sc2A Down}{sc152}{sc2A Up}')         ;! {Shift}{Insert}
-	; 		Send(key.shiftinsert)         ;! {Shift}{Insert}
-	; 		Sleep(A_Delay)
-	; 		readyToRestore := true
-	;     }
-		
-	; 	loop {
-	; 		Sleep(A_Delay)
-	; 	} until readyToRestore || A_Index = 500
-
-	; 	seqNumRestore := this.Get.SequenceNumber
-
-	; 	; Restore clipboard if needed
-	; 	if (revertClip && readyToRestore) {
-	; 		this.ClearClipboard()
-	; 		A_Clipboard := cBak
-	; 		loop {
-	; 			Sleep(A_Delay/10)
-	; 		} until seqNumRestore != this.Get.SequenceNumber && this.IsNotBusy
-	; 	}
-
-	; 	return input
-	; }
 
 	/**
 	 * @property {Boolean} IsEmpty
@@ -1699,8 +1538,9 @@ class Clipboard {
 	 *   isAvailable := Clipboard.IsFormatAvailable(13)
 	 */
 	static IsFormatAvailable(fmt) {
-		if !IsSet(fmt) || !fmt
+		if !IsSet(fmt) || !fmt {
 			throw ValueError("Format identifier required", -1)
+		}
 		return !!DllCall("User32.dll\IsClipboardFormatAvailable", "UInt", fmt, "Int")
 	}
 
@@ -1714,16 +1554,19 @@ class Clipboard {
 	 *   buf := Clipboard.GetBuffer(13)
 	 */
 	static GetBuffer(fmt) {
-		if !IsSet(fmt) || !fmt
+		if !IsSet(fmt) || !fmt {
 			throw ValueError("Format identifier required", -1)
+		}
 		this.Open()
 		try {
 			local hData := DllCall("User32.dll\GetClipboardData", "UInt", fmt, "Ptr")
-			if !hData
+			if !hData {
 				return ""
+			}
 			local pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "Ptr")
-			if !pData
+			if !pData {
 				return ""
+			}
 			local size := DllCall("Kernel32.dll\GlobalSize", "Ptr", hData, "UPtr")
 			local buf := Buffer(size)
 			DllCall("RtlMoveMemory", "Ptr", buf, "Ptr", pData, "UPtr", size)
@@ -1800,6 +1643,17 @@ class Clipboard {
 	}
 
 	/**
+	 * @method Backup
+	 * @description {helper method} Backup the entire clipboard using ClipboardAll().
+	 * @returns {ClipboardAll} Clipboard backup object from BackupAll()
+	 * @example
+	 *   backup := Clipboard.BackupAll()
+	 */
+	static Backup(&cBak?) {
+		return this.BackupAll(&cBak?)
+	}
+
+	/**
 	 * @method RestoreAll
 	 * @description Restore the clipboard from a ClipboardAll() backup.
 	 * @param {ClipboardAll} clipBackup The backup object to restore.
@@ -1809,10 +1663,24 @@ class Clipboard {
 	 *   Clipboard.RestoreAll(backup)
 	 */
 	static RestoreAll(clipBackup) {
-		if !IsSet(clipBackup)
+		if !IsSet(clipBackup){
 			throw ValueError("ClipboardAll backup required", -1)
+		}
 		A_Clipboard := clipBackup
 		return true
+	}
+
+	/**
+	 * @method Restore()
+	 * @description Restores the clipboard from a backup.
+	 * @param {ClipboardAll} clipBackup The backup object to restore.
+	 * @returns {Boolean} True if restored.
+	 * @throws {ValueError} If backup is not provided.
+	 * @example
+	 *   Clipboard.Restore(backup)
+	 */
+	static Restore(clipBackup) {
+		return this.RestoreAll(clipBackup)
 	}
 
 	/**
@@ -1967,7 +1835,7 @@ class Clipboard {
 	 * @returns {String} RTF clipboard content or empty string.
 	 */
 	static GetRTF() {
-		format := this.RegisterFormat.RTF()
+		format := this.RegisterFormat.RTF
 		return this.GetContent(format)
 	}
 
@@ -1976,7 +1844,7 @@ class Clipboard {
 	 * @returns {String} HTML clipboard content or empty string.
 	 */
 	static GetHTML() {
-		format := this.RegisterFormat.HTML()
+		format := this.RegisterFormat.HTML
 		return this.GetContent(format)
 	}
 
@@ -1985,7 +1853,7 @@ class Clipboard {
 	 * @returns {String} CSV clipboard content or empty string.
 	 */
 	static GetCSV() {
-		format := this.RegisterFormat.CSV()
+		format := this.RegisterFormat.CSV
 		return this.GetContent(format)
 	}
 
@@ -2089,7 +1957,7 @@ class Clipboard {
 		this._LogUsage("CSVToJSON", Map(), json)
 		return json
 	}
-	;@region class Clipboard.Get
+	;@region class Get
 	/**
 	 * @class Clipboard.Get
 	 * @description Provides grouped accessors for clipboard state and sequence number.
@@ -2162,13 +2030,14 @@ class Clipboard {
 				text := StrGet(pData, "UTF-8")
 				DllCall('Kernel32.dll\GlobalUnlock', 'Ptr', hData)
 				return text
-			} finally {
+			}
+			finally {
 				Clipboard.Close()
 			}
 		}
 	}
 	; ---------------------------------------------------------------------------
-	;@endregion class Clipboard.Get
+	;@endregion class Get
 	; ---------------------------------------------------------------------------
 
 	; For backward compatibility, keep static methods on Clipboard itself
@@ -2180,147 +2049,267 @@ class Clipboard {
 	 */
 	static SetContent(content, format) => Clipboard.Set.Content(content, format)
 
-	;@region Clipboard.Set
+	;@region class Set
 	/**
 	 * @class Clipboard.Set
 	 * @description Provides methods to set clipboard content in various formats and raw format.
+	 * @version 1.1.0
+	 * @author OvercastBTC
+	 * @date 2025-06-11
+	 * @requires AutoHotkey v2.0+
 	 */
 	class Set {
 		/**
-		 * @description Sets clipboard content with specified format.
-		 * @param {String} content Content to set in the clipboard.
-		 * @param {Integer} format Clipboard format identifier.
-		 * @throws {OSError} If clipboard operations fail.
+		 * @description Sets clipboard content with specified format using proper error handling
+		 * @param {String} content Content to set in the clipboard
+		 * @param {Integer} format Clipboard format identifier
+		 * @throws {OSError} If clipboard operations fail
+		 * @returns {Boolean} True if successful
 		 */
 		static Content(content, format) {
-			size := StrPut(content, "UTF-8")
-			hGlobal := DllCall('Kernel32.dll\GlobalAlloc', 'UInt', 0x42, 'UPtr', size)
-			if !hGlobal {
-				throw OSError('Failed to allocate memory', -1)
+			if (!IsString(content)) {
+				throw TypeError("Content must be a string", -1)
 			}
-			try {
-				pGlobal := DllCall('Kernel32.dll\GlobalLock', 'Ptr', hGlobal, 'Ptr')
-				if !pGlobal {
-					throw OSError('Failed to lock memory', -1)
-				}
-				StrPut(content, pGlobal, "UTF-8")
-				DllCall('Kernel32.dll\GlobalUnlock', 'Ptr', hGlobal)
-				if !DllCall('User32.dll\SetClipboardData', 'UInt', format, 'Ptr', hGlobal) {
-					throw OSError('Failed to set clipboard data', -1)
-				}
-				hGlobal := 0 ; Ownership transferred to system
-			} catch Any as err {
-				if hGlobal {
-					DllCall('Kernel32.dll\GlobalFree', 'Ptr', hGlobal)
-				}
-				throw err
+			
+			if (!IsInteger(format) || format <= 0) {
+				throw ValueError("Format must be a positive integer", -1)
 			}
-		}
 
-		/**
-		 * @description Sets RTF content to the clipboard.
-		 * @param {String} rtfText RTF formatted text.
-		 * @throws {OSError} If clipboard operations fail.
-		 */
-		static RTF(rtfText, endChar:= '') {
-			format := Clipboard.RegisterFormat.RTF
-			Clipboard.Open()
-			if A_Clipboard != '' {
-				try Clipboard.Clear()
-			}
-			Clipboard.SetContent(rtfText endChar, format)
+			; Ensure clipboard is closed first
 			try {
-			} finally {
 				Clipboard.Close()
+			} catch {
+				; Ignore if already closed
 			}
-		}
 
-		/**
-		 * @description Sets plain text to the clipboard.
-		 * @param {String} text Plain text.
-		 * @throws {OSError} If clipboard operations fail.
-		 */
-		static Plain(text) {
-			static CF_TEXT := 1
-			Clipboard.Open()
-			try {
-				Clipboard.Clear()
-				Clipboard.SetContent(text, CF_TEXT)
-			} finally {
-				Clipboard.Close()
+			; Wait for clipboard to be available
+			if (!Clipboard.Wait(1000)) {
+				throw OSError("Clipboard is busy and cannot be accessed", -1)
 			}
-		}
 
-		/**
-		 * @description Sets Unicode text to the clipboard.
-		 * @param {String} text Unicode text.
-		 * @throws {OSError} If clipboard operations fail.
-		 */
-		static Unicode(text) {
-			static CF_UNICODETEXT := 13
-			Clipboard.Open()
+			; Open with retry logic
+			if (!Clipboard.Open(5, 100)) {
+				throw OSError("Failed to open clipboard for writing", -1)
+			}
+
 			try {
+				; Clear existing content
 				Clipboard.Clear()
-				size := StrPut(text, "UTF-16")
-				hGlobal := DllCall('Kernel32.dll\GlobalAlloc', 'UInt', 0x42, 'UPtr', size * 2)
-				if !hGlobal
-					throw OSError('Failed to allocate memory', -1)
+				
+				; Allocate and set content
+				size := StrPut(content, "UTF-8")
+				hGlobal := DllCall('Kernel32.dll\GlobalAlloc', 'UInt', 0x42, 'UPtr', size, 'Ptr')
+				
+				if (!hGlobal) {
+					throw OSError('Failed to allocate memory for clipboard', -1)
+				}
+
 				try {
 					pGlobal := DllCall('Kernel32.dll\GlobalLock', 'Ptr', hGlobal, 'Ptr')
-					if !pGlobal
-						throw OSError('Failed to lock memory', -1)
-					StrPut(text, pGlobal, "UTF-16")
+					if (!pGlobal) {
+						throw OSError('Failed to lock memory for clipboard', -1)
+					}
+
+					StrPut(content, pGlobal, "UTF-8")
 					DllCall('Kernel32.dll\GlobalUnlock', 'Ptr', hGlobal)
-					if !DllCall('User32.dll\SetClipboardData', 'UInt', CF_UNICODETEXT, 'Ptr', hGlobal)
+
+					if (!DllCall('User32.dll\SetClipboardData', 'UInt', format, 'Ptr', hGlobal)) {
 						throw OSError('Failed to set clipboard data', -1)
-					hGlobal := 0
+					}
+
+					hGlobal := 0 ; Ownership transferred to system
+					return true
+
 				} catch as err {
-					if hGlobal
+					if (hGlobal) {
 						DllCall('Kernel32.dll\GlobalFree', 'Ptr', hGlobal)
+					}
 					throw err
 				}
+
 			} finally {
 				Clipboard.Close()
 			}
 		}
 
 		/**
-		 * @description Sets HTML content to the clipboard.
-		 * @param {String} htmlText HTML formatted text.
-		 * @throws {OSError} If clipboard operations fail.
+		 * @description Sets RTF content to the clipboard with enhanced error handling
+		 * @param {String} rtfText RTF formatted text
+		 * @param {String} endChar Optional character(s) to append
+		 * @throws {OSError} If clipboard operations fail
+		 * @throws {TypeError} If rtfText is not a string
+		 * @returns {Boolean} True if successful
+		 */
+		static RTF(rtfText, endChar := '') {
+			; Validate input
+			if (!IsString(rtfText)) {
+				throw TypeError("RTF text must be a string", -1)
+			}
+
+			if (!IsString(endChar)) {
+				throw TypeError("End character must be a string", -1)
+			}
+
+			; Validate RTF content
+			if (!Clipboard._IsRTFContent(rtfText)) {
+				throw ValueError("Invalid RTF content provided", -1)
+			}
+
+			; Get RTF format identifier
+			static rtfFormat := 0
+			if (!rtfFormat) {
+				rtfFormat := Clipboard.RegisterFormat.RTF
+				if (!rtfFormat) {
+					throw OSError("Failed to register RTF clipboard format", -1)
+				}
+			}
+
+			; Prepare content
+			finalContent := rtfText . endChar
+
+			; Set content using the robust Content method
+			try {
+				return this.Content(finalContent, rtfFormat)
+			} catch as err {
+				throw OSError("Failed to set RTF content: " . err.Message, -1)
+			}
+		}
+
+		/**
+		 * @description Sets plain text to the clipboard with error handling
+		 * @param {String} text Plain text
+		 * @throws {OSError} If clipboard operations fail
+		 * @throws {TypeError} If text is not a string
+		 * @returns {Boolean} True if successful
+		 */
+		static Plain(text) {
+			if (!IsString(text)) {
+				throw TypeError("Text must be a string", -1)
+			}
+
+			static CF_TEXT := 1
+			return this.Content(text, CF_TEXT)
+		}
+
+		/**
+		 * @description Sets Unicode text to the clipboard with enhanced handling
+		 * @param {String} text Unicode text
+		 * @throws {OSError} If clipboard operations fail
+		 * @throws {TypeError} If text is not a string
+		 * @returns {Boolean} True if successful
+		 */
+		static Unicode(text) {
+			if (!IsString(text)) {
+				throw TypeError("Text must be a string", -1)
+			}
+
+			static CF_UNICODETEXT := 13
+
+			; Ensure clipboard is available
+			try {
+				Clipboard.Close()
+			} catch {
+				; Ignore if already closed
+			}
+
+			if (!Clipboard.Wait(1000)) {
+				throw OSError("Clipboard is busy and cannot be accessed", -1)
+			}
+
+			if (!Clipboard.Open(5, 100)) {
+				throw OSError("Failed to open clipboard for Unicode text", -1)
+			}
+
+			try {
+				Clipboard.Clear()
+				
+				; Calculate size for UTF-16
+				size := StrPut(text, "UTF-16")
+				hGlobal := DllCall('Kernel32.dll\GlobalAlloc', 'UInt', 0x42, 'UPtr', size * 2, 'Ptr')
+				
+				if (!hGlobal) {
+					throw OSError('Failed to allocate memory for Unicode text', -1)
+				}
+
+				try {
+					pGlobal := DllCall('Kernel32.dll\GlobalLock', 'Ptr', hGlobal, 'Ptr')
+					if (!pGlobal) {
+						throw OSError('Failed to lock memory for Unicode text', -1)
+					}
+
+					StrPut(text, pGlobal, "UTF-16")
+					DllCall('Kernel32.dll\GlobalUnlock', 'Ptr', hGlobal)
+
+					if (!DllCall('User32.dll\SetClipboardData', 'UInt', CF_UNICODETEXT, 'Ptr', hGlobal)) {
+						throw OSError('Failed to set Unicode clipboard data', -1)
+					}
+
+					hGlobal := 0 ; Ownership transferred
+					return true
+
+				} catch as err {
+					if (hGlobal) {
+						DllCall('Kernel32.dll\GlobalFree', 'Ptr', hGlobal)
+					}
+					throw err
+				}
+
+			} finally {
+				Clipboard.Close()
+			}
+		}
+
+		/**
+		 * @description Sets HTML content to the clipboard
+		 * @param {String} htmlText HTML formatted text
+		 * @throws {OSError} If clipboard operations fail
+		 * @throws {TypeError} If htmlText is not a string
+		 * @returns {Boolean} True if successful
 		 */
 		static HTML(htmlText) {
-			format := Clipboard.RegisterFormat.HTML()
-			Clipboard.Open()
-			try {
-				Clipboard.Clear()
-				Clipboard.SetContent(htmlText, format)
-			} finally {
-				Clipboard.Close()
+			if (!IsString(htmlText)) {
+				throw TypeError("HTML text must be a string", -1)
 			}
+
+			static htmlFormat := 0
+			if (!htmlFormat) {
+				htmlFormat := Clipboard.RegisterFormat.HTML
+				if (!htmlFormat) {
+					throw OSError("Failed to register HTML clipboard format", -1)
+				}
+			}
+
+			return this.Content(htmlText, htmlFormat)
 		}
 
 		/**
-		 * @description Sets CSV content to the clipboard.
-		 * @param {String} csvText CSV formatted text.
-		 * @throws {OSError} If clipboard operations fail.
+		 * @description Sets CSV content to the clipboard
+		 * @param {String} csvText CSV formatted text
+		 * @throws {OSError} If clipboard operations fail
+		 * @throws {TypeError} If csvText is not a string
+		 * @returns {Boolean} True if successful
 		 */
 		static CSV(csvText) {
-			format := Clipboard.RegisterFormat.CSV()
-			Clipboard.Open()
-			try {
-				Clipboard.Clear()
-				Clipboard.SetContent(csvText, format)
-			} finally {
-				Clipboard.Close()
+			if (!IsString(csvText)) {
+				throw TypeError("CSV text must be a string", -1)
 			}
+
+			static csvFormat := 0
+			if (!csvFormat) {
+				csvFormat := Clipboard.RegisterFormat.CSV
+				if (!csvFormat) {
+					throw OSError("Failed to register CSV clipboard format", -1)
+				}
+			}
+
+			return this.Content(csvText, csvFormat)
 		}
 	}
 	; ---------------------------------------------------------------------------
-	;@endregion class Clipboard.Set
+	;@endregion class Set
 	; ---------------------------------------------------------------------------
 
-	;@region Clipboard.RegisterFormat
+	;@region RegisterFormat
 	/**
 	 * @class Clipboard.RegisterFormat
 	 * @description Provides methods to register custom clipboard formats.
@@ -2375,8 +2364,13 @@ class Clipboard {
 			return DllCall('User32.dll\RegisterClipboardFormat', 'Str', name, 'UInt')
 		}
 	}
-	;@endregion Clipboard.RegisterFormat
-
+	;@endregion RegisterFormat
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	;@region Logging
 	/**
 	 * @private
 	 * @description Log Clip method usage to JSON file and optionally display.
@@ -2400,6 +2394,12 @@ class Clipboard {
 		; Optionally display log (ErrorLogGui or MsgBox)
 		; ErrorLogGui.Show(this._usageLog) ; Uncomment if ErrorLogGui is available
 	}
+	; @endregion Logging
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
 	/**
 	 * @method __Delete
 	 * @description Clean up resources when object is destroyed.

@@ -23,9 +23,11 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 ;
-#Requires AutoHotkey v2.0
 
 class cJSON {
+	
+	#Requires AutoHotkey v2.0+
+	
 	static version := "2.0.0"
 
 	static BoolsAsInts {
@@ -44,6 +46,8 @@ class cJSON {
 	}
 
 	static fnCastString := Format.Bind('{}')
+
+	static arrOffset := [30, 91, 116, 249, 392, 522, 643, 755, 779, 800, 933, 1094, 1248, 1449, 1823, 1956, 2007, 2258, 2264, 2307, 2313, 2356, 2362, 2485, 2539, 2815, 2865, 2892, 2970, 3151, 3234, 3632, 4567, 4606, 4633, 4643, 4682, 4716, 4723, 4766, 4779, 4794, 5835, 6392, 6564]
 
 	static __New() {
 		this.lib := this._LoadLib()
@@ -110,28 +114,36 @@ class cJSON {
 		. "QFZedxHrQo1EUIGgACF2BhAEHxx3M3AI0DPbA3UA6wYDQBByXFwkBA+3kgdwIeg9kATp0NCOASADD4sTjUoCiUALZokC6b0gAf8YBum2kwG7FwL/"
 		. "BgiDxAx1MDHAieURwRoQi1XwGhCLTQAIic5mwekEgyTmD+BxtuRwJGaJAHRF8ECD+AR1DOS4sS+AIBGLCo1AcQKJMmaLoAFmBIkxQAUDg+gBczDk"
 		. "g8QQYSByYg=="
-		if (32 != A_PtrSize * 8)
+		if (32 != A_PtrSize * 8){
 			throw Error("$Name does not support " (A_PtrSize * 8) " bit AHK, please run using 32 bit AHK")
+		}
 		; MCL standalone loader https://github.com/G33kDude/MCLib.ahk
 		; Copyright (c) 2023 G33kDude, CloakerSmoker (CC-BY-4.0)
 		; https://creativecommons.org/licenses/by/4.0/
-		if IsSet(lib)
+		if IsSet(lib){
 			return lib
-		if !DllCall("Crypt32\CryptStringToBinary", "Str", codeB64, "UInt", 0, "UInt", 1, "Ptr", buf := Buffer(3955), "UInt*", buf.Size, "Ptr", 0, "Ptr", 0, "UInt")
+		}
+		if !DllCall("Crypt32\CryptStringToBinary", "Str", codeB64, "UInt", 0, "UInt", 1, "Ptr", buf := Buffer(3955), "UInt*", buf.Size, "Ptr", 0, "Ptr", 0, "UInt"){
 			throw Error("Failed to convert MCL b64 to binary")
-		if (r := DllCall("ntdll\RtlDecompressBuffer", "UShort", 0x102, "Ptr", code, "UInt", 6624, "Ptr", buf, "UInt", buf.Size, "UInt*", &DecompressedSize := 0, "UInt"))
+		}
+		if (r := DllCall("ntdll\RtlDecompressBuffer", "UShort", 0x102, "Ptr", code, "UInt", 6624, "Ptr", buf, "UInt", buf.Size, "UInt*", &DecompressedSize := 0, "UInt")){
 			throw Error("Error calling RtlDecompressBuffer",, Format("0x{:08x}", r))
+		}
 		for import, offset in Map(['OleAut32', 'SysFreeString'], 5340) {
-			if !(hDll := DllCall("GetModuleHandle", "Str", import[1], "Ptr"))
+			if !(hDll := DllCall("GetModuleHandle", "Str", import[1], "Ptr")){
 				throw Error("Could not load dll " import[1] ": " OsError().Message)
-			if !(pFunction := DllCall("GetProcAddress", "Ptr", hDll, "AStr", import[2], "Ptr"))
+			}
+			if !(pFunction := DllCall("GetProcAddress", "Ptr", hDll, "AStr", import[2], "Ptr")){
 				throw Error("Could not find function " import[2] " from " import[1] ".dll: " OsError().Message)
+			}
 			NumPut("Ptr", pFunction, code, offset)
 		}
-		for offset in [30, 91, 116, 249, 392, 522, 643, 755, 779, 800, 933, 1094, 1248, 1449, 1823, 1956, 2007, 2258, 2264, 2307, 2313, 2356, 2362, 2485, 2539, 2815, 2865, 2892, 2970, 3151, 3234, 3632, 4567, 4606, 4633, 4643, 4682, 4716, 4723, 4766, 4779, 4794, 5835, 6392, 6564]
+		for offset in this.arrOffset {
 			NumPut("Ptr", NumGet(code, offset, "Ptr") + code.Ptr, code, offset)
-		if !DllCall("VirtualProtect", "Ptr", code, "Ptr", code.Size, "UInt", 0x40, "UInt*", &old := 0, "UInt")
+		}
+		if !DllCall("VirtualProtect", "Ptr", code, "Ptr", code.Size, "UInt", 0x40, "UInt*", &old := 0, "UInt"){
 			throw Error("Failed to mark MCL memory as executable")
+		}
 		lib := {
 			code: code,
 		dumps: (this, pObjIn, ppszString, pcchString, bPretty, iLevel) =>
@@ -229,26 +241,33 @@ class cJSON {
 		. "1Ok1gwIJhAI3jwKBAhB0AOkMkAGAPbIA+v//AHQLjUgC4CBbXncR6zyNREiBoAAhdgZQBB8Udy0xCRcfBAJ1AATrBBESD7cL6E4dgXW8sZDAAvBr"
 		. "CkyNiEkCTAEbAemlYAE58BfpneQB3hkTHcQgBeknkOAcGDHATI0MHbNhbKAmCEmJyghmwekgB+IPZkcAD74UE2ZFiRQIQUj/UCD4BHXhKrgQdgDx"
 		. "BRXgB2ZFQIsUQUyNWTAIGhBmRIkRNAboAXMC3VIjGMM="
-		if (64 != A_PtrSize * 8)
+		if (64 != A_PtrSize * 8){
 			throw Error("$Name does not support " (A_PtrSize * 8) " bit AHK, please run using 64 bit AHK")
+		}
 		; MCL standalone loader https://github.com/G33kDude/MCLib.ahk
 		; Copyright (c) 2023 G33kDude, CloakerSmoker (CC-BY-4.0)
 		; https://creativecommons.org/licenses/by/4.0/
-		if IsSet(lib)
+		if IsSet(lib){
 			return lib
-		if !DllCall("Crypt32\CryptStringToBinary", "Str", codeB64, "UInt", 0, "UInt", 1, "Ptr", buf := Buffer(3980), "UInt*", buf.Size, "Ptr", 0, "Ptr", 0, "UInt")
+		}
+		if !DllCall("Crypt32\CryptStringToBinary", "Str", codeB64, "UInt", 0, "UInt", 1, "Ptr", buf := Buffer(3980), "UInt*", buf.Size, "Ptr", 0, "Ptr", 0, "UInt"){
 			throw Error("Failed to convert MCL b64 to binary")
-		if (r := DllCall("ntdll\RtlDecompressBuffer", "UShort", 0x102, "Ptr", code, "UInt", 6960, "Ptr", buf, "UInt", buf.Size, "UInt*", &DecompressedSize := 0, "UInt"))
+		}
+		if (r := DllCall("ntdll\RtlDecompressBuffer", "UShort", 0x102, "Ptr", code, "UInt", 6960, "Ptr", buf, "UInt", buf.Size, "UInt*", &DecompressedSize := 0, "UInt")){
 			throw Error("Error calling RtlDecompressBuffer",, Format("0x{:08x}", r))
+		}
 		for import, offset in Map(['OleAut32', 'SysFreeString'], 5744) {
-			if !(hDll := DllCall("GetModuleHandle", "Str", import[1], "Ptr"))
+			if !(hDll := DllCall("GetModuleHandle", "Str", import[1], "Ptr")){
 				throw Error("Could not load dll " import[1] ": " OsError().Message)
-			if !(pFunction := DllCall("GetProcAddress", "Ptr", hDll, "AStr", import[2], "Ptr"))
+			}
+			if !(pFunction := DllCall("GetProcAddress", "Ptr", hDll, "AStr", import[2], "Ptr")){
 				throw Error("Could not find function " import[2] " from " import[1] ".dll: " OsError().Message)
+			}
 			NumPut("Ptr", pFunction, code, offset)
 		}
-		if !DllCall("VirtualProtect", "Ptr", code, "Ptr", code.Size, "UInt", 0x40, "UInt*", &old := 0, "UInt")
+		if !DllCall("VirtualProtect", "Ptr", code, "Ptr", code.Size, "UInt", 0x40, "UInt*", &old := 0, "UInt"){
 			throw Error("Failed to mark MCL memory as executable")
+		}
 		lib := {
 			code: code,
 		dumps: (this, pObjIn, ppszString, pcchString, bPretty, iLevel) =>
@@ -299,12 +318,35 @@ class cJSON {
 		return A_PtrSize = 4 ? this._LoadLib32Bit() : this._LoadLib64Bit()
 	}
 
-	static Stringify(obj, pretty := 0) => this.Dump(obj, pretty := 0)
+	/**
+	 * @brief Dumps an object to a JSON string
+	 * @param obj The object to dump
+	 * @param pretty If 1, the output will be pretty-printed
+	 * @return The JSON string
+	 * @throws Error if the input is not an object
+	 * @throws Error if the dump fails
+	 * @throws Error if the JSON string cannot be converted to a string
+	 * @throws Error if the JSON string cannot be converted to a BSTR
+	 * @alias Stringify(obj, pretty)
+	 */
+	static Stringify(obj, pretty := 1) {
+		return this.Dump(obj, pretty := 1)
+	}
 
-	static Dump(obj, pretty := 0)
-	{
-		if !IsObject(obj)
+	/**
+	 * @brief Dumps an object to a JSON string
+	 * @param obj The object to dump
+	 * @param pretty If 1, the output will be pretty-printed
+	 * @return The JSON string
+	 * @throws Error if the input is not an object
+	 * @throws Error if the dump fails
+	 * @throws Error if the JSON string cannot be converted to a string
+	 * @throws Error if the JSON string cannot be converted to a BSTR
+	 */
+	static Dump(obj, pretty := 1) {
+		if !IsObject(obj){
 			throw Error("Input must be object")
+		}
 		size := 0
 		this.lib.dumps(ObjPtr(obj), 0, &size, !!pretty, 0)
 		buf := Buffer(size*5 + 2, 0)
@@ -314,8 +356,35 @@ class cJSON {
 		return StrGet(buf, "UTF-16")
 	}
 
-	static Parse(json) => this.Load(json)
+	/**
+	 * @brief Parses a JSON string into an object
+	 * @param json The JSON string to Parse
+	 * @return The parsed object
+	 * @throws Error if the input is not a valid JSON string
+	 * @throws Error if the JSON string cannot be converted to a BSTR
+	 * @throws Error if the JSON string cannot be converted to a COM object
+	 * @throws Error if the JSON string cannot be converted to a variant
+	 * @throws Error if the JSON string cannot be converted to a pointer
+	 * @throws Error if the JSON string cannot be converted to a buffer
+	 * @throws Error if the JSON string cannot be converted to a COM object
+	 * @alias Load(json)
+	 */
+	static Parse(json) {
+		return this.Load(json)
+	}
 
+	/**
+	 * @brief Parses a JSON string into an object
+	 * @param json The JSON string to Parse
+	 * @return The parsed object
+	 * @throws Error if the input is not a valid JSON string
+	 * @throws Error if the JSON string cannot be converted to a BSTR
+	 * @throws Error if the JSON string cannot be converted to a COM object
+	 * @throws Error if the JSON string cannot be converted to a variant
+	 * @throws Error if the JSON string cannot be converted to a pointer
+	 * @throws Error if the JSON string cannot be converted to a buffer
+	 * @throws Error if the JSON string cannot be converted to a COM object
+	 */
 	static Load(json) {
 		_json := " " json ; Prefix with a space to provide room for BSTR prefixes
 		pJson := Buffer(A_PtrSize)
@@ -323,13 +392,13 @@ class cJSON {
 
 		pResult := Buffer(24)
 
-		/*
+		; /* ;? Enabled 2025.06.09 @ 1715 (OC - 2025.06.09)
 		if r := this.lib.loads(pJson, pResult) {
 			throw Error("Failed to parse JSON (" r ")", -1
 			, Format("Unexpected character at position {}: '{}'"
 			, (NumGet(pJson, 'UPtr') - StrPtr(_json)) // 2, Chr(NumGet(NumGet(pJson, 'UPtr'), 'Short'))))
 		}
-		*/
+		; */
 		
 		result := ComValue(0x400C, pResult.Ptr)[] ; VT_BYREF | VT_VARIANT
 		if IsObject(result)

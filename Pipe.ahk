@@ -148,11 +148,12 @@ class DelayManager {
      */
     static Delay {
         get {
-            now := A_TickCount
-            if (now - this._lastUpdate > this._interval) {
-                this.Recalculate()
-            }
-            return this._delay
+            ; now := A_TickCount
+            ; if (now - this._lastUpdate > this._interval) {
+            ;     this.Recalculate()
+            ; }
+            ; return this._delay
+			return 400
         }
     }
 
@@ -162,7 +163,7 @@ class DelayManager {
      */
     static Interval {
         get => this._interval
-        set => this._interval := value
+        ; set => this._interval := value
     }
 
 	/**
@@ -203,7 +204,7 @@ class DelayManager {
 	 * @example
 	 * delay := DelayManager.GetDelayTime('query', 5, 1000)
 	 */
-	static GetDelayTime(method := 'query', samples := 5, iterations := 1000) {
+	static GetDelayTime(method := 'combined', samples := 5, iterations := 1000) {
 		
 		local delays := []
 		local delay := 0
@@ -254,8 +255,8 @@ class DelayManager {
      */
     static Recalculate() {
         try {
-            this._delay := this.getdelayTime()
-        } catch as err {
+            this._delay := this.GetDelayTime()
+        } catch Error as err {
             this._delay := 50
         }
         this._lastUpdate := A_TickCount
@@ -268,8 +269,9 @@ class DelayManager {
      * @returns {DelayManager} This instance for method chaining.
      */
     static SetInterval(ms) {
-        if !IsSet(ms) || ms < 100
+        if (!IsSet(ms) || ms < 100) {
             throw ValueError("Interval must be >= 100 ms", -1)
+		}
         this._interval := ms
         return this
     }

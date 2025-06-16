@@ -324,8 +324,9 @@ class Map2 {
 
 	static SafeSet(key, value) {
 		MapObj := this
-        if this.HasKey(key)
+        if this.HasKey(key){
             throw IndexError("Map already has key: " key)
+		}
         MapObj.Set(key, value)
         return this
     }
@@ -425,22 +426,246 @@ class Map2 {
 	}
 	; static Choose(keyName) => this._ChooseMap(keyName)
 	; ---------------------------------------------------------------------------
-	static _MapToString(delim := ", ") {
-		value := k := str := ''
-		for k, value in this {
-			; if k = mapObj.Length {
-			; 	str .= value
-			; 	break
-			; }
-			str .= k ' : ' value delim
-		}
-		; return str
-		return RTrim(str, delim)
-	}
-	static ToString(delim?) => this._MapToString(delim?)
 	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region MapToString(delim := "`n")
+	/**
+	 * @description Converts a Map to string representation with custom delimiter
+	 * @param {String} [delim="`n"] Optional delimiter character. Default is newline
+	 * @returns {String} String representation of the map
+	 * @throws {Error} If conversion fails
+	 * @example
+	 * myMap := Map("key1", "value1", "key2", "value2")
+	 * str := myMap.MapToString()  ; "key1 : value1`nkey2 : value2"
+	 * str2 := myMap.MapToString("|")  ; "key1 : value1|key2 : value2"
+	 */
+	static MapToString(delim := "`n") {
+		visitedMaps := 0
+		v := k := str := ''
+		count := this.Count()
+		if (count == 0) {
+			return ""
+		}
+		; Initialize visited maps tracking on first call
+		if (visitedMaps == 0) {
+			visitedMaps := Map()
+		}
+		
+		; Check for circular references
+		visitedMaps[ObjPtr(this)] := true
+		
+		; When processing nested maps:
+		if (IsMap(value) && !visitedMaps.Has(ObjPtr(value))) {
+			; Safe to process
+		} else if (IsMap(value)) {
+			value := "[Circular]"
+		}
+		; For large maps, pre-allocate capacity
+		VarSetStrCapacity(&str, count * 50)  ; Estimate average entry length
+		
+		; Rest of implementation
+		for k, v in this {
+			; Use Any2 methods for type checking
+			if ((IsObject(k) && IsArray(k)||IsMap(k)||IsClass(k)) && !IsString(k) && !IsNumber(k)) {
+				; Try to convert object key to string
+				if HasMethod(k, "ToString") {
+					k := k.ToString()
+				}
+			}
+			
+			if ((IsObject(v) && IsArray(v)||IsMap(v)||IsClass(v)) && !IsString(v) && !IsNumber(v)) {
+				; Try to convert object value to string
+				if HasMethod(v, "ToString") {
+					v := v.ToString()
+				}
+			}
+			
+			str .= k ' : ' v delim
+		}
+	
+		str := RTrim(str, delim)
+	
+		this := str
 
-	static _MapHasValue(valueToFind) {
+		; Clear local variables to help GC (optional, not strictly necessary in AHK v2)
+		visitedMaps := str := k := v := count := unset
+
+		return this
+	}
+	; @endregion MapToString(delim := "`n")
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region ToString(delim?)
+	/**
+	 * @description Primary string conversion method. Wrapper for MapToString
+	 * @param {String} [delim="`n"] Optional delimiter character
+	 * @returns {String} String representation of the map
+	 * @throws {Error} If conversion fails
+	 * @example
+	 * myMap := Map("key1", "value1", "key2", "value2")
+	 * str := myMap.ToString()  ; "key1 : value1`nkey2 : value2"
+	 */
+	static ToString(delim?) {
+		objText := this.MapToString(delim?)
+		return objText
+	}
+	; @endregion ToString(delim?)
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region ToStr(delim?)
+	/**
+	 * @description Alias for MapToString - shorter name version
+	 * @param {String} [delim="`n"] Optional delimiter character
+	 * @returns {String} String representation of the map
+	 * @example
+	 * myMap := Map("key1", "value1", "key2", "value2")
+	 * str := myMap.ToStr()  ; "key1 : value1`nkey2 : value2" 
+	 */
+	static ToStr(delim?){
+		objText := this.MapToString(delim?)
+		return objText
+	}
+	; @endregion ToStr(delim?)
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region Stringify(delim?)
+	/**
+	 * @description Alias for MapToString - matches JavaScript convention
+	 * @param {String} [delim="`n"] Optional delimiter character
+	 * @returns {String} String representation of the map
+	 * @example
+	 * myMap := Map("key1", "value1", "key2", "value2")
+	 * str := myMap.Stringify()  ; "key1 : value1`nkey2 : value2"
+	 */
+	static Stringify(delim?){
+		objText := this.MapToString(delim?)
+		return objText
+	}
+	; @endregion Stringify(delim?)
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region ToJSON()
+	/**
+	 * @description Converts map to JSON string representation
+	 * @param {Integer} [indent=0] Optional indentation spaces (0 for no formatting)
+	 * @returns {String} JSON string representation of the map
+	 * @throws {Error} If JSON conversion fails
+	 * @example
+	 * myMap := Map("key1", "value1", "key2", 42, "key3", true)
+	 * json := myMap.ToJSON()  ; '{"key1":"value1","key2":42,"key3":true}'
+	 * prettyJson := myMap.ToJSON(2)  ; Formatted with 2-space indentation
+	 */
+	static ToJSON(indent := 0) {
+		jsonObj := {}
+		libJSON := 'cJSON'
+		
+		; Convert Map to standard object for JSON serialization
+		for k, v in this {
+			; Convert keys to string (JSON keys must be strings)
+			keyStr := IsString(k) ? k : String(k)
+			
+			; Process values
+			if (IsObject(v)) {
+				if (HasMethod(v, "ToJSON")) {
+					; Use object's own ToJSON method if available
+					jsonObj.%keyStr% := %libJSON%.Parse(v.ToJSON())
+				} 
+				else if (IsMap(v)) {
+					; Recursively convert nested maps
+					nestedObj := {}
+					for nk, nv in v {
+						nestedObj.%nk% := nv
+					}
+					jsonObj.%keyStr% := nestedObj
+				}
+				else if (IsArray(v)) {
+					; Arrays can be directly used
+					jsonObj.%keyStr% := v
+				}
+				else {
+					; Fall back to string representation for other objects
+					try {
+						jsonObj.%keyStr% := v.ToString()
+					} catch {
+						jsonObj.%keyStr% := "[Object]"
+					}
+				}
+			}
+			else {
+				; Direct assignment for primitive types
+				jsonObj.%keyStr% := v
+			}
+		}
+		
+		; Use JSON library to stringify with proper formatting
+		if (indent > 0) {
+			return %libJSON%.Stringify(jsonObj, indent)
+		} else {
+			return %libJSON%.Stringify(jsonObj)
+		}
+	}
+	; @endregion ToJSON()
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region FromJSON(jsonString)
+	/**
+	 * @description Creates a map from JSON string
+	 * @param {String} jsonString Valid JSON string to parse
+	 * @returns {Map} New map populated with data from JSON
+	 * @throws {Error} If JSON parsing fails
+	 * @example
+	 * jsonStr := '{"name":"John","age":30,"active":true}'
+	 * myMap := Map2.FromJSON(jsonStr)
+	 */
+	static FromJSON(jsonString) {
+		; Parse JSON string to object
+		try {
+			obj := JSON.Parse(jsonString)
+		} catch Error as e {
+			throw ValueError("Invalid JSON format: " e.Message, -1)
+		}
+		
+		; Convert object to Map
+		resultMap := Map()
+		
+		; Process object properties
+		for key, value in obj.OwnProps() {
+			if IsObject(value) {
+				if IsArray(value) {
+					; Keep arrays as arrays
+					resultMap[key] := value
+				} else {
+					; Convert nested objects to maps
+					nestedMap := Map()
+					for nKey, nValue in value.OwnProps() {
+						nestedMap[nKey] := nValue
+					}
+					resultMap[key] := nestedMap
+				}
+			} else {
+				; Direct assignment for primitive values
+				resultMap[key] := value
+			}
+		}
+		
+		return resultMap
+	}
+	; @endregion FromJSON(jsonString)
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region MapHasValue(valueToFind)
+	/**
+	 * @description Checks if the specified value exists in the map.
+	 * @param valueToFind The value to search for in the map.
+	 * @returns {Boolean} True if the value exists, otherwise false.
+	 */
+	static MapHasValue(valueToFind) {
         for k, value in this {
             if (value = valueToFind) {
                 return value
@@ -450,26 +675,62 @@ class Map2 {
 	}
 
 	static HasValue(valueToFind) {
-		return this._MapHasValue(valueToFind)
+		return this.MapHasValue(valueToFind)
 	}
 	HasValue(valueToFind) {
-		return Map2._MapHasValue(valueToFind)
+		return Map2.MapHasValue(valueToFind)
 	}
-
-	static _MapHaskey(keyToFind) {
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region HasKey(findKey)
+	/**
+	 * @type Static
+	 * @description Checks if the specified key exists in the map.
+	 *
+	 * @param findKey The key to search for in the map.
+	 * @returns {Boolean} True if the key exists, otherwise false.
+	 */
+	/**
+	 * 
+	 */
+	static HasKey(findKey) {
+		return this._MapHaskey(findKey)
+	}
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	/**
+	 * @type Non-static
+	 * @description Checks if the specified key exists in the map.
+	 *
+	 * @param findKey The key to search for in the map.
+	 * @returns {Boolean} True if the key exists, otherwise false.
+	 */
+	HasKey(findKey) {
+		return Map2._MapHaskey(findKey)
+	}
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region _MapHasKey(findKey)
+	/**
+	 * @type Non-static
+	 * @description Checks if the specified key exists in the map.
+	 */
+	static _MapHaskey(findKey) {
 		for k, value in this {
-			if (k = keyToFind){
+			if (k = findKey){
 				return k
 			}
 		}
 		return false
 	}
-	static HasKey(keyToFind) {
-		return this._MapHaskey(keyToFind)
-	}
-	HasKey(keyToFind) {
-		return Map2._MapHaskey(keyToFind)
-	}
+	; @endregion HasKey(findKey)
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region GetKeys()
 	static GetKeys() {
 		keys := []
 		for k, _ in this {
@@ -477,7 +738,11 @@ class Map2 {
 		}
 		return keys
 	}
-	
+	; @endregion GetKeys()
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region GetValues()
 	static GetValues() {
 		values := []
 		for _, value in this {
@@ -485,8 +750,109 @@ class Map2 {
 		}
 		return values
 	}
-	
+	; @endregion GetValues()
 	; ---------------------------------------------------------------------------
+	/**
+	 * @description Converts a Map to an Array or handles various inputs to produce arrays
+	 * @param {...Any} [inputs] Optional inputs to convert (defaults to this instance)
+	 * @returns {Array} An array containing the converted elements
+	 * @throws {TypeError} If input cannot be processed
+	 * @example
+	 * ; Basic instance conversion
+	 * myMap := Map("a", 1, "b", 2)
+	 * arr := myMap.ToArray()  ; Returns ["a", 1, "b", 2]
+	 * 
+	 * ; Static conversion
+	 * arr := Map2.ToArray(myMap)  ; Same result
+	 * 
+	 * ; Converting multiple objects
+	 * arr := Map2.ToArray(myMap, [3, 4], "text")  ; Complex conversion
+	 */
+	; @region ToArray(obj?)
+	static ToArray(obj?) {
+		; Call the more comprehensive MapToArray method for consistency
+		return this.ToArray(IsSet(obj) ? obj : unset)
+	}
+	; @endregion ToArray(obj?)
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region MapToArray(inputs*)
+	/**
+	 * @description Converts a Map to an Array (legacy method)
+	 * @param {Map|Object} [obj] Optional map to convert; defaults to this instance
+	 * @returns {Array} An array containing alternating keys and values
+	 * @throws {TypeError} If input cannot be enumerated
+	 */
+	static MapToArray(inputs*) {
+		; If no inputs, convert this object
+		if (inputs.Length == 0) {
+			; Default conversion for maps
+			arrObj := []
+			for k, v in this {
+				arrObj.Push(k, v)
+			}
+			return this := arrObj
+		}
+		
+		result := []
+		
+		; Process each input
+		for input in inputs {
+			; Handle different types
+			if IsMap(input) {
+				; Convert map to alternating key/value elements
+				for k, v in input {
+					result.Push(k, v)
+				}
+			} 
+			else if IsObject(input) && HasMethod(input, "__Enum") {
+				; Handle general enumerable objects
+				if HasMethod(input, "ToArray") {
+					; Use object's own ToArray method if available
+					result.Push(input.ToArray()*)
+				} 
+				else {
+					; Default handling for enumerable objects
+					for item in input {
+						result.Push(item)
+					}
+				}
+			}
+			else if IsArray(input) {
+				; Arrays can be directly added
+				result.Push(input*)
+			}
+			else if Type(input) == "String" {
+				; Split strings by newlines (default) or specified separator
+				strings := StrSplit(input, "`n", "`r")
+				result.Push(strings*)
+			}
+			else {
+				; Non-collection values are added directly
+				result.Push(input)
+			}
+		}
+		
+		return result
+	}
+	; @endregion MapToArray(inputs*)
+
+	; /**
+	;  * Static method to convert the current object into a native Map object.
+	;  * Iterates over all key-value pairs in the current object and sets them in a new Map.
+	;  * Replaces the current object with the new Map instance.
+	;  *
+	;  * @returns {Map} The new Map instance containing all key-value pairs from the original object.
+	;  */
+	; static __Set() {
+	; 	objMap := Map()
+	; 	for k, v in this {
+	; 		objMap.Set(k, v)
+	; 	}
+	; 	return this := objMap
+	; }
+	
 }
 
 ; ====== Map with Dot Notation Support ======
@@ -505,15 +871,20 @@ class DotMap extends Map {
         super.__New()
         
         if IsSet(init) {
-            if TypeChecker.IsObject(init) {
-                for key, value in init.OwnProps()
+            if IsObject(init) {
+                for key, value in init.OwnProps() {
                     this[key] := value
-            } else if TypeChecker.IsArray(init) {
-                Loop init.Length // 2
+				}
+            }
+			else if IsArray(init) {
+                Loop init.Length // 2{
                     this[init[A_Index*2-1]] := init[A_Index*2]
-            } else if TypeChecker.IsMap(init) {
-                for key, value in init
+				}
+            }
+			else if IsMap(init) {
+                for key, value in init {
                     this[key] := value
+				}
             }
         }
     }
@@ -527,7 +898,7 @@ class DotMap extends Map {
 		objMap := Map()
 		if this.Has(key) {
 			objMap := this[key]
-			if TypeChecker.IsObject(objMap) {
+			if IsObject(objMap) {
 				return objMap
 			} else {
 				return objMap
@@ -545,13 +916,13 @@ class DotMap extends Map {
 		objMap := Map()
 		if this.Has(key) {
 			objMap := this[key]
-			if TypeChecker.IsObject(objMap) {
+			if IsObject(objMap) {
 				objMap := objMap.__Set(key, value)
 				return objMap
-			} else if TypeChecker.IsArray(objMap) {
+			} else if IsArray(objMap) {
 				objMap := objMap.__Set(key, value)
 				return objMap
-			} else if TypeChecker.IsMap(objMap) {
+			} else if IsMap(objMap) {
 				objMap := objMap.__Set(key, value)
 				return objMap
 			}

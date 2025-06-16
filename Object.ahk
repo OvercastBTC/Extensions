@@ -232,13 +232,81 @@ class Get {
 ; Object.Prototype.DefineProp("ToArray", 	{Call: (this) => Object2.ToArray(this)})
 ; Object.Prototype.DefineProp("ToMap", 	{Call: (this) => Object2.ToMap(this)})
 
-class Object2 extends Object {
+; Set Integer prototype
+; Integer2.InitPrototype()
+; class Integer2 {
+; 	static InitPrototype() {
+; 		; Set Integer.Prototype's base to this class
+; 		ObjSetBase(Integer.Prototype, this)
+; 	}
+
+; 	static __New() {
+; 		; Add all methods to Integer prototype
+; 		for methodName in this.OwnProps() {
+; 			if methodName != "__New" && methodName != "InitPrototype" && HasMethod(this, methodName) {
+; 				; Check if method already exists
+; 				if HasProp(Integer.Prototype, methodName) {
+; 					; Skip if method exists
+; 					continue  
+; 					; Or override:
+; 					; Integer.Prototype.DeleteProp(methodName)
+; 				}
+				
+; 				; Add method to prototype using Object.DefineProp
+; 				func := this.%methodName%
+; 				Integer.Prototype.DefineProp(methodName, {
+; 					Call: this.%methodName%
+; 				})
+; 			}
+; 		}
+; 	}
+; 	/**
+; 	 * Converts to string with custom delimiter
+; 	 * @param char Optional: delimiter character. Default is newline.
+; 	 * @returns {String}
+; 	 */
+; 	static _ToString(delim := "`n") {
+; 		value := k := str := ''
+; 		for k, value in this {
+; 			If IsObject(k) || IsObject(value) {
+; 				k := k.ToString()
+; 				value := value.ToString()
+; 			}
+; 			str .= k ' : ' value delim
+; 		}
+
+; 		str := RTrim(str, delim)
+
+; 		return str
+; 	}
+; 	static ToString(delim?) {
+; 		textObject := this._ToString(delim?)
+; 		if IsNotString(textObject){
+; 			return Infos('Failed to convert to string. `n' A_LastError)
+; 		}
+; 		return textObject
+; 	}
+
+; 	/**
+; 	 * Alias for _ToString
+; 	 */
+; 	static ToStr(delim?){
+; 		return this._ToString(delim?)
+; 	}
+; 	static Stringify(delim?){
+; 		return this._ToString(delim?)
+; 	}
+; }
+
+Object.Prototype := Object2
+
+class Object2 {
 
 	static __New() {
 
 		; Add all Object2 methods to Object prototype
-		for methodName in Object2.OwnProps() {
-			if methodName != "__New" && HasMethod(Object2, methodName) {
+		for methodName in this.OwnProps() {
+			if methodName != "__New" && HasMethod(this, methodName) {
 				; Check if method already exists
 				if Object.Prototype.HasOwnProp(methodName) {
 					; Skip if method exists
@@ -247,23 +315,80 @@ class Object2 extends Object {
 					; Object.Prototype.DeleteProp(methodName)
 				}
 				Object.Prototype.DefineProp(methodName, {
-					Call: Object2.%methodName%
+					Call: this.%methodName%
 				})
 			}
 		}
+
+		; Remove attempt to modify non-existent Any.Prototype
+		; AHK v2 doesn't have an Any class with a modifiable prototype
 	}
 	
-	static ToString(toPrint) {
-		toPrint_string := ''
-		switch Type(toPrint) {
-			case "Map", "Array", "Object":
-				toPrint_string := cJSON.Stringify(toPrint)
-			default:
-				try toPrint_string := String(toPrint)
+	; @region Enum/Flatten Obj
+	static flattenObjects(objects*) {
+		return this.enumerateObjects(objects*)
+	}
+
+	static enumerateObjects(objects*) {
+		arrFlat := []
+		
+		for obj in objects {
+			if (obj = ""){
+				continue
+			}
+			switch {
+				case IsArray(obj):
+					; Flatten arrays into the options list
+					for item in obj{
+						arrFlat.Push(item)
+					}
+
+				case IsMap(obj):
+					; Convert maps to strings with key-value pairs
+					for key, value in obj{
+						arrFlat.Push(key ": " value)
+					}
+				
+				case IsObject(obj):
+					; Handle objects
+					if (obj.HasOwnProp("__ToString") || obj.HasOwnProp("_ToString") || obj.HasOwnProp("ToString") || HasMethod(obj, "ToString")){
+						arrFlat.Push(String(obj))
+					}
+					else {
+						; Get properties for selection
+						for propName in obj.OwnProps() {
+							if !(propName ~= "^__") { ; Skip internal properties
+								arrFlat.Push(propName ": " obj.%propName%)
+							}
+						}
+					}
+				
+				case IsString(obj):
+					; Check if it's a JSON string
+					; Try to identify JSON strings with a more precise regex check
+					if (obj ~= "^\s*(\{[\s\S]*\}|\[[\s\S]*\])\s*$" && obj ~= '[\""\{\[\]\}:,\d]') {
+						try {
+							jsonObj := JSON.Parse(obj)
+							; If parsing succeeds, process the JSON object recursively
+							for item in enumerateOptions(jsonObj) {
+								arrFlat.Push(item)
+							}
+						} catch {
+							; Not valid JSON or parsing failed, treat as regular string
+							arrFlat.Push(obj)
+						}
+					}
+					else {
+						arrFlat.Push(obj)
+					}
+				
+				default:
+					; For all other types, convert to string
+					arrFlat.Push(obj)
+			}
 		}
-		; try FileAppend(toPrint_string "`n", "*", "utf-8")
-		; try Infos(toPrint_string)
-		return toPrint_string
+		
+		return arrFlat
 	}
 
 	static ToArray(obj?) {
@@ -585,7 +710,7 @@ class Object2 extends Object {
 	 * @returns {String} Joined string
 	 */
 	Join(delim := '`n') {
-		Print(this)
+		; Print(this)
 		result := ''
 		for v in this {
 			result .= v . delim
@@ -966,6 +1091,7 @@ class Object2 extends Object {
 		return 0
 	}
 
+	; @region _ObjectToString()
 	/**
 	 * @param {String|Integer} depth Maximum depth to recurse (default: 'all')
 	 * @param {String} indentLevel Current indentation level (default: '')
@@ -986,11 +1112,16 @@ class Object2 extends Object {
 		return Trim(list)
 	}
 
+	; @region ToString()
 	/**
 	 * @returns {String} String representation of the object
 	 */
-	ToString() => this._ObjectToString()
-
+	ToString() {
+		return this._ObjectToString()
+	}
+	; @endregion ToString()
+	; ---------------------------------------------------------------------------
+	; @region _ObjectHasPropertyValue()
 	/**
 	 * @param {Any} valueToFind Value to search for
 	 * @returns {Any|False} Found value or False if not found
@@ -1003,12 +1134,18 @@ class Object2 extends Object {
 		}
 		return false
 	}
-
+	; @endregion _ObjectHasPropertyValue()
+	; ----------------------------------------------------------------------------
+	; @region HasValue()
 	/**
 	 * @param {Any} valueToFind Value to search for
 	 * @returns {Any|False} Found value or False if not found
-	 */
-	HasValue(valueToFind) => this._ObjectHasPropertyValue(valueToFind)
+	*/
+	HasValue(valueToFind){
+		return this._ObjectHasPropertyValue(valueToFind)
+	}
+	; @endregion HasValue()
+	; ----------------------------------------------------------------------------
 
 	; /**
 	;  * @param {Any} v Value to set
@@ -1037,7 +1174,8 @@ class Object2 extends Object {
 	;         this.SafeSet(value)
 	;     }
 	; }
-
+	; ---------------------------------------------------------------------------
+	; @region ObjReverse()
 	/**
 	 * @returns {Object} Reversed object
 	 */
@@ -1048,7 +1186,8 @@ class Object2 extends Object {
 		}
 		return reversedObject
 	}
-
+	; @endregion ObjReverse()
+	
 	/**
 	 * @param {Any*} options Options to choose from
 	 * @returns {Any} Chosen option
@@ -1081,3 +1220,83 @@ class Object2 extends Object {
 		return text
 	}
 }
+
+; @region enumerateOptions()
+/**
+ * @description Process options of various types into a standardized array
+ * @param {Any} options* Options of any type
+ * @returns {Array} Standardized array of options
+ */
+; static ProcessOptions(options*) {
+enumerateOptions(options*) {
+	return options.enumerateObjects(options*)
+}
+; @endregion enumerateOptions()
+; ---------------------------------------------------------------------------
+; @region enumOptions()
+enumOptions(options*){
+	return options.enumerateObjects(options*)
+}
+; @endregion enumOptions()
+
+; enumerateOptions(options*) {
+; 	processedOptions := []
+	
+; 	for option in options {
+; 		if (option = "")
+; 			continue
+			
+; 		switch {
+; 			case IsArray(option):
+; 				; Flatten arrays into the options list
+; 				for item in option{
+; 					processedOptions.Push(item)
+; 				}
+
+; 			case IsMap(option):
+; 				; Convert maps to strings with key-value pairs
+; 				for key, value in option{
+; 					processedOptions.Push(key ": " value)
+; 				}
+			
+; 			case IsObject(option):
+; 				; Handle objects
+; 				if (option.HasOwnProp("__ToString") || option.HasOwnProp("_ToString") || option.HasOwnProp("ToString") || HasMethod(option, "ToString")){
+; 					processedOptions.Push(String(option))
+; 				}
+; 				else {
+; 					; Get properties for selection
+; 					for propName in option.OwnProps() {
+; 						if !(propName ~= "^__") { ; Skip internal properties
+; 							processedOptions.Push(propName ": " option.%propName%)
+; 						}
+; 					}
+; 				}
+			
+; 			case IsString(option):
+; 				; Check if it's a JSON string
+; 				; Try to identify JSON strings with a more precise regex check
+; 				if (option ~= "^\s*(\{[\s\S]*\}|\[[\s\S]*\])\s*$" && option ~= '[\""\{\[\]\}:,\d]') {
+; 					try {
+; 						jsonObj := JSON.Parse(option)
+; 						; If parsing succeeds, process the JSON object recursively
+; 						for item in enumerateOptions(jsonObj) {
+; 							processedOptions.Push(item)
+; 						}
+; 					} catch {
+; 						; Not valid JSON or parsing failed, treat as regular string
+; 						processedOptions.Push(option)
+; 					}
+; 				}
+; 				else {
+; 					processedOptions.Push(option)
+; 				}
+			
+; 			default:
+; 				; For all other types, convert to string
+; 				processedOptions.Push(option)
+; 		}
+; 	}
+	
+; 	return processedOptions
+; }

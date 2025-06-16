@@ -1,7 +1,10 @@
 {
 	"folders": [
 		{
-			"path": ".."
+			"path": "../.."
+		},
+		{
+			"path": "../../../../../../../OneDrive - FM Global/Documents/AutoHotkey/Lib"
 		}
 	]
 }

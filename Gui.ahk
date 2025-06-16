@@ -1,5 +1,6 @@
 ; #Requires AutoHotkey v2+
 #Include <Includes/Basic>
+#Include <System\RichEdit>
 
 ;@class Gui2
 Gui.Prototype.Base := Gui2
@@ -8,17 +9,16 @@ class Gui2 {
 
 	#Requires AutoHotkey v2+
 
-	static WS_EX_NOACTIVATE 	:= '0x08000000L'
-	static WS_EX_TRANSPARENT 	:= '0x00000020L'
-	static WS_EX_COMPOSITED 	:= '0x02000000L'
-	static WS_EX_CLIENTEDGE 	:= '0x00000200L'
-	static WS_EX_APPWINDOW 		:= '0x00040000L'
-	static WS_EX_LAYERED      	:= '0x00080000L'  ; Layered window for transparency
-	static WS_EX_TOOLWINDOW   	:= '0x00000080L'  ; Creates a tool window (no taskbar button)
-	static WS_EX_TOPMOST      	:= '0x00000008L'  ; Always on top
-	static WS_EX_ACCEPTFILES  	:= '0x00000010L'  ; Accepts drag-drop files
-	static WS_EX_CONTEXTHELP  	:= '0x00000400L'  ; Has '?' button in titlebar
-
+	static WS_EX_NOACTIVATE 	=> '0x08000000L'
+	static WS_EX_TRANSPARENT 	=> '0x00000020L'
+	static WS_EX_COMPOSITED 	=> '0x02000000L'
+	static WS_EX_CLIENTEDGE 	=> '0x00000200L'
+	static WS_EX_APPWINDOW 		=> '0x00040000L'
+	static WS_EX_LAYERED      	=> '0x00080000L'  ; Layered window for transparency
+	static WS_EX_TOOLWINDOW   	=> '0x00000080L'  ; Creates a tool window (no taskbar button)
+	static WS_EX_TOPMOST      	=> '0x00000008L'  ; Always on top
+	static WS_EX_ACCEPTFILES  	=> '0x00000010L'  ; Accepts drag-drop files
+	static WS_EX_CONTEXTHELP  	=> '0x00000400L'  ; Has '?' button in titlebar
 
 	static __New() {
 		; Add all Gui2 methods to Gui prototype
@@ -73,7 +73,7 @@ class Gui2 {
 		return this
 	}
 
-	;; @method static DarkMode(params*)
+	; @region DarkMode(params*)
 	static DarkMode(params*) {
 		; Initialize with default values
 		; static DEFAULT_COLOR := '0x1E1E1E'  ; Dark gray
@@ -89,9 +89,9 @@ class Gui2 {
 				guiObj := param  ; Store Gui object
 			} else if IsObject(param) && param.HasProp("BackColor") {
 				color := param.BackColor  ; Use color from object
-			} else if param is String || param is Integer {
+			} else if IsString(param) || IsInteger(param) {
 				; Convert integer to hex string if needed
-				color := param is Integer ? Format('0x{:06X}', param) : param
+				color := IsInteger(param) ? Format('0x{:06X}', param) : param
 				; Ensure hex format
 				if !InStr(color, "0x || #") && RegExMatch(color, "^[0-9A-Fa-f]+$") {
 					(color ~= '#') ? StrReplace(color, '#', '') :
@@ -114,8 +114,11 @@ class Gui2 {
 
 		return guiObj  ; Return for method chaining
 	}
+	; @endregion
 	; ---------------------------------------------------------------------------
-
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region FontNicer(params*)
 	/**
 	 * @description Improves font settings with reasonable defaults and parameter parsing
 	 * @param {String} options Optional font settings string containing:
@@ -209,8 +212,11 @@ class Gui2 {
 
 		return config.guiObj
 	}
-
-	
+	; @endregion
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; ---------------------------------------------------------------------------
+	; @region Window Styles
 	/**
 	 * @description Prevents window from receiving focus or being activated
 	 * @returns {Gui} The Gui object for method chaining
@@ -222,19 +228,6 @@ class Gui2 {
 		return this
 	}
 
-	; static NeverFocusWindow(guiObj := this) {
-	; static NeverFocusWindow() {
-	; 	; guiObj := guiObj ? guiObj : this
-	; 	; WinSetExStyle('+' this.NOACTIVATE, guiObj)
-	; 	WinSetExStyle('+' this.WS_EX_NOACTIVATE, this)
-	; 	; WinSetExStyle('+' . this.TRANSPARENT, guiObj)
-	; 	; WinSetExStyle('+' . this.COMPOSITED, guiObj)
-	; 	; WinSetExStyle('+' . this.CLIENTEDGE, guiObj)
-	; 	; WinSetExStyle('+' . this.APPWINDOW, guiObj)
-	; 	; return guiObj
-	; 	return this
-	; }
-
 	/**
 	 * @description Makes window click-through (input passes to windows beneath)
 	 * @returns {Gui} The Gui object for method chaining
@@ -245,15 +238,6 @@ class Gui2 {
 		WinSetExStyle('+' this.WS_EX_TRANSPARENT, this)
 		return this
 	}
-
-	; static MakeClickThrough(guiObj := this) {
-	; 	if (guiObj is Gui){
-	; 		; WinSetTransparent(255, guiObj)
-	; 		WinSetTransparent(255, this)
-	; 		guiObj.Opt('+E0x20')
-	; 	}
-	; 	return this
-	; }
 
 	/**
 	 * @description Enables double-buffered composited window rendering
@@ -621,7 +605,7 @@ class Gui2 {
 
 	static UpdateTextSize(GuiObj) {
 		newSize := GuiObj["TextSize"].Value
-		if (newSize is integer && newSize > 0) {
+		if (IsInteger(newSize) && newSize > 0) {
 			GuiObj.SetFont("s" newSize)
 			for ctrl in GuiObj {
 				if (ctrl.Type == "Text" || ctrl.Type == "Edit" || ctrl.Type == "Button") {
@@ -974,97 +958,7 @@ class Gui2 {
 ; ---------------------------------------------------------------------------
 ;@endregion class Gui2
 
-;@region CheckBoxManager
-class CheckBoxManager {
-	/************************************************************************
-	* @description Stores found checkboxes and their states
-	***********************************************************************/
-	checkboxes := []
-	currentIndex := 0
 
-	/************************************************************************
-	* @description Find and cache all checkboxes on the page
-	* @example checkboxManager.FindAllCheckboxes()
-	***********************************************************************/
-	FindAllCheckboxes() {
-		this.checkboxes := []
-		try {
-			expRpt := UIA.ElementFromChromium(' - Google Chrome')
-			if !expRpt
-				throw Error("Chrome window not found")
-			
-			; Find all checkboxes
-			; foundBoxes := expRpt.FindAll({Type: '50002', LocalizedType: "check box"})
-			foundBoxes := expRpt.FindAll({LocalizedType: "check box"})
-			for box in foundBoxes{
-				this.checkboxes.Push(box)
-			}
-			return this.checkboxes.Length
-		} catch Error as e {
-			throw Error("Failed to find checkboxes: " e.Message)
-		}
-	}
-
-	/************************************************************************
-	* @description Process the next unchecked checkbox in the list
-	* @example checkboxManager.ProcessNextCheckbox()
-	***********************************************************************/
-	ProcessNextCheckbox() {
-		if (this.checkboxes.Length = 0)
-			this.FindAllCheckboxes()
-		
-		if (this.checkboxes.Length = 0)
-			throw Error("No checkboxes found")
-		
-		loop this.checkboxes.Length {
-			this.currentIndex++
-			if (this.currentIndex > this.checkboxes.Length)
-				this.currentIndex := 1
-			
-			currentBox := this.checkboxes[this.currentIndex]
-			if (!this.IsCheckboxChecked(currentBox)) {
-				this.FocusAndCheck(currentBox)
-				return true
-			}
-		}
-		
-		return false ; No unchecked boxes found
-	}
-
-	/************************************************************************
-	* @description Check if a checkbox is currently checked
-	* @example if !checkboxManager.IsCheckboxChecked(checkbox)
-	***********************************************************************/
-	IsCheckboxChecked(checkbox) {
-		try {
-			return checkbox.GetPropertyValue(UIA.Property.ToggleToggleState)
-		} catch {
-			return false
-		}
-	}
-
-	/************************************************************************
-	* @description Focus on a checkbox and check it
-	* @example checkboxManager.FocusAndCheck(checkbox)
-	***********************************************************************/
-	FocusAndCheck(checkbox) {
-		try {
-			checkbox.ScrollIntoView()
-			Sleep(100)  ; Give UI time to update
-			checkbox.SetFocus()
-			Sleep(100)
-			
-			if (!this.IsCheckboxChecked(checkbox))
-				checkbox.Click()
-			
-			return true
-		} catch Error as e {
-			throw Error("Failed to check checkbox: " e.Message)
-		}
-	}
-}
-; ---------------------------------------------------------------------------
-;@endregion
 ; ---------------------------------------------------------------------------
 ;@region DisplaySettings
 /**
@@ -1824,265 +1718,308 @@ class FontProperties extends Gui {
 	}
 }
 
-;@region ErrorLogger/Gui
+;@region ErrorLogGui
 /**
- * @abstract ErrorLogger and ErrorLogGui - Advanced Error Logging System for AutoHotkey v2
- * 
- * @class ErrorLogger
- * @class ErrorLogGui
- * 
- * @description ErrorLogger provides a flexible error logging system with GUI support.
- * @description ErrorLogGui handles the visual representation of logs.
- * 
- * @example 
- * Basic Usage:
- * ; Create a new logger instance
- * logger := ErrorLogger("MyLogger")
- * 
- * ; Log a simple message
- * logger.Log("Something happened")
- * 
- * ; Log an error
- * try {
- *     ; Some code that might throw an error
- *     throw Error("Test error")
- * } catch as e {
- *     logger.LogErrorProps(e)
- * }
- * 
- * ; Use static methods
- * ErrorLogger.Log("Quick log message")
- * 
- * Git Operations:
- * ; Log git operations
- * logger.Git().Operation("push", "Pushed to remote")
- * logger.Git().Error("pull", errorObject)
- * 
- * Features:
- * - Persistent logging with JSON file storage
- * - Click-through GUI capability
- * - Auto-sizing columns
- * - Copy logs to clipboard
- * - Multiple logger instances support
- * - Chainable methods
- * 
- * GUI Features:
- * - Resizable window
- * - ListView display
- * - Click-through toggle via tray menu
- * - Auto-save to JSON file
- * 
- * @property {Map} ErrorLogger.instances - Stores all logger instances
- * @property {Integer} ErrorLogger.instanceId - Unique identifier counter
- * @property {Array} errorOrder - Order of error properties to display
- * @property {String} name - Instance name
- * @property {ErrorLogGui} logGui - GUI instance
- * 
- * @Methods
- * @method Log(input, showGui := true) - Log message or error object
- * @method LogErrorProps(e) - Log error properties in structured format
- * @method LogErrorMap(e) - Log error using property map
- * @method Git() - Access Git operation logging methods
- * 
- * @Static @Methods
- * @method ErrorLogger.Log(input, showGui := true) - Static logging
- * @method ErrorLogger.LogErrorProps(e) - Static error properties logging
- * @method ErrorLogger.LogErrorMap(e) - Static error map logging
- * @method ErrorLogger.Git() - Static Git operations
- * 
- * @ErrorLogGui @Methods
- * @method AddTrayMenuItem() - Add click-through toggle to tray menu
- * @method MakeClickThrough() - Toggle click-through capability
- * @method CreateGui() - Create the GUI window
- * @method UpdateListView() - Refresh the GUI display
- * @method CopyToClipboard() - Copy all logs to clipboard
- * 
- * @File @Storage
- * @note - Logs are stored in 'error_log.json' by default
- * @note - JSON format: [{timestamp: "YYYY-MM-DD HH:mm:ss", message: "log content"}]
+ * @name ImprovedErrorLogGui
+ * @description Enhanced error logging system with flexible data collection and visualization
+ * @version 1.0.0
+ * @author OvercastBTC (Adam Bacon)
+ * @date 2025-04-24
+ * @requires AutoHotkey v2.0+
  */
+
+; #Include <Includes\Basic>
+; #Include <Extensions\Gui>
+
 class ErrorLogGui {
-	logGui := {}
-	logListView := {}
-	logData := []  ; Changed from Map to Array for better ordering and structured data
-	logFile := 'error_log.json'
-	instanceId := 0
 
-	__New() {
-		this.instanceId := this.GenerateUniqueId()
+	#Requires AutoHotkey v2.0+
+	
+	; Static properties for instance tracking 
+	static Instances := Map()
+	static InstanceCount := 0
+	
+	; Configuration properties
+	Title := "Error Log"
+	MaxLogEntries := 1000
+	AutoSaveEnabled := true
+	LogFilePath := A_ScriptDir "\error_log.json"
+	
+	; UI elements
+	gui := {}
+	lvEntries := {}
+	searchBox := {}
+	filterDropdown := {}
+	
+	; Data storage
+	logEntries := []
+	filteredEntries := []
+	
+	/**
+	 * @constructor
+	 * @param {String} title Optional title for the GUI
+	 * @param {String} logFilePath Optional path to log file
+	 */
+	__New(title := "", logFilePath := "") {
+		; Set instance properties
+		this.InstanceCount := ErrorLogGui.InstanceCount++
+		
+		; Apply custom settings if provided
+		if (title){
+			this.Title := title
+		}    
+		if (logFilePath)
+			this.LogFilePath := logFilePath
+			
+		; Initialize the GUI
 		this.CreateGui()
+		
+		; Load existing log data
 		this.LoadLogData()
+		
+		; Register this instance
+		ErrorLogGui.Instances[this.gui.Hwnd] := this
+		
+		return this
 	}
 	
-	AddTrayMenuItem() {
-		A_TrayMenu.Add('Toggle ErrorLog Click-Through', (*) => this.MakeClickThrough())
-	}
-
-	MakeClickThrough() {
-		static isClickThrough := false
-		if (isClickThrough) {
-			WinSetTransparent('Off', 'ahk_id ' . this.logGui.Hwnd)
-			this.logGui.Opt('-E0x20')  ; Remove WS_EX_TRANSPARENT style
-			isClickThrough := false
-		} else {
-			WinSetTransparent(255, 'ahk_id ' . this.logGui.Hwnd)
-			this.logGui.Opt('+E0x20')  ; Add WS_EX_TRANSPARENT style
-			isClickThrough := true
-		}
-	}
-
-	GenerateUniqueId() {
-		static failsafeCounter := 0
-		loop 10 {  ; Limit attempts to prevent infinite loop
-			randomId := 'ErrorLogGui_' . Random(1, 9999)
-			
-			; CHANGED: Use DllCall directly to avoid WinExist which might trigger error handling
-			if !DllCall("User32\FindWindowEx", "Ptr", 0, "Ptr", 0, "Str", "AutoHotkeyGUI", "Str", randomId, "Ptr")
-				return randomId
-			
-			; Increment failsafe counter to prevent recursion
-			if (++failsafeCounter > 20)
-				return 'ErrorLogGui_Fallback_' . A_TickCount  ; Use timestamp as fallback
-		}
-		; If we exit the loop without finding a unique ID, use timestamp as fallback
-		return 'ErrorLogGui_Fallback_' . A_TickCount
-	}
-	
+	/**
+	 * @method CreateGui
+	 * @description Creates the error log GUI with all controls
+	 */
 	CreateGui() {
-		; Create main GUI with modern styling using Gui2 extensions
-		this.logGui := Gui('+Resize +MinSize400x300', 'Error Log - ' . this.instanceId)
+		; Create the main GUI window
+		this.gui := Gui("+Resize +MinSize400x300", this.Title)
 		
-		try {
-			; Apply Gui2 extensions for better appearance - use try/catch
-			this.logGui.MakeFontNicer("s10")
-			this.logGui.DarkMode()
-			this.logGui.Transparent()
-			this.logGui.NoActivate()
-		} catch Error as e {
-			; Don't log this error - just continue without styling
-			OutputDebug("Warning: Could not apply GUI styling: " e.Message)
-		}
-		
-		; Set GUI title for identification
-		this.logGui.Opt('+LastFound')
-		WinSetTitle(this.instanceId)
-		
+		; Apply styling using Gui2 extensions
+		this.gui.DarkMode()
+		this.gui.MakeFontNicer("s10", "cD4D4D4")
 		
 		; Add control buttons
-		buttonPanel := this.logGui.AddGroupBox("xm ym w780 h40", "Controls")
-		buttonPanel.SetFont("s9")
+		this.CreateControlPanel()
 		
-		copyBtn := this.logGui.AddButton("x+10 y5 w120", "Copy to Clipboard")
-		copyBtn.OnEvent("Click", (*) => this.CopyToClipboard())
+		; Add search and filter controls
+		this.CreateSearchPanel()
 		
-		clearBtn := this.logGui.AddButton("x+10 w120", "Clear Log")
-		clearBtn.OnEvent("Click", (*) => this.ClearLog())
+		; Add the main ListView
+		this.CreateListView()
 		
-		exportBtn := this.logGui.AddButton("x+10 w120", "Export JSON")
-		exportBtn.OnEvent("Click", (*) => this.ExportLog())
-		
-		buttonPanel.GetPos(&x, &y, &w, &h)
-		; Add ListView with enhanced columns for error information
-		this.logListView := this.logGui.Add('ListView', x+5 y +5 ' r20 w800 vLogContent Grid', 
-			['Timestamp', 'Type', 'Message', 'Source', 'Details'])
-
-		; Set up event handlers
-		this.logGui.OnEvent('Close', (*) => this.logGui.Hide())
-		this.logGui.OnEvent('Size', (*) => this.ResizeControls())
-		
-		; Show the GUI initially
-		this.logGui.Show("w800 h500")
+		; Set up events
+		this.SetupEvents()
 	}
 	
-	ResizeControls() {
-		if (!this.logGui.Hwnd)
+	/**
+	 * @method CreateControlPanel
+	 * @description Creates the control button panel
+	 */
+	CreateControlPanel() {
+		; Control panel group
+		panel := this.gui.AddGroupBox("xm ym w780 h60", "Controls")
+		
+		; Add buttons with callback methods
+		copyBtn := this.gui.AddButton("x20 yp+25 w120", "Copy to Clipboard")
+		copyBtn.OnEvent("Click", this.CopyToClipboard.Bind(this))
+		
+		clearBtn := this.gui.AddButton("x+15 yp w120", "Clear Log")
+		clearBtn.OnEvent("Click", this.ClearLog.Bind(this))
+		
+		exportBtn := this.gui.AddButton("x+15 w120", "Export JSON")
+		exportBtn.OnEvent("Click", this.ExportLog.Bind(this))
+		
+		saveBtn := this.gui.AddButton("x+15 w120", "Save Settings")
+		saveBtn.OnEvent("Click", this.SaveSettings.Bind(this))
+		
+		; Add auto-save checkbox
+		this.autoSaveCheck := this.gui.AddCheckBox("x+15 yp+5", "Auto-Save")
+		this.autoSaveCheck.Value := this.AutoSaveEnabled
+		this.autoSaveCheck.OnEvent("Click", this.ToggleAutoSave.Bind(this))
+	}
+	
+	/**
+	 * @method CreateSearchPanel
+	 * @description Creates the search and filter panel
+	 */
+	CreateSearchPanel() {
+		; Get position of the control panel
+		panel := this.gui["Controls"]
+		panel.GetPos(&x, &y, &w, &h)
+		
+		; Create search panel
+		searchPanel := this.gui.AddGroupBox("xm y" (y + h + 5) " w780 h60", "Search and Filter")
+		
+		; Add search box
+		this.gui.AddText("x20 yp+25", "Search:")
+		this.searchBox := this.gui.AddEdit("x+5 yp-3 w250")
+		this.searchBox.OnEvent("Change", this.FilterEntries.Bind(this))
+		
+		; Add filter dropdown
+		this.gui.AddText("x+20 yp+3", "Filter by:")
+		this.filterDropdown := this.gui.AddDropDownList("x+5 yp-3 w150 Choose1", ["All Types", "Error", "Warning", "Info", "Debug"])
+		this.filterDropdown.OnEvent("Change", this.FilterEntries.Bind(this))
+		
+		; Add refresh button
+		refreshBtn := this.gui.AddButton("x+15 w100", "Refresh")
+		refreshBtn.OnEvent("Click", this.RefreshView.Bind(this))
+	}
+	
+	/**
+	 * @method CreateListView
+	 * @description Creates the main ListView control
+	 */
+	CreateListView() {
+		; Get position of the search panel
+		searchPanel := this.gui["Search and Filter"]
+		searchPanel.GetPos(&x, &y, &w, &h)
+		
+		; Create ListView with appropriate columns
+		this.lvEntries := this.gui.AddListView("xm y" (y + h + 5) " w780 r20 Grid", 
+			["Timestamp", "Type", "Message", "Source", "Details"])
+			
+		; Set column widths
+		this.lvEntries.ModifyCol(1, 150)  ; Timestamp
+		this.lvEntries.ModifyCol(2, 80)   ; Type
+		this.lvEntries.ModifyCol(3, 250)  ; Message
+		this.lvEntries.ModifyCol(4, 120)  ; Source
+		this.lvEntries.ModifyCol(5, 180)  ; Details
+		
+		; Add right-click context menu
+		this.lvEntries.OnEvent("ContextMenu", this.ShowContextMenu.Bind(this))
+		this.lvEntries.OnEvent("DoubleClick", this.ShowEntryDetails.Bind(this))
+	}
+	
+	/**
+	 * @method SetupEvents
+	 * @description Sets up event handlers for the GUI
+	 */
+	SetupEvents() {
+		; Window sizing
+		this.gui.OnEvent("Size", this.OnResize.Bind(this))
+		
+		; Window close
+		this.gui.OnEvent("Close", this.OnClose.Bind(this))
+		
+		; Add to existing GuiResizer if appropriate
+		try {
+			this.gui.OnEvent("Size", GuiReSizer)
+		} catch {
+			; GuiReSizer not available - ignore
+		}
+	}
+	
+	/**
+	 * @method OnResize
+	 * @description Handles GUI resize events
+	 * @param {Gui} guiObj The GUI object
+	 * @param {Integer} minMax Window state (minimized, maximized)
+	 * @param {Integer} width New width
+	 * @param {Integer} height New height
+	 */
+	OnResize(guiObj, minMax, width, height) {
+		if (minMax = -1)  ; Window is minimized
 			return
 			
-		this.logGui.GetClientPos(,,&w, &h)
-		this.logListView.Move(,,w - 20, h - 60)
+		; Update control panel width
+		panel := this.gui["Controls"]
+		if (panel)
+			panel.Move(,, width - 20)
+			
+		; Update search panel width
+		searchPanel := this.gui["Search and Filter"]
+		if (searchPanel)
+			searchPanel.Move(,, width - 20)
+			
+		; Update ListView size
+		if (this.lvEntries)
+			this.lvEntries.Move(,, width - 20, height - 165)
 	}
 	
-	LoadLogData() {
-		if (!FileExist(this.logFile)) {
-			this.CreateDefaultLogFile()
-			return
-		}
+	/**
+	 * @method OnClose
+	 * @description Handles GUI close event
+	 */
+	OnClose(guiObj) {
+		; Save log data if auto-save is enabled
+		if (this.AutoSaveEnabled)
+			this.SaveLogData()
+			
+		; Remove this instance from the tracking map
+		ErrorLogGui.Instances.Delete(this.gui.Hwnd)
 		
-		try {
-			fileContent := FileRead(this.logFile)
-			this.logData := jsongo.Parse(fileContent)
-			if (!IsObject(this.logData) || !this.logData.Length) {
-				this.logData := []
-				this.CreateDefaultLogFile()
-			}
-		} catch as err {
-			OutputDebug('Error loading log data: ' . err.Message)
-			this.logData := []
-			this.CreateDefaultLogFile()
-		}
-		
-		this.UpdateListView()
+		; Hide instead of destroy for potential reuse
+		this.gui.Hide()
 	}
 	
-	CreateDefaultLogFile() {
-		defaultData := [{
-			timestamp: FormatTime(, 'yyyy-MM-dd HH:mm:ss'), 
-			type: "System",
-			message: 'Log file created',
-			source: "ErrorLogGui",
-			details: ""
-		}]
-		this.logData := defaultData
-		FileAppend(jsongo.Stringify(defaultData, 4), this.logFile)
-	}
-
-	UpdateListView() {
-		this.logListView.Opt('-Redraw')  ; Suspend redrawing
-		this.logListView.Delete()
-		
-		for entry in this.logData {
-			; Handle different data structures for backward compatibility
-			if (IsObject(entry)) {
-				; Process structured data
-				row := [
-					entry.HasProp("timestamp") ? entry.timestamp : FormatTime(, 'yyyy-MM-dd HH:mm:ss'),
-					entry.HasProp("type") ? entry.type : "Info",
-					entry.HasProp("message") ? entry.message : (entry.HasProp("text") ? entry.text : ""),
-					entry.HasProp("source") ? entry.source : "",
-					entry.HasProp("details") ? entry.details : ""
-				]
-				this.logListView.Add(, row*)
-			} else {
-				; Legacy format handling
-				this.logListView.Add(, FormatTime(, 'yyyy-MM-dd HH:mm:ss'), "Legacy", entry, "", "")
-			}
-		}
-		
-		; Auto-size columns
-		this.logListView.ModifyCol()
-		this.logListView.ModifyCol(3, 250)  ; Make message column wider
-		this.logListView.Opt('+Redraw')     ; Resume redrawing
+	/**
+	 * @method Show
+	 * @description Shows the GUI
+	 * @param {String} options Show options
+	 */
+	Show(options := "w800 h500") {
+		this.gui.Show(options)
 	}
 	
+	/**
+	 * @method Hide
+	 * @description Hides the GUI
+	 */
+	Hide() {
+		this.gui.Hide()
+	}
+	
+	/**
+	 * @method Log
+	 * @description Logs a new entry to the error log
+	 * @param {Object|String} input The log entry data or message
+	 * @param {Boolean} showGui Whether to show the GUI after logging
+	 * @returns {ErrorLogGui} This instance for method chaining
+	 */
 	Log(input, showGui := true) {
-		; Create a consistent log entry object
-		logEntry := {}
-		timestamp := FormatTime(, 'yyyy-MM-dd HH:mm:ss')
+		logEntry := this.CreateLogEntry(input)
+		
+		; Add to the log entries array
+		this.logEntries.Push(logEntry)
+		
+		; Trim log if it exceeds maximum entries
+		if (this.logEntries.Length > this.MaxLogEntries)
+			this.logEntries.RemoveAt(1)
+			
+		; Add to ListView
+		this.AddEntryToListView(logEntry)
+		
+		; Auto-save if enabled
+		if (this.AutoSaveEnabled)
+			this.SaveLogData()
+			
+		; Show GUI if requested
+		if (showGui)
+			this.Show()
+			
+		return this
+	}
+	
+	/**
+	 * @method CreateLogEntry
+	 * @description Creates a structured log entry from input data
+	 * @param {Object|String} input The log entry data or message
+	 * @returns {Object} Structured log entry
+	 */
+	CreateLogEntry(input) {
+		timestamp := FormatTime(, "yyyy-MM-dd HH:mm:ss")
 		
 		if (IsObject(input)) {
-			; Handle structured input
+			; Process structured input
 			if (input is Error) {
 				; Format error objects
-				logEntry := {
+				return {
 					timestamp: timestamp,
 					type: "Error",
 					message: input.Message,
-					source: input.HasProp("File") ? input.File : "Unknown",
+					source: input.HasProp("File") ? input.File . ":" . input.Line : "Unknown",
 					details: input.HasProp("Stack") ? input.Stack : ""
 				}
 			} else {
 				; Handle other object types
-				logEntry := {
+				return {
 					timestamp: timestamp,
 					type: input.HasProp("type") ? input.type : "Info",
 					message: input.HasProp("message") ? input.message : "Object log",
@@ -2092,7 +2029,7 @@ class ErrorLogGui {
 			}
 		} else {
 			; Handle simple string input
-			logEntry := {
+			return {
 				timestamp: timestamp,
 				type: "Info",
 				message: input,
@@ -2100,92 +2037,641 @@ class ErrorLogGui {
 				details: ""
 			}
 		}
-		
-		; Add to log data and update display
-		this.logData.Push(logEntry)
-		this.UpdateListView()
-		this.SaveLogData()
-		OutputDebug(timestamp . ': ' . logEntry.message)
-		
-		if (showGui) {
-			this.logGui.Show()
-		}
 	}
 	
-	SaveLogData() {
-		try {
-			FileDelete(this.logFile)
-			FileAppend(jsongo.Stringify(this.logData, 4), this.logFile)
-		} catch as err {
-			try OutputDebug('Error saving log data: ' . err.Message)
-		}
+	/**
+	 * @method AddEntryToListView
+	 * @description Adds a log entry to the ListView
+	 * @param {Object} entry The log entry to add
+	 */
+	AddEntryToListView(entry) {
+		; Add entry to ListView
+		rowNum := this.lvEntries.Add(
+			, entry.timestamp, 
+			entry.type, 
+			entry.message, 
+			entry.source, 
+			entry.details)
+			
+		; Color-code different entry types
+		if (entry.type = "Error")
+			this.lvEntries.SetColors(rowNum, 0xFF0000)
+		else if (entry.type = "Warning")
+			this.lvEntries.SetColors(rowNum, 0xFFAA00)
+		else if (entry.type = "Debug")
+			this.lvEntries.SetColors(rowNum, 0x8888FF)
+			
+		; Auto-scroll to latest entry
+		this.lvEntries.Modify(rowNum, "Vis")
+		this.lvEntries.Modify(rowNum, "Select Focus")
 	}
 	
-	CopyToClipboard() {
+	/**
+	 * @method CopyToClipboard
+	 * @description Copies log data to clipboard
+	 * @param {Gui.Button} ctrlObj Control that triggered the event
+	 */
+	CopyToClipboard(ctrlObj, *) {
 		clipboardContent := ""
-		for entry in this.logData {
-			if (IsObject(entry)) {
-				clipboardContent .= Format("[{1}] [{2}] {3} ({4}){5}{6}`n", 
-					entry.timestamp, 
-					entry.type, 
-					entry.message,
-					entry.source,
-					entry.details ? "`n" : "",
-					entry.details)
-			} else {
-				clipboardContent .= entry . "`n"
-			}
+		
+		; Get entries based on current filter
+		entries := this.filteredEntries.Length ? this.filteredEntries : this.logEntries
+		
+		; Format entries for clipboard
+		for entry in entries {
+			clipboardContent .= Format("[{1}] [{2}] {3} ({4}){5}{6}`n", 
+				entry.timestamp, 
+				entry.type, 
+				entry.message,
+				entry.source,
+				entry.details ? "`n" : "",
+				entry.details)
 		}
+		
+		; Set clipboard and notify user
 		A_Clipboard := clipboardContent
 		this.ShowTooltip("Log data copied to clipboard!")
 	}
 	
-	ClearLog() {
-		this.logData := []
-		this.CreateDefaultLogFile()
-		this.UpdateListView()
+	/**
+	 * @method ClearLog
+	 * @description Clears all log entries
+	 * @param {Gui.Button} ctrlObj Control that triggered the event
+	 */
+	ClearLog(ctrlObj, *) {
+		; Confirm with user
+		result := MsgBox("Are you sure you want to clear all log entries?", 
+			"Confirm Clear", "YesNo Icon?")
+			
+		if (result != "Yes")
+			return
+			
+		; Clear entries arrays
+		this.logEntries := []
+		this.filteredEntries := []
+		
+		; Clear ListView
+		this.lvEntries.Delete()
+		
+		; Create default entry
+		defaultEntry := {
+			timestamp: FormatTime(, "yyyy-MM-dd HH:mm:ss"),
+			type: "System",
+			message: "Log cleared",
+			source: "ErrorLogGui",
+			details: ""
+		}
+		
+		; Add default entry
+		this.logEntries.Push(defaultEntry)
+		this.AddEntryToListView(defaultEntry)
+		
+		; Save changes
+		if (this.AutoSaveEnabled)
+			this.SaveLogData()
+			
 		this.ShowTooltip("Log cleared!")
 	}
 	
-	ExportLog() {
+	/**
+	 * @method ExportLog
+	 * @description Exports log data to JSON file
+	 * @param {Gui.Button} ctrlObj Control that triggered the event
+	 */
+	ExportLog(ctrlObj, *) {
+		; Get entries based on current filter
+		entries := this.filteredEntries.Length ? this.filteredEntries : this.logEntries
+		
 		try {
+			; Generate filename with timestamp
 			filename := A_Desktop . "\ErrorLog_" . FormatTime(, "yyyyMMdd_HHmmss") . ".json"
-			FileAppend(jsongo.Stringify(this.logData, 4), filename)
+			
+			; Write data to file
+			FileDelete(filename)
+			FileAppend(JSON.Stringify(entries, 4), filename)
+			
 			this.ShowTooltip("Log exported to: " . filename)
-		} catch as err {
+		} catch Error as err {
 			this.ShowTooltip("Error exporting log: " . err.Message)
 		}
 	}
 	
+	/**
+	 * @method SaveSettings
+	 * @description Saves current settings
+	 * @param {Gui.Button} ctrlObj Control that triggered the event
+	 */
+	SaveSettings(ctrlObj, *) {
+		settings := {
+			AutoSaveEnabled: this.AutoSaveEnabled,
+			MaxLogEntries: this.MaxLogEntries,
+			LogFilePath: this.LogFilePath
+		}
+		
+		try {
+			; Save settings to file
+			settingsFile := A_ScriptDir "\errorlog_settings.json"
+			FileDelete(settingsFile)
+			FileAppend(JSON.Stringify(settings, 4), settingsFile)
+			
+			this.ShowTooltip("Settings saved!")
+		} catch Error as err {
+			this.ShowTooltip("Error saving settings: " . err.Message)
+		}
+	}
+	
+	/**
+	 * @method ToggleAutoSave
+	 * @description Toggles auto-save functionality
+	 * @param {Gui.CheckBox} ctrlObj Control that triggered the event
+	 */
+	ToggleAutoSave(ctrlObj, *) {
+		this.AutoSaveEnabled := ctrlObj.Value
+		
+		; Show feedback to user
+		state := this.AutoSaveEnabled ? "enabled" : "disabled"
+		this.ShowTooltip("Auto-save " . state)
+	}
+	
+	/**
+	 * @method FilterEntries
+	 * @description Filters log entries based on search text and type filter
+	 * @param {Gui.Control} ctrlObj Control that triggered the event
+	 */
+	FilterEntries(ctrlObj, *) {
+		; Get filter criteria
+		searchText := this.searchBox.Text
+		filterType := this.filterDropdown.Text
+		
+		; Clear current filtered entries
+		this.filteredEntries := []
+		
+		; Apply filters
+		for entry in this.logEntries {
+			; Skip if type doesn't match filter (unless "All Types" is selected)
+			if (filterType != "All Types" && entry.type != filterType)
+				continue
+				
+			; Skip if text doesn't match search
+			if (searchText && !this.EntryMatchesSearch(entry, searchText))
+				continue
+				
+			; Add matching entry to filtered list
+			this.filteredEntries.Push(entry)
+		}
+		
+		; Update the ListView
+		this.RefreshView()
+	}
+	
+	/**
+	 * @method EntryMatchesSearch
+	 * @description Checks if an entry matches the search text
+	 * @param {Object} entry The log entry to check
+	 * @param {String} searchText The search text
+	 * @returns {Boolean} True if entry matches search
+	 */
+	EntryMatchesSearch(entry, searchText) {
+		; Check main fields for matches
+		if (InStr(entry.message, searchText) || 
+			InStr(entry.source, searchText) || 
+			InStr(entry.details, searchText) ||
+			InStr(entry.timestamp, searchText) ||
+			InStr(entry.type, searchText)) {
+			return true
+		}
+		
+		return false
+	}
+	
+	/**
+	 * @method RefreshView
+	 * @description Refreshes the ListView with current entries
+	 * @param {Gui.Button} ctrlObj Control that triggered the event (optional)
+	 */
+	RefreshView(ctrlObj?, *) {
+		; Clear ListView
+		this.lvEntries.Delete()
+		
+		; Get entries to display
+		entries := this.filteredEntries.Length ? this.filteredEntries : this.logEntries
+		
+		; Add entries to ListView
+		for entry in entries {
+			this.AddEntryToListView(entry)
+		}
+		
+		; Update status
+		entryCount := entries.Length
+		this.ShowTooltip("Showing " . entryCount . " entries")
+	}
+	
+	/**
+	 * @method ShowContextMenu
+	 * @description Shows context menu for ListView items
+	 * @param {Gui.ListView} ctrlObj The ListView control
+	 * @param {Integer} rowNum The row number
+	 * @param {Boolean} isRightClick Whether it was a right-click
+	 */
+	ShowContextMenu(ctrlObj, rowNum, isRightClick) {
+		; Create context menu
+		menu := Menu()
+		
+		; Only show if a row is selected
+		if (rowNum > 0) {
+			; Add menu items
+			menu.Add("Copy Entry", this.CopyEntry.Bind(this, rowNum))
+			menu.Add("Copy Details", this.CopyDetails.Bind(this, rowNum))
+			menu.Add("View Details", this.ShowEntryDetails.Bind(this, rowNum))
+			menu.Add()
+			menu.Add("Delete Entry", this.DeleteEntry.Bind(this, rowNum))
+		} else {
+			; General menu items
+			menu.Add("Refresh View", this.RefreshView.Bind(this))
+			menu.Add("Copy All", this.CopyToClipboard.Bind(this))
+		}
+		
+		; Show menu at cursor position
+		menu.Show()
+	}
+	
+	/**
+	 * @method CopyEntry
+	 * @description Copies a single entry to clipboard
+	 * @param {Integer} rowNum The row number to copy
+	 */
+	CopyEntry(rowNum, *) {
+		; Get the entry
+		entries := this.filteredEntries.Length ? this.filteredEntries : this.logEntries
+		entry := entries[rowNum]
+		
+		; Format entry for clipboard
+		clipContent := Format("[{1}] [{2}] {3} ({4}){5}{6}", 
+			entry.timestamp, 
+			entry.type, 
+			entry.message,
+			entry.source,
+			entry.details ? "`n" : "",
+			entry.details)
+			
+		; Set clipboard
+		A_Clipboard := clipContent
+		this.ShowTooltip("Entry copied to clipboard!")
+	}
+	
+	/**
+	 * @method CopyDetails
+	 * @description Copies entry details to clipboard
+	 * @param {Integer} rowNum The row number to copy
+	 */
+	CopyDetails(rowNum, *) {
+		; Get the entry
+		entries := this.filteredEntries.Length ? this.filteredEntries : this.logEntries
+		entry := entries[rowNum]
+		
+		; Set clipboard
+		A_Clipboard := entry.details
+		this.ShowTooltip("Details copied to clipboard!")
+	}
+	
+	/**
+	 * @method DeleteEntry
+	 * @description Deletes an entry from the log
+	 * @param {Integer} rowNum The row number to delete
+	 */
+	DeleteEntry(rowNum, *) {
+		; Get entries to display
+		entries := this.filteredEntries.Length ? this.filteredEntries : this.logEntries
+		
+		; Remove the entry
+		entries.RemoveAt(rowNum)
+		
+		; Update view
+		this.RefreshView()
+		
+		; Save changes
+		if (this.AutoSaveEnabled)
+			this.SaveLogData()
+	}
+	
+	/**
+	 * @method ShowEntryDetails
+	 * @description Shows detailed view of an entry
+	 * @param {Object|Integer} ctrlObj Either the ListView control or row number
+	 * @param {Integer} rowNum The row number (optional if ctrlObj is row number)
+	 */
+	ShowEntryDetails(ctrlObj, rowNum?) {
+		; Handle different parameter patterns
+		if (!IsSet(rowNum) && IsInteger(ctrlObj)) {
+			rowNum := ctrlObj
+		} else if (!IsSet(rowNum) && ctrlObj is Gui.ListView) {
+			rowNum := ctrlObj.GetNext(0)
+			if (rowNum = 0)  ; No selection
+				return
+		}
+		
+		; Get entries to display
+		entries := this.filteredEntries.Length ? this.filteredEntries : this.logEntries
+		entry := entries[rowNum]
+		
+		; Create details GUI
+		detailsGui := Gui("+AlwaysOnTop +Owner" . this.gui.Hwnd, "Log Entry Details")
+		
+		; Apply styling
+		try {
+			detailsGui.DarkMode()
+			detailsGui.MakeFontNicer("s10", "cD4D4D4")
+		} catch {
+			; Ignore styling errors
+		}
+		
+		; Add details fields
+		detailsGui.AddText("w120 h20", "Timestamp:")
+		detailsGui.AddEdit("x+10 yp w250 ReadOnly", entry.timestamp)
+		
+		detailsGui.AddText("xm y+10 w120 h20", "Type:")
+		detailsGui.AddEdit("x+10 yp w250 ReadOnly", entry.type)
+		
+		detailsGui.AddText("xm y+10 w120 h20", "Source:")
+		detailsGui.AddEdit("x+10 yp w250 ReadOnly", entry.source)
+		
+		detailsGui.AddText("xm y+10 w120 h20", "Message:")
+		detailsGui.AddEdit("x+10 yp w400 ReadOnly", entry.message)
+		
+		detailsGui.AddText("xm y+10 w120 h20", "Details:")
+		detailsEdit := detailsGui.AddEdit("x+10 yp w400 h200 ReadOnly", entry.details)
+		
+		; Add copy button
+		copyBtn := detailsGui.AddButton("xm y+10 w120", "Copy All")
+		copyBtn.OnEvent("Click", (*) => (
+			A_Clipboard := JSON.Stringify(entry, 4),
+			this.ShowTooltip("Entry copied to clipboard as JSON!")
+			)
+		)
+		
+		; Show the details GUI
+		detailsGui.Show("w550 h350")
+	}
+	
+	/**
+	 * @method LoadLogData
+	 * @description Loads log data from file
+	 */
+	LoadLogData() {
+		if (!FileExist(this.LogFilePath)) {
+			this.CreateDefaultLogFile()
+			return
+		}
+		
+		try {
+			fileContent := FileRead(this.LogFilePath)
+			this.logEntries := JSON.Parse(fileContent)
+			
+			if (!IsObject(this.logEntries) || !this.logEntries.Length) {
+				this.logEntries := []
+				this.CreateDefaultLogFile()
+			}
+		} catch Error as err {
+			OutputDebug('Error loading log data: ' . err.Message)
+			this.logEntries := []
+			this.CreateDefaultLogFile()
+		}
+		
+		; Update the ListView
+		this.RefreshView()
+	}
+	
+	/**
+	 * @method CreateDefaultLogFile
+	 * @description Creates a default log file
+	 */
+	CreateDefaultLogFile() {
+		defaultEntry := {
+			timestamp: FormatTime(, 'yyyy-MM-dd HH:mm:ss'), 
+			type: "System",
+			message: 'Log file created',
+			source: "ErrorLogGui",
+			details: ""
+		}
+		
+		this.logEntries := [defaultEntry]
+		
+		try {
+			FileDelete(this.LogFilePath)
+			FileAppend(JSON.Stringify(this.logEntries, 4), this.LogFilePath)
+		} catch Error as err {
+			OutputDebug('Error creating default log file: ' . err.Message)
+		}
+	}
+	
+	/**
+	 * @method SaveLogData
+	 * @description Saves log data to file
+	 * @returns {Boolean} True if successful
+	 */
+	SaveLogData() {
+		try {
+			FileDelete(this.LogFilePath)
+			FileAppend(JSON.Stringify(this.logEntries, 4), this.LogFilePath)
+			return true
+		} catch Error as err {
+			OutputDebug('Error saving log data: ' . err.Message)
+			return false
+		}
+	}
+	
+	/**
+	 * @method ShowTooltip
+	 * @description Shows a tooltip message
+	 * @param {String} message The message to show
+	 * @param {Integer} duration Duration in milliseconds
+	 */
 	ShowTooltip(message, duration := 1500) {
 		ToolTip(message)
 		SetTimer(() => ToolTip(), -duration)
 	}
+	
+	/**
+	 * @method __Delete
+	 * @description Cleanup when object is destroyed
+	 */
+	__Delete() {
+		; Save data if auto-save is enabled
+		if (this.AutoSaveEnabled)
+			this.SaveLogData()
+			
+		; Remove from instances map
+		ErrorLogGui.Instances.Delete(this.gui.Hwnd)
+	}
+	
+	/**
+	 * @method SetColors
+	 * @description Helper method for ListView color coding
+	 * @param {Integer} rowNum Row number to color
+	 * @param {Integer} color Color value
+	 */
+	SetColors(rowNum, color) {
+		try {
+			; This method requires ListView custom drawing - implement if needed
+			; Currently a placeholder
+		} catch {
+			; Ignore errors - coloring is optional
+		}
+	}
+	
+	/**
+	 * Static helper methods
+	 */
+	
+	/**
+	 * @method Show
+	 * @description Shows or creates an error log GUI
+	 * @param {Object|String} input Optional log entry to add
+	 * @returns {ErrorLogGui} The shown instance
+	 */
+	static Show(input?) {
+		; Use first instance or create new one
+		instance := ErrorLogGui.Instances.Count ? ErrorLogGui.Instances.Values()[1] : ErrorLogGui()
+		
+		; Log input if provided
+		if (IsSet(input))
+			instance.Log(input, false)
+			
+		; Show the GUI
+		instance.Show()
+		
+		return instance
+	}
+	
+	/**
+	 * @method DestroyAll
+	 * @description Destroys all ErrorLogGui instances
+	 */
+	static DestroyAll() {
+		for hwnd, instance in ErrorLogGui.Instances {
+			; Save data if auto-save is enabled
+			if (instance.AutoSaveEnabled)
+				instance.SaveLogData()
+				
+			; Destroy the GUI
+			instance.gui.Destroy()
+		}
+		
+		; Clear instances map
+		ErrorLogGui.Instances := Map()
+	}
+	
+	/**
+	 * @method FromMap
+	 * @description Creates log entries from a Map object
+	 * @param {Map} mapData Map containing data to log
+	 * @returns {ErrorLogGui} The instance for method chaining
+	 */
+	static FromMap(mapData) {
+		instance := ErrorLogGui.Show()
+		
+		for key, value in mapData {
+			entry := {
+				type: "Info",
+				message: key,
+				details: IsObject(value) ? JSON.Stringify(value, 4) : value,
+				source: "Map"
+			}
+			
+			instance.Log(entry, false)
+		}
+		
+		return instance
+	}
+	
+	/**
+	 * @method FromObject
+	 * @description Creates log entries from an object
+	 * @param {Object} obj Object containing data to log
+	 * @returns {ErrorLogGui} The instance for method chaining
+	 */
+	static FromObject(obj) {
+		instance := ErrorLogGui.Show()
+		
+		for prop in obj.OwnProps() {
+			entry := {
+				type: "Info",
+				message: prop,
+				details: IsObject(obj.%prop%) ? JSON.Stringify(obj.%prop%, 4) : obj.%prop%,
+				source: "Object"
+			}
+			
+			instance.Log(entry, false)
+		}
+		
+		return instance
+	}
+	
+	/**
+	 * @method FromArray
+	 * @description Creates log entries from an array
+	 * @param {Array} arr Array containing data to log
+	 * @returns {ErrorLogGui} The instance for method chaining
+	 */
+	static FromArray(arr) {
+		instance := ErrorLogGui.Show()
+		
+		for index, value in arr {
+			entry := {
+				type: "Info",
+				message: "Index " . index,
+				details: IsObject(value) ? JSON.Stringify(value, 4) : value,
+				source: "Array"
+			}
+			
+			instance.Log(entry, false)
+		}
+		
+		return instance
+	}
 }
 ;@region ErrorLogger
+/**
+ * @name ErrorLogger
+ * @description Flexible logging system for AHK v2 with improved data collection
+ * @version 1.0.0
+ * @author OvercastBTC (Adam Bacon)
+ * @date 2025-04-24
+ * @requires AutoHotkey v2.0+
+ */
+
+#Requires AutoHotkey v2.0+
+#Include <Includes\Basic>
+
 class ErrorLogger {
 	; Static properties
 	static instances := Map()
 	static instanceId := 0
+	static logLevels := {
+		Debug: 1,
+		Info: 2,
+		Warning: 3,
+		Error: 4,
+		Critical: 5
+	}
 
 	; Instance properties
-	errorOrder := [
-		"Message",
-		"What", 
-		"Extra",
-		"File",
-		"Line",
-		"Stack"
-	]
-
 	name := ""
+	logLevel := 2  ; Info
 	logGui := ""
+	logFilePath := A_ScriptDir "\log.json"
+	displayLogs := true
+	autoSaveEnabled := true
+	
+	; Collection of log entries
+	logEntries := []
 
 	/**
-	 * Constructor initializes logger instance with unique ID
+	 * @constructor
 	 * @param {String} [name] Optional instance name
+	 * @param {Object} [options] Optional configuration options
 	 */
-	__New(name := "") {
+	__New(name := "", options := {}) {
 		; Generate unique ID if name not provided
 		if (name = "") {
 			ErrorLogger.instanceId++
@@ -2193,501 +2679,849 @@ class ErrorLogger {
 		}
 
 		this.name := name
-		this.logGui := ErrorLogGui()
+		
+		; Apply custom options
+		for key, value in options.OwnProps() {
+			if this.HasProp(key) {
+				this.%key% := value
+			}
+		}
+		
+		; Initialize GUI
+		try {
+			this.logGui := ErrorLogGui(this.name, this.logFilePath)
+		} catch Error as e {
+			OutputDebug("ErrorLogger: Failed to create GUI: " e.Message)
+		}
+		
+		; Register this instance
 		ErrorLogger.instances[this.name] := this
 
-		; Initialize Git methods for chaining
-		this.logGit := {
-			Operation: this._GitOperation.Bind(this),
-			Error: this._GitError.Bind(this)
-		}
-
 		return this
 	}
 
 	/**
-	 * Static constructor to initialize class
+	 * @method Log
+	 * @description Generic logging method that accepts various input types
+	 * @param {String|Error|Object} input Message or error to log
+	 * @param {String} [type="Info"] Log entry type
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} This instance for method chaining
 	 */
-	static __New() {
-		; Add static methods as properties for chaining
-		this.DefineProp("Log", {Call: this.LogStatic})
-		this.DefineProp("LogErrorProps", {Call: this.LogErrorPropsStatic})
-		this.DefineProp("LogErrorMap", {Call: this.LogErrorMapStatic})
-		this.DefineProp("Git", {Call: this.GitStatic})
+	Log(input, type := "Info", showGui := true) {
+		; Skip logging if below minimum log level
+		if (ErrorLogger.logLevels.%type% < this.logLevel) {
+			return this
+		}
+		
+		; Create log entry based on input type
+		logEntry := this._CreateLogEntry(input, type)
+		
+		; Add to log entries collection
+		this.logEntries.Push(logEntry)
+		
+		; Log to GUI if available
+		if (this.logGui && this.displayLogs) {
+			try {
+				this.logGui.Log(logEntry, showGui)
+			}
+			catch Error as e {
+				OutputDebug("ErrorLogger: Failed to log to GUI: " e.Message)
+			}
+		}
+		
+		; Output to debug console
+		OutputDebug(this._FormatLogEntry(logEntry))
+		
+		return this
 	}
+	
+	; /**
+	;  * Log error properties in order
+	;  * @param {Error} e Error object
+	;  * @returns {ErrorLogger} This instance for chaining
+	;  */
+	; LogErrorProps(e) {
+	; 	props := {}
+	; 	props.type := "ErrorProps"
+	; 	props.message := e.HasProp("Message") ? e.Message : "Unknown Error"
+		
+	; 	details := ""
+	; 	for propName in this.errorOrder {
+	; 		if (e.HasProp(propName) && e.%propName% != '') {
+	; 			details .= propName . ": " . e.%propName% . "`n"
+	; 		}
+	; 	}
+		
+	; 	props.details := details
+	; 	return props  ; Ensure to return the props object
+	; }
 
 	/**
-	 * Create logger instance with given name or generate unique name
-	 * @param {String} [name] Optional instance name
+	 * @method LogErrorPropsStatic
+	 * @description Static method to log detailed error properties
+	 * @param {Error} err Error object to log
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
 	 * @returns {ErrorLogger} Logger instance
 	 */
-	__Call(name := "") {
-		return ErrorLogger(name)
-	}
-
-	/**
-	 * Log message or error
-	 * @param {String|Error} input Message or error to log
-	 * @param {Boolean} [showGui] Whether to show GUI
-	 * @returns {ErrorLogger} This instance for chaining
-	 */
-	Log(input, showGui := true) {
+	LogErrorProps(err, showGui := true) {
+		; Format error details as string
+		details := "Error Properties:`n"
+		details .= "----------------`n"
 		
-		; Enhanced error handling based on input type
-		if (input is Error) {
-			; Create structured error object for logging
-			errorObj := {
-				type: input.HasProp("Type") ? input.Type : "Error",
-				message: input.Message,
-				source: input.HasProp("File") ? input.File . ":" . input.Line : "Unknown",
-				details: input.HasProp("Stack") ? input.Stack : ""
+		; Add standard error properties
+		props := ["Message", "What", "Extra", "File", "Line", "Stack"]
+		for prop in props {
+			if (err.HasProp(prop) && err.%prop% != "") {
+				details .= prop ": " err.%prop% "`n"
 			}
-			this.logGui.Log(errorObj, showGui)
-		} else if (IsObject(input)) {
-			; Pass object through
-			this.logGui.Log(input, showGui)
-		} else {
-			; Simple message
-			this.logGui.Log(input, showGui)
 		}
 		
-		return this
-	}
-
-	/**
-	 * Static log method
-	 */
-	static LogStatic(input, showGui := true) {
-		static isLogging := false
-		if (isLogging)
-			return false  ; Prevent recursion
+		; Add any additional properties
+		details .= "`nAdditional Properties:`n"
+		details .= "--------------------`n"
+		extraProps := false
+		
+		for prop in err.OwnProps() {
+			if (prop = "Message" || prop = "What" || prop = "Extra" || 
+				prop = "File" || prop = "Line" || prop = "Stack") {
+				continue
+			}
 			
-		isLogging := true
-		try {
-			return ErrorLogger().Log(input, showGui)
-		} finally {
-			isLogging := false
-		}
-	}
-
-	/**
-	 * Log error properties in order
-		for propName in this.errorOrder {
-			if (e.HasProp(propName) && e.%propName% != '') {
-				details .= propName . ": " . e.%propName% . "`n"
-			}
+			extraProps := true
+			details .= prop ": " (IsObject(err.%prop%) ? "[Object]" : err.%prop%) "`n"
 		}
 		
-		props.details := details
-		props.source := e.HasProp("File") ? e.File . ":" . e.Line : "Unknown"
+		if (!extraProps) {
+			details .= "None`n"
+		}
 		
-		this.logGui.Log(props)
-		return this
+		; Log the formatted details
+		; return ErrorLogger.Log(details, "Error", showGui)
+		; return ErrorLogger().Log(details, "Error", showGui)
+		return details
 	}
-
-	/**
-	 * Static error properties logging
-	 */
-	static LogErrorPropsStatic(e) {
+	static LogErrorProps(e) {
 		return ErrorLogger().LogErrorProps(e)
 	}
-
+	
 	/**
-	 * Log error using property map
-	 * @param {Error} e Error object 
+	 * For backwards compatibility with code that uses errorMap
+	 * @param {Error} e Error object
 	 * @returns {ErrorLogger} This instance for chaining
 	 */
-	LogErrorMap(e) {
-		errorProps := Map(
-			"Message", e.Message,
-			"What", e.What,
-			"Extra", e.Extra,
-			"File", e.File,
-			"Line", e.Line,
-			"Stack", e.Stack
-		)
-		
-		props := {}
-		props.type := "ErrorMap"
-		props.message := "Error Details:"
-		
-		details := ""
-		for propName in this.errorOrder {
-			if (errorProps.Has(propName) && errorProps[propName] != '') {
-				details .= propName . ": " . errorProps[propName] . "`n"
-			}
-		}
-		
-		props.details := details
-		props.source := e.HasProp("File") ? e.File . ":" . e.Line : "Unknown"
-		
-		this.logGui.Log(props)
-		return this
+	errorMap(e) {
+		return this.LogErrorMap(e)
 	}
-
+	
 	/**
-	 * Static error map logging
+	 * Static version of errorMap for backwards compatibility
+	 * @param {Error} e Error object
+	 * @returns {ErrorLogger} The logger instance
 	 */
-	static LogErrorMapStatic(e) {
+	static errorMap(e) {
 		return ErrorLogger().LogErrorMap(e)
 	}
 
 	/**
-	 * Git operation methods that support chaining
-	 * @returns {Object} Git operation methods
+	 * @method Debug
+	 * @description Log a debug message
+	 * @param {String|Object} input Message to log
+	 * @param {Boolean} [showGui=false] Whether to show the GUI
+	 * @returns {ErrorLogger} This instance for method chaining
 	 */
-	Git() {
-		return {
-			Operation: this._GitOperation.Bind(this),
-			Error: this._GitError.Bind(this)
-		}
-	}
-
-	/**
-	 * Static Git operations
-	 */
-	static GitStatic() {
-		return ErrorLogger().Git()
-	}
-
-	_GitOperation(operation, details, logEdit := '') {
-		gitLog := {
-			type: "Git",
-			message: details,
-			source: "Git:" . operation,
-			details: Type(details) == "object" ? JSON.Stringify(details) : details
-		}
-		
-		this.logGui.Log(gitLog, true)
-		
-		if (logEdit)
-			logEdit.Value := Format("[Git {1}] {2}", operation, details) . "`n" . logEdit.Value
-			
-		return this
-	}
-
-	_GitError(operation, e, logEdit := '') {
-		errorDetails := {
-			type: "GitError",
-			message: e.Message,
-			source: "Git:" . operation,
-			details: e.HasProp("Stack") ? e.Stack : ""
-		}
-		
-		this.logGui.Log(errorDetails, true)
-		
-		if (logEdit)
-			logEdit.Value := Format("[Git Error-{1}] {2}", operation, e.Message) . "`n" . logEdit.Value
-			
-		return this
-	}
-
-	/**
-	 * Clean up resources when logger instance is destroyed
-	 */
-	__Delete() {
-		if (ErrorLogger.instances.Has(this.name))
-			ErrorLogger.instances.Delete(this.name)
-	}
-}
-;@region FileSystemSearch
-class FileSystemSearch extends Gui {
-
-	/**
-		* Find all the matches of your search request within the currently
-		* opened folder in the explorer.
-		* The searcher recurses into all the subfolders.
-		* Will search for both files and folders.
-		* After the search is completed, will show all the matches in a list.
-		* Call StartSearch() after creating the class instance if you can pass
-		* the input yourself.
-		* Call GetInput() after creating the class instance if you want to have
-		* an input box to type in your search into.
-		*/
-	__New(searchWhere?, caseSense := 'Off') {
-		super.__New('+Resize', 'These files match your search:')
-
-		Gui2.MakeFontNicer(14)
-		Gui2.DarkMode(this)
-
-		this.List := this.AddText(, '
-		(
-			Right click on a result to copy its full path.
-			Double click to open it in explorer.
-		)')
-
-		this.WidthOffset  := 35
-		this.HeightOffset := 80
-
-		this.List := this.AddListView(
-			'Count50 Background' this.BackColor,
-			/**
-				* Count50 — we're not losing much by allocating more memory
-				* than needed,
-				* and on the other hand we improve the performance by a lot
-				* by doing so
-				*/
-			['File', 'Folder', 'Directory']
-		)
-
-		this.caseSense := caseSense
-
-		if !IsSet(searchWhere) {
-			this.ValidatePath()
-		} else {
-			this.path := searchWhere
-		}
-
-		this.SetOnEvents()
-	}
-
-	/**
-		* Get an input box to type in your search request into.
-		* Get a list of all the matches that you can open in explorer.
-		*/
-	GetInput() {
-		if !input := CleanInputBox().WaitForInput() {
-			return false
-		}
-		this.StartSearch(input)
-	}
-
-	ValidatePath() {
-		SetTitleMatchMode('RegEx')
-		try {
-			this.path := WinGetTitle('^[A-Z]: ahk_exe explorer\.exe')
-		}
-		catch Any {
-			Infos('Open an explorer window first!')
-		}
-	}
-
-	/**
-		* Get a list of all the matches of *input*.
-		* You can either open them in explorer or copy their path.
-		* @param input *String*
-		*/
-	StartSearch(input) {
-		/**
-			* Improves performance rather than keeping on adding rows
-			* and redrawing for each one of them
-			*/
-		this.List.Opt('-Redraw')
-
-		;To remove the worry of 'did I really start the search?'
-		gInfo := Infos('The search is in progress')
-
-		if this.path ~= '^[A-Z]:\\$' {
-			this.path := this.path[1, -2]
-		}
-
-		loop files this.path '\*.*', 'FDR' {
-			if !A_LoopFileName.Find(input, this.caseSense) {
-				continue
-			}
-			if A_LoopFileAttrib.Find('D')
-				this.List.Add(, , A_LoopFileName, A_LoopFileDir)
-			else if A_LoopFileExt
-				this.List.Add(, A_LoopFileName, , A_LoopFileDir)
-		}
-
-		gInfo.Destroy()
-
-		this.List.Opt('+Redraw')
-		this.List.ModifyCol() ;It makes the columns fit the data — @rbstrachan
-
-		this.Show('AutoSize')
-	}
-
-	DestroyResultListGui() {
-		this.Minimize()
-		this.Destroy()
-	}
-
-	SetOnEvents() {
-		this.List.OnEvent('DoubleClick',
-			(guiCtrlObj, selectedRow) => this.ShowResultInFolder(selectedRow)
-		)
-		this.List.OnEvent('ContextMenu',
-			(guiCtrlObj, rowNumber, var:=0) => this.CopyPathToClip(rowNumber)
-		)
-		this.OnEvent('Size',
-			(guiObj, minMax, width, height) => this.FixResizing(width, height)
-		)
-		this.OnEvent('Escape', (guiObj) => this.DestroyResultListGui())
-	}
-
-	FixResizing(width, height) {
-		this.List.Move(,, width - this.WidthOffset, height - this.HeightOffset)
-		/**
-			* When you resize the main gui, the listview also gets resize to have the same
-			* borders as usual.
-			* So, on resize, the onevent passes *what* you resized and the width and height
-			* that's now the current one.
-			* Then you can use that width and height to also resize the listview in relation
-			* to the gui
-			*/
-	}
-
-	ShowResultInFolder(selectedRow) {
-		try Run('explorer.exe /select,' this.GetPathFromList(selectedRow))
-		/**
-			* By passing select, we achieve the cool highlighting thing when the file / folder
-			* gets opened. (You can pass command line parameters into the run function)
-			*/
-	}
-
-	CopyPathToClip(rowNumber) {
-		A_Clipboard := this.GetPathFromList(rowNumber)
-		Info('Path copied to clipboard!')
-	}
-
-	GetPathFromList(rowNumber) {
-		/**
-			* The OnEvent passes which row we interacted with automatically
-			* So we read the text that's on the row
-			* And concoct it to become the full path
-			* This is much better performance-wise than adding all the full paths to an array
-			* while adding the listviews (in the loop) and accessing it here.
-			* Arguably more readable too
-			*/
-
-		file := this.List.GetText(rowNumber, 1)
-		dir  := this.List.GetText(rowNumber, 2)
-		path := this.List.GetText(rowNumber, 3)
-
-		return path '\' file dir ; No explanation required, it's just logic — @rbstrachan
-	}
-}
-;@endregion FileSystemSearch
-; ---------------------------------------------------------------------------
-;@region FileSearch
-class FileSearch {
-	static fso := ComObject('Scripting.FileSystemObject')
-
-	__New(searchPath := A_WorkingDir) {
-		this.searchPath := searchPath
-	}
-
-	Search(pattern := '', options := {}) {
-		results := []
-		this._SearchRecursive(this.searchPath, pattern, options, &results)
-		sortBy := options.HasOwnProp('sortBy') ? options.sortBy : 'name'
-		sortDesc := options.HasOwnProp('sortDesc') ? options.sortDesc : false
-		return this._SortResults(results, sortBy, sortDesc)
-	}
-
-	_SearchRecursive(folder, pattern, options, &results) {
-		for file in FileSearch.fso.GetFolder(folder).Files {
-			if this._MatchesCriteria(file, pattern, options)
-				results.Push({path: file.Path, name: file.Name, size: file.Size, dateModified: file.DateLastModified})
-		}
-		for subFolder in FileSearch.fso.GetFolder(folder).SubFolders
-			this._SearchRecursive(subFolder.Path, pattern, options, &results)
-	}
-
-	_MatchesCriteria(file, pattern, options) {
-		if pattern && !InStr(file.Name, pattern)
-			return false
-		if options.HasOwnProp('minSize') && file.Size < options.minSize
-			return false
-		if options.HasOwnProp('maxSize') && file.Size > options.maxSize
-			return false
-		if options.HasOwnProp('afterDate') && file.DateLastModified < options.afterDate
-			return false
-		if options.HasOwnProp('beforeDate') && file.DateLastModified > options.beforeDate
-			return false
-		return true
-	}
-
-	_SortResults(results, sortBy := 'name', sortDesc := false) {
-		results.Sort((*) => this._CompareItems(&a, &b, sortBy, sortDesc))
-		return results
+	Debug(input, showGui := false) {
+		return this.Log(input, "Debug", showGui)
 	}
 	
-	_CompareItems(&a, &b, sortBy, sortDesc) {
-		if (sortDesc)
-			return a.%sortBy% > b.%sortBy% ? -1 : 1
-		else
-			return a.%sortBy% < b.%sortBy% ? -1 : 1
+	/**
+	 * @method Info
+	 * @description Log an info message
+	 * @param {String|Object} input Message to log
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} This instance for method chaining
+	 */
+	Info(input, showGui := true) {
+		return this.Log(input, "Info", showGui)
 	}
-
-	ShowResultsGUI(results) {
-		; Implement GUI display similar to FileSystemSearch class
-		Infos(results)
+	
+	/**
+	 * @method Warning
+	 * @description Log a warning message
+	 * @param {String|Object} input Message to log
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} This instance for method chaining
+	 */
+	Warning(input, showGui := true) {
+		return this.Log(input, "Warning", showGui)
 	}
-}
-
-#HotIf WinActive('ahk_class CabinetWClass')
-; F3::{
-; 	sel := []
-; 	sel := getSelected()
-; 	str := ''
-; 	str := sel.ToString()
-; 	len := sel.Length
-; 	Infos(len '`n' str)
-; }
-F3::fileString()
-fileString(&str?){
-	sel := []
-	sel := getSelected()
-	str := ''
-	str := sel.ToString()
-	len := sel.Length
-	; Infos(len '`n' str)
-	return str
-}
-^+Enter::
-^+LButton::{
-	sel := []
-	sel := ''
-	sel := getSelected()
-	len := sel.length
-	; if len == 1 {
-	if len >= 1 {
-		sel := sel.ToString()
-		Run(Paths.Code ' "' sel '"')
-		; Infos('len == ' len)
+	
+	/**
+	 * @method Error
+	 * @description Log an error message
+	 * @param {String|Error|Object} input Error to log
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} This instance for method chaining
+	 */
+	Error(input, showGui := true) {
+		return this.Log(input, "Error", showGui)
 	}
-	else {
-		for each, value in sel {
-			Run(Paths.Code ' "' value '"')
-			; Infos('I did this array to run.')
+	
+	/**
+	 * @method Critical
+	 * @description Log a critical error message
+	 * @param {String|Error|Object} input Error to log
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} This instance for method chaining
+	 */
+	Critical(input, showGui := true) {
+		return this.Log(input, "Critical", showGui)
+	}
+	
+	/**
+	 * @method LogException
+	 * @description Log an exception with detailed information
+	 * @param {Error} err Error object to log
+	 * @param {String} [context=""] Additional context information
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} This instance for method chaining
+	 */
+	LogException(err, context := "", showGui := true) {
+		if (!(err is Error)) {
+			throw ValueError("LogException requires an Error object", -1)
+		}
+		
+		; Add context to error
+		err.Context := context
+		
+		; Log the error
+		return this.Log(err, "Error", showGui)
+	}
+	
+	/**
+	 * @method LogObject
+	 * @description Log all properties of an object
+	 * @param {Object} obj Object to log
+	 * @param {String} [title="Object Log"] Log entry title
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} This instance for method chaining
+	 */
+	LogObject(obj, title := "Object Log", showGui := true) {
+		; Skip if not an object
+		if (!IsObject(obj)) {
+			return this.Warning("LogObject called with non-object value", showGui)
+		}
+		
+		; Create log entry with object properties
+		entry := {
+			type: "Info",
+			message: title,
+			source: "Object Logger",
+			details: ""
+		}
+		
+		; Collect object properties
+		try {
+			; For objects with OwnProps method
+			if (HasMethod(obj, "OwnProps")) {
+				props := {}
+				for key, value in obj.OwnProps() {
+					props.%key% := IsObject(value) ? "[Object]" : value
+				}
+				entry.details := JSON.Stringify(props, 4)
+			} 
+			; For arrays
+			else if (obj is Array) {
+				entry.details := JSON.Stringify(obj, 4)
+			}
+			; For Maps
+			else if (obj is Map) {
+				mapObj := {}
+				for key, value in obj {
+					mapObj.%key% := IsObject(value) ? "[Object]" : value
+				}
+				entry.details := JSON.Stringify(mapObj, 4)
+			}
+			; Fallback for other objects
+			else {
+				entry.details := String(obj)
+			}
+		} catch Error as e {
+			entry.details := "Error getting object properties: " e.Message
+		}
+		
+		; Log the entry
+		if (this.logGui && this.displayLogs) {
+			try {
+				this.logGui.Log(entry, showGui)
+			} catch Error as e {
+				OutputDebug("ErrorLogger: Failed to log to GUI: " e.Message)
+			}
+		}
+		
+		return this
+	}
+	
+	/**
+	 * @method LogPerformance
+	 * @description Log performance metrics
+	 * @param {String} operation Operation being measured
+	 * @param {Function} func Function to measure
+	 * @param {Array} [params] Parameters to pass to the function
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {Any} The return value of the function
+	 */
+	LogPerformance(operation, func, params := [], showGui := true) {
+		if (!HasMethod(func)) {
+			throw ValueError("LogPerformance requires a function", -1)
+		}
+		
+		; Prepare performance counters
+		DllCall("QueryPerformanceFrequency", "Int64*", &freq := 0)
+		DllCall("QueryPerformanceCounter", "Int64*", &startTime := 0)
+		
+		; Execute the function
+		result := func(params*)
+		
+		; Get end time
+		DllCall("QueryPerformanceCounter", "Int64*", &endTime := 0)
+		
+		; Calculate elapsed time in milliseconds
+		elapsedTime := (endTime - startTime) * 1000 / freq
+		
+		; Log performance data
+		entry := {
+			type: "Debug",
+			message: "Performance: " operation,
+			source: "Performance Logger",
+			details: "Execution time: " Round(elapsedTime, 3) " ms"
+		}
+		
+		; Log the entry
+		if (this.logGui && this.displayLogs) {
+			try {
+				this.logGui.Log(entry, showGui)
+			} catch Error as e {
+				OutputDebug("ErrorLogger: Failed to log to GUI: " e.Message)
+			}
+		}
+		
+		return result
+	}
+	
+	/**
+	 * @method LogSystemInfo
+	 * @description Log system information
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} This instance for method chaining
+	 */
+	LogSystemInfo(showGui := true) {
+		; Collect system information
+		sysInfo := {
+			ComputerName: A_ComputerName,
+			UserName: A_UserName,
+			OSVersion: A_OSVersion,
+			Is64BitOS: A_Is64bitOS,
+			Language: A_Language,
+			ScriptDir: A_ScriptDir,
+			ScriptName: A_ScriptName,
+			AhkVersion: A_AhkVersion,
+			IsAdmin: DllCall("shell32\IsUserAnAdmin"),
+			ScreenDPI: A_ScreenDPI,
+			ScreenWidth: A_ScreenWidth,
+			ScreenHeight: A_ScreenHeight,
+			IPAddresses: this._GetIPAddresses()
+		}
+		
+		; Create log entry
+		entry := {
+			type: "Info",
+			message: "System Information",
+			source: "System Logger",
+			details: JSON.Stringify(sysInfo, 4)
+		}
+		
+		; Log the entry
+		if (this.logGui && this.displayLogs) {
+			try {
+				this.logGui.Log(entry, showGui)
+			} catch Error as e {
+				OutputDebug("ErrorLogger: Failed to log to GUI: " e.Message)
+			}
+		}
+		
+		return this
+	}
+	
+	/**
+	 * @method ShowGui
+	 * @description Shows the log GUI
+	 * @returns {ErrorLogger} This instance for method chaining
+	 */
+	ShowGui() {
+		if (this.logGui) {
+			try {
+				this.logGui.Show()
+			} catch Error as e {
+				OutputDebug("ErrorLogger: Failed to show GUI: " e.Message)
+			}
+		}
+		
+		return this
+	}
+	
+	/**
+	 * @method HideGui
+	 * @description Hides the log GUI
+	 * @returns {ErrorLogger} This instance for method chaining
+	 */
+	HideGui() {
+		if (this.logGui) {
+			try {
+				this.logGui.Hide()
+			} catch Error as e {
+				OutputDebug("ErrorLogger: Failed to hide GUI: " e.Message)
+			}
+		}
+		
+		return this
+	}
+	
+	/**
+	 * @method SetLogLevel
+	 * @description Sets the minimum log level
+	 * @param {String} level Log level ("Debug", "Info", "Warning", "Error", "Critical")
+	 * @returns {ErrorLogger} This instance for method chaining
+	 */
+	SetLogLevel(level) {
+		if (!ErrorLogger.logLevels.HasProp(level)) {
+			throw ValueError("Invalid log level: " level, -1)
+		}
+		
+		this.logLevel := ErrorLogger.logLevels.%level%
+		
+		return this
+	}
+	
+	/**
+	 * @method ClearLogs
+	 * @description Clears all logs
+	 * @returns {ErrorLogger} This instance for method chaining
+	 */
+	ClearLogs() {
+		this.logEntries := []
+		
+		if (this.logGui) {
+			try {
+				this.logGui.ClearLog()
+			} catch Error as e {
+				OutputDebug("ErrorLogger: Failed to clear logs: " e.Message)
+			}
+		}
+		
+		return this
+	}
+	
+	/**
+	 * @method SaveLogs
+	 * @description Saves logs to file
+	 * @param {String} [filePath=""] Optional file path (uses default if not provided)
+	 * @returns {ErrorLogger} This instance for method chaining
+	 */
+	SaveLogs(filePath := "") {
+		; Use provided path or default
+		savePath := filePath ? filePath : this.logFilePath
+		
+		try {
+			FileDelete(savePath)
+			FileAppend(JSON.Stringify(this.logEntries, 4), savePath)
+			
+			return this
+		} catch Error as e {
+			OutputDebug("ErrorLogger: Failed to save logs: " e.Message)
+			
+			; Try to log the error
+			this.Error("Failed to save logs: " e.Message, false)
+			
+			return this
 		}
 	}
-}
-#HotIf
-
-/**
-	* 
-	* @description..: Get the paths of selected files and folders both in Explorer and on the Desktop
-	* @link 	GEV: https://www.autohotkey.com/boards/viewtopic.php?p=514288#p514288
-	* @link	v2: https://www.autohotkey.com/boards/viewtopic.php?style=17&t=60403#p255256
-	* @author 	v1: GEV, teadrinker
-	* @author 	v2: mikeyww
-*/
-; ---------------------------------------------------------------------------
-getSelected(hWnd := 0) { 
-	Static SWC_DESKTOP := 8, SWFO_NEEDDISPATCH := 1
-	winClass := WinGetClass(hWnd := WinActive('A'))
-	If !(winClass ~= 'Progman|WorkerW|(Cabinet|Explore)WClass'){
-		Return
+	
+	/**
+	 * @method GetLogEntries
+	 * @description Gets all log entries
+	 * @param {String} [type=""] Optional filter by type
+	 * @returns {Array} Array of log entries
+	 */
+	GetLogEntries(type := "") {
+		; Return all entries if no type filter
+		if (type = "") {
+			return this.logEntries
+		}
+		
+		; Filter entries by type
+		filteredEntries := []
+		for entry in this.logEntries {
+			if (entry.type = type) {
+				filteredEntries.Push(entry)
+			}
+		}
+		
+		return filteredEntries
 	}
-	shellWindows := ComObject('Shell.Application').Windows
-	sel := []
-	If !(winClass ~= 'Progman|WorkerW') {
-		For window in shellWindows{
-			If hWnd = window.HWND && shellFolderView := window.Document{
-				Break
+	
+	/**
+	 * @method __Delete
+	 * @description Cleanup when object is destroyed
+	 */
+	__Delete() {
+		; Save logs if auto-save is enabled
+		if (this.autoSaveEnabled) {
+			this.SaveLogs()
+		}
+		
+		; Remove from instances map
+		ErrorLogger.instances.Delete(this.name)
+	}
+	
+	/**
+	 * Private helper methods
+	 */
+	
+	/**
+	 * @method _CreateLogEntry
+	 * @description Creates a structured log entry from input data
+	 * @param {String|Error|Object} input Log input
+	 * @param {String} type Log type
+	 * @returns {Object} Structured log entry
+	 */
+	_CreateLogEntry(input, type) {
+		timestamp := FormatTime(, "yyyy-MM-dd HH:mm:ss")
+		
+		if (IsObject(input)) {
+			; Process structured input
+			if (input is Error) {
+				; Format error objects
+				return {
+					timestamp: timestamp,
+					type: type,
+					message: input.Message,
+					source: input.HasProp("File") 
+						? input.File . ":" . input.Line 
+						: (input.HasProp("Context") ? input.Context : "Unknown"),
+					details: this._FormatErrorDetails(input)
+				}
+			} else if (input.HasProp("type") && input.HasProp("message")) {
+				; Input is already a log entry
+				return input.HasProp("timestamp") 
+					? input 
+					: input.Assign({timestamp: timestamp}, input)
+			} else {
+				; Handle other object types
+				return {
+					timestamp: timestamp,
+					type: type,
+					message: input.HasProp("message") ? input.message : "Object log",
+					source: input.HasProp("source") ? input.source : this.name,
+					details: JSON.Stringify(input, 4)
+				}
+			}
+		} else {
+			; Handle simple string input
+			return {
+				timestamp: timestamp,
+				type: type,
+				message: input,
+				source: this.name,
+				details: ""
 			}
 		}
 	}
-	Else shellFolderView := shellWindows.FindWindowSW(0, 0, SWC_DESKTOP, 0, SWFO_NEEDDISPATCH).Document
-	For item in shellFolderView.SelectedItems{
-		sel.SafePush(item.Path)
+	
+	/**
+	 * @method _FormatErrorDetails
+	 * @description Formats error details for logging
+	 * @param {Error} err Error object
+	 * @returns {String} Formatted error details
+	 */
+	_FormatErrorDetails(err) {
+		details := ""
+		
+		; Add standard error properties
+		props := ["Message", "What", "Extra", "File", "Line", "Stack"]
+		for prop in props {
+			if (err.HasProp(prop) && err.%prop% != "") {
+				details .= prop . ": " . err.%prop% . "`n"
+			}
+		}
+		
+		; Add any additional properties
+		for prop in err.OwnProps() {
+			if (prop = "Message" || prop = "What" || prop = "Extra" || 
+				prop = "File" || prop = "Line" || prop = "Stack") {
+				continue
+			}
+			
+			; Add other properties
+			if (err.%prop% != "") {
+				details .= prop . ": " . (IsObject(err.%prop%) 
+					? JSON.Stringify(err.%prop%) 
+					: err.%prop%) . "`n"
+			}
+		}
+		
+		return details
 	}
-	Return sel
+	
+	/**
+	 * @method _FormatLogEntry
+	 * @description Formats a log entry for console output
+	 * @param {Object} entry Log entry
+	 * @returns {String} Formatted log entry
+	 */
+	_FormatLogEntry(entry) {
+		return Format("[{1}] [{2}] {3} ({4}){5}", 
+			entry.timestamp, 
+			entry.type, 
+			entry.message,
+			entry.source,
+			entry.details ? "`n" . entry.details : "")
+	}
+	
+	/**
+	 * @method _GetIPAddresses
+	 * @description Gets system IP addresses
+	 * @returns {Array} Array of IP addresses
+	 */
+	_GetIPAddresses() {
+		ipList := []
+		
+		try {
+			; Run ipconfig and get output
+			result := ""
+			RunWait("ipconfig", , "Hide", &result)
+			
+			; Extract IP addresses
+			ipPattern := "IPv4 Address.*: ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)"
+			pos := 1
+			
+			while (pos := RegExMatch(result, ipPattern, &match, pos)) {
+				ipList.Push(match[1])
+				pos += StrLen(match[0])
+			}
+		} catch {
+			; Ignore errors
+		}
+		
+		return ipList
+	}
+	
+	/**
+	 * Static utility methods
+	 */
+	
+	/**
+	 * @method Log
+	 * @description Static log method for quick logging
+	 * @param {String|Error|Object} input Message or error to log
+	 * @param {String} [type="Info"] Log entry type
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} Logger instance
+	 */
+	static Log(input, type := "Info", showGui := true) {
+		; Use or create default instance
+		instance := ErrorLogger.instances.Count ? ErrorLogger.instances.Values()[1] : ErrorLogger()
+		
+		; Log the message
+		instance.Log(input, type, showGui)
+		
+		return instance
+	}
+	
+	/**
+	 * @method Debug
+	 * @description Static debug logging method
+	 * @param {String|Object} input Message to log
+	 * @param {Boolean} [showGui=false] Whether to show the GUI
+	 * @returns {ErrorLogger} Logger instance
+	 */
+	static Debug(input, showGui := false) {
+		return ErrorLogger.Log(input, "Debug", showGui)
+	}
+	
+	/**
+	 * @method Info
+	 * @description Static info logging method
+	 * @param {String|Object} input Message to log
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} Logger instance
+	 */
+	static Info(input, showGui := true) {
+		return ErrorLogger.Log(input, "Info", showGui)
+	}
+	
+	/**
+	 * @method Warning
+	 * @description Static warning logging method
+	 * @param {String|Object} input Message to log
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} Logger instance
+	 */
+	static Warning(input, showGui := true) {
+		return ErrorLogger.Log(input, "Warning", showGui)
+	}
+	
+	/**
+	 * @method Error
+	 * @description Static error logging method
+	 * @param {String|Error|Object} input Error to log
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} Logger instance
+	 */
+	static Error(input, showGui := true) {
+		return ErrorLogger.Log(input, "Error", showGui)
+	}
+	
+	/**
+	 * @method Critical
+	 * @description Static critical error logging method
+	 * @param {String|Error|Object} input Error to log
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} Logger instance
+	 */
+	static Critical(input, showGui := true) {
+		return ErrorLogger.Log(input, "Critical", showGui)
+	}
+	
+	/**
+	 * @method LogException
+	 * @description Static method to log exceptions
+	 * @param {Error} err Error object to log
+	 * @param {String} [context=""] Additional context information
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} Logger instance
+	 */
+	static LogException(err, context := "", showGui := true) {
+		; Use or create default instance
+		instance := ErrorLogger.instances.Count ? ErrorLogger.instances.Values()[1] : ErrorLogger()
+		
+		; Log the exception
+		instance.LogException(err, context, showGui)
+		
+		return instance
+	}
+	
+	/**
+	 * @method LogObject
+	 * @description Static method to log object properties
+	 * @param {Object} obj Object to log
+	 * @param {String} [title="Object Log"] Log entry title
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} Logger instance
+	 */
+	static LogObject(obj, title := "Object Log", showGui := true) {
+		; Use or create default instance
+		instance := ErrorLogger.instances.Count ? ErrorLogger.instances.Values()[1] : ErrorLogger()
+		
+		; Log the object
+		instance.LogObject(obj, title, showGui)
+		
+		return instance
+	}
+	
+	/**
+	 * @method LogSystemInfo
+	 * @description Static method to log system information
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} Logger instance
+	 */
+	static LogSystemInfo(showGui := true) {
+		; Use or create default instance
+		instance := ErrorLogger.instances.Count ? ErrorLogger.instances.Values()[1] : ErrorLogger()
+		
+		; Log system info
+		instance.LogSystemInfo(showGui)
+		
+		return instance
+	}
+	
+	/**
+	 * @method ShowAll
+	 * @description Shows all logger GUIs
+	 */
+	static ShowAll() {
+		for name, instance in ErrorLogger.instances {
+			instance.ShowGui()
+		}
+	}
+	
+	/**
+	 * @method HideAll
+	 * @description Hides all logger GUIs
+	 */
+	static HideAll() {
+		for name, instance in ErrorLogger.instances {
+			instance.HideGui()
+		}
+	}
+	
+	/**
+	 * @method SaveAll
+	 * @description Saves logs for all instances
+	 */
+	static SaveAll() {
+		for name, instance in ErrorLogger.instances {
+			instance.SaveLogs()
+		}
+	}
+	
+	/**
+	 * @method Get
+	 * @description Gets a logger instance by name
+	 * @param {String} name Instance name
+	 * @returns {ErrorLogger} Logger instance or new instance if not found
+	 */
+	static Get(name) {
+		return ErrorLogger.instances.Has(name) ? ErrorLogger.instances[name] : ErrorLogger(name)
+	}
+
+	/**
+	 * @method LogErrorMap
+	 * @description Static method to log an error's properties as a map
+	 * @param {Error} err Error object to log
+	 * @param {Boolean} [showGui=true] Whether to show the GUI
+	 * @returns {ErrorLogger} Logger instance
+	 */
+	static LogErrorMap(err, showGui := true) {
+		; Create a map from the error object
+		errorMap := Map()
+		
+		; Add standard error properties
+		props := ["Message", "What", "Extra", "File", "Line", "Stack"]
+		for prop in props {
+			if (err.HasProp(prop) && err.%prop% != "") {
+				errorMap[prop] := err.%prop%
+			}
+		}
+		
+		; Add any additional properties
+		for prop in err.OwnProps() {
+			if (prop = "Message" || prop = "What" || prop = "Extra" || 
+				prop = "File" || prop = "Line" || prop = "Stack") {
+				continue
+			}
+			
+			errorMap[prop] := err.%prop%
+		}
+		
+		; Log the map using LogObject
+		return ErrorLogger.LogObject(errorMap, "Error Properties", showGui)
+	}
+
 }
+
+
+
 
 /*
 	Github: https://github.com/Nich-Cebolla/AutoHotkey-LibV2/blob/main/GuiResizer.ahk
@@ -2714,245 +3548,245 @@ getSelected(hWnd := 0) {
  */
 class Align {
 
-    static DPI_AWARENESS_CONTEXT := -4
+	static DPI_AWARENESS_CONTEXT := -4
 
-    ; --- Window-level alignment methods (from original) ---
-    static CenterH(Subject, Target) {
-        Subject.GetPos(&X1, &Y1, &W1)
-        Target.GetPos(&X2, , &W2)
-        Subject.Move(X2 + W2 / 2 - W1 / 2, Y1)
-    }
-    static CenterHSplit(Win1, Win2) {
-        Win1.GetPos(&X1, &Y1, &W1)
-        Win2.GetPos(&X2, &Y2, &W2)
-        diff := X1 + 0.5 * W1 - X2 - 0.5 * W2
-        X1 -= diff * 0.5
-        X2 += diff * 0.5
-        Win1.Move(X1, Y1)
-        Win2.Move(X2, Y2)
-    }
-    static CenterV(Subject, Target) {
-        Subject.GetPos(&X1, &Y1, , &H1)
-        Target.GetPos( , &Y2, , &H2)
-        Subject.Move(X1, Y2 + H2 / 2 - H1 / 2)
-    }
-    static CenterVSplit(Win1, Win2) {
-        Win1.GetPos(&X1, &Y1, , &H1)
-        Win2.GetPos(&X2, &Y2, , &H2)
-        diff := Y1 + 0.5 * H1 - Y2 - 0.5 * H2
-        Y1 -= diff * 0.5
-        Y2 += diff * 0.5
-        Win1.Move(X1, Y1)
-        Win2.Move(X2, Y2)
-    }
+	; --- Window-level alignment methods (from original) ---
+	static CenterH(Subject, Target) {
+		Subject.GetPos(&X1, &Y1, &W1)
+		Target.GetPos(&X2, , &W2)
+		Subject.Move(X2 + W2 / 2 - W1 / 2, Y1)
+	}
+	static CenterHSplit(Win1, Win2) {
+		Win1.GetPos(&X1, &Y1, &W1)
+		Win2.GetPos(&X2, &Y2, &W2)
+		diff := X1 + 0.5 * W1 - X2 - 0.5 * W2
+		X1 -= diff * 0.5
+		X2 += diff * 0.5
+		Win1.Move(X1, Y1)
+		Win2.Move(X2, Y2)
+	}
+	static CenterV(Subject, Target) {
+		Subject.GetPos(&X1, &Y1, , &H1)
+		Target.GetPos( , &Y2, , &H2)
+		Subject.Move(X1, Y2 + H2 / 2 - H1 / 2)
+	}
+	static CenterVSplit(Win1, Win2) {
+		Win1.GetPos(&X1, &Y1, , &H1)
+		Win2.GetPos(&X2, &Y2, , &H2)
+		diff := Y1 + 0.5 * H1 - Y2 - 0.5 * H2
+		Y1 -= diff * 0.5
+		Y2 += diff * 0.5
+		Win1.Move(X1, Y1)
+		Win2.Move(X2, Y2)
+	}
 
-    ; --- Control-level alignment methods (from your new class) ---
+	; --- Control-level alignment methods (from your new class) ---
 
-    /**
-     * Center a list of controls horizontally within a given width or container.
-     * @param {Array} controls Array of Gui.Control objects
-     * @param {Integer|Gui.Control|Gui} containerOrWidth Optional: container (GroupBox/Area/Gui) or width
-     * @param {Integer} y Optional Y position for all controls
-     */
-    static CenterHList(controls, containerOrWidth := 0, y := unset) {
-        if !IsSet(controls) || !IsObject(controls) || controls.Length = 0
-            throw ValueError("Align.CenterHList: controls must be a non-empty array", -1)
-        local sumWidth := 0
-        for _, ctrl in controls {
-            if !ctrl.HasOwnProp("Hwnd")
-                continue
-            ctrl.GetPos(,, &w)
-            sumWidth += w
-        }
-        ; Determine container width
-        local totalWidth := 0
-        if (containerOrWidth is Gui.Control || containerOrWidth is Gui) {
-            containerOrWidth.GetPos(,, &totalWidth)
-        } else if (containerOrWidth > 0) {
-            totalWidth := containerOrWidth
-        } else {
-            ; fallback: use parent gui width
-            parent := controls[1].Gui
-            parent.GetClientPos(,, &totalWidth)
-        }
-        local spacing := 0
-        if (totalWidth > 0 && controls.Length > 1)
-            spacing := Floor((totalWidth - sumWidth) / (controls.Length + 1))
-        else
-            spacing := 5
-        local x := spacing
-        for _, ctrl in controls {
-            ctrl.GetPos(,, &w, &h)
-            if IsSet(y)
-                ctrl.Move(x, y, w, h)
-            else
-                ctrl.Move(x, , w, h)
-            x += w + spacing
-        }
-        return this
-    }
+	/**
+	 * Center a list of controls horizontally within a given width or container.
+	 * @param {Array} controls Array of Gui.Control objects
+	 * @param {Integer|Gui.Control|Gui} containerOrWidth Optional: container (GroupBox/Area/Gui) or width
+	 * @param {Integer} y Optional Y position for all controls
+	 */
+	static CenterHList(controls, containerOrWidth := 0, y := unset) {
+		if !IsSet(controls) || !IsObject(controls) || controls.Length = 0
+			throw ValueError("Align.CenterHList: controls must be a non-empty array", -1)
+		local sumWidth := 0
+		for _, ctrl in controls {
+			if !ctrl.HasOwnProp("Hwnd")
+				continue
+			ctrl.GetPos(,, &w)
+			sumWidth += w
+		}
+		; Determine container width
+		local totalWidth := 0
+		if (containerOrWidth is Gui.Control || containerOrWidth is Gui) {
+			containerOrWidth.GetPos(,, &totalWidth)
+		} else if (containerOrWidth > 0) {
+			totalWidth := containerOrWidth
+		} else {
+			; fallback: use parent gui width
+			parent := controls[1].Gui
+			parent.GetClientPos(,, &totalWidth)
+		}
+		local spacing := 0
+		if (totalWidth > 0 && controls.Length > 1)
+			spacing := Floor((totalWidth - sumWidth) / (controls.Length + 1))
+		else
+			spacing := 5
+		local x := spacing
+		for _, ctrl in controls {
+			ctrl.GetPos(,, &w, &h)
+			if IsSet(y)
+				ctrl.Move(x, y, w, h)
+			else
+				ctrl.Move(x, , w, h)
+			x += w + spacing
+		}
+		return this
+	}
 
-    /**
-     * Center a list of controls vertically within a given height or container.
-     */
-    static CenterVList(controls, containerOrHeight := 0, x := unset) {
-        if !IsSet(controls) || !IsObject(controls) || controls.Length = 0
-            throw ValueError("Align.CenterVList: controls must be a non-empty array", -1)
-        local sumHeight := 0
-        for _, ctrl in controls {
-            if !ctrl.HasOwnProp("Hwnd")
-                continue
-            ctrl.GetPos(,,, &h)
-            sumHeight += h
-        }
-        local totalHeight := 0
-        if (containerOrHeight is Gui.Control || containerOrHeight is Gui) {
-            containerOrHeight.GetPos(,,, &totalHeight)
-        } else if (containerOrHeight > 0) {
-            totalHeight := containerOrHeight
-        } else {
-            parent := controls[1].Gui
-            parent.GetClientPos(,,, &totalHeight)
-        }
-        local spacing := 0
-        if (totalHeight > 0 && controls.Length > 1)
-            spacing := Floor((totalHeight - sumHeight) / (controls.Length + 1))
-        else
-            spacing := 5
-        local y := spacing
-        for _, ctrl in controls {
-            ctrl.GetPos(,, &w, &h)
-            if IsSet(x)
-                ctrl.Move(x, y, w, h)
-            else
-                ctrl.Move(, y, w, h)
-            y += h + spacing
-        }
-        return this
-    }
+	/**
+	 * Center a list of controls vertically within a given height or container.
+	 */
+	static CenterVList(controls, containerOrHeight := 0, x := unset) {
+		if !IsSet(controls) || !IsObject(controls) || controls.Length = 0
+			throw ValueError("Align.CenterVList: controls must be a non-empty array", -1)
+		local sumHeight := 0
+		for _, ctrl in controls {
+			if !ctrl.HasOwnProp("Hwnd")
+				continue
+			ctrl.GetPos(,,, &h)
+			sumHeight += h
+		}
+		local totalHeight := 0
+		if (containerOrHeight is Gui.Control || containerOrHeight is Gui) {
+			containerOrHeight.GetPos(,,, &totalHeight)
+		} else if (containerOrHeight > 0) {
+			totalHeight := containerOrHeight
+		} else {
+			parent := controls[1].Gui
+			parent.GetClientPos(,,, &totalHeight)
+		}
+		local spacing := 0
+		if (totalHeight > 0 && controls.Length > 1)
+			spacing := Floor((totalHeight - sumHeight) / (controls.Length + 1))
+		else
+			spacing := 5
+		local y := spacing
+		for _, ctrl in controls {
+			ctrl.GetPos(,, &w, &h)
+			if IsSet(x)
+				ctrl.Move(x, y, w, h)
+			else
+				ctrl.Move(, y, w, h)
+			y += h + spacing
+		}
+		return this
+	}
 
-    /**
-     * Set all controls in a list to the same width (max width).
-     */
-    static GroupWidth(controls) {
-        if !IsSet(controls) || !IsObject(controls) || controls.Length = 0
-            throw ValueError("Align.GroupWidth: controls must be a non-empty array", -1)
-        local maxWidth := 0
-        for _, ctrl in controls {
-            ctrl.GetPos(,, &w)
-            if (w > maxWidth)
-                maxWidth := w
-        }
-        for _, ctrl in controls {
-            ctrl.GetPos(&x, &y, , &h)
-            ctrl.Move(x, y, maxWidth, h)
-        }
-        return this
-    }
+	/**
+	 * Set all controls in a list to the same width (max width).
+	 */
+	static GroupWidth(controls) {
+		if !IsSet(controls) || !IsObject(controls) || controls.Length = 0
+			throw ValueError("Align.GroupWidth: controls must be a non-empty array", -1)
+		local maxWidth := 0
+		for _, ctrl in controls {
+			ctrl.GetPos(,, &w)
+			if (w > maxWidth)
+				maxWidth := w
+		}
+		for _, ctrl in controls {
+			ctrl.GetPos(&x, &y, , &h)
+			ctrl.Move(x, y, maxWidth, h)
+		}
+		return this
+	}
 
-    /**
-     * Evenly distribute controls horizontally within a given width or container.
-     */
-    static DistributeH(controls, containerOrWidth, y := unset) {
-        if !IsSet(controls) || !IsObject(controls) || controls.Length = 0
-            throw ValueError("Align.DistributeH: controls must be a non-empty array", -1)
-        local sumWidth := 0
-        for _, ctrl in controls {
-            ctrl.GetPos(,, &w)
-            sumWidth += w
-        }
-        local totalWidth := 0
-        if (containerOrWidth is Gui.Control || containerOrWidth is Gui) {
-            containerOrWidth.GetPos(,, &totalWidth)
-        } else {
-            totalWidth := containerOrWidth
-        }
-        local spacing := 0
-        if (controls.Length > 1)
-            spacing := Floor((totalWidth - sumWidth) / (controls.Length - 1))
-        else
-            spacing := 0
-        local x := 0
-        for _, ctrl in controls {
-            ctrl.GetPos(,, &w, &h)
-            if IsSet(y)
-                ctrl.Move(x, y, w, h)
-            else
-                ctrl.Move(x, , w, h)
-            x += w + spacing
-        }
-        return this
-    }
+	/**
+	 * Evenly distribute controls horizontally within a given width or container.
+	 */
+	static DistributeH(controls, containerOrWidth, y := unset) {
+		if !IsSet(controls) || !IsObject(controls) || controls.Length = 0
+			throw ValueError("Align.DistributeH: controls must be a non-empty array", -1)
+		local sumWidth := 0
+		for _, ctrl in controls {
+			ctrl.GetPos(,, &w)
+			sumWidth += w
+		}
+		local totalWidth := 0
+		if (containerOrWidth is Gui.Control || containerOrWidth is Gui) {
+			containerOrWidth.GetPos(,, &totalWidth)
+		} else {
+			totalWidth := containerOrWidth
+		}
+		local spacing := 0
+		if (controls.Length > 1)
+			spacing := Floor((totalWidth - sumWidth) / (controls.Length - 1))
+		else
+			spacing := 0
+		local x := 0
+		for _, ctrl in controls {
+			ctrl.GetPos(,, &w, &h)
+			if IsSet(y)
+				ctrl.Move(x, y, w, h)
+			else
+				ctrl.Move(x, , w, h)
+			x += w + spacing
+		}
+		return this
+	}
 
-    /**
-     * Evenly distribute controls vertically within a given height or container.
-     */
-    static DistributeV(controls, containerOrHeight, x := unset) {
-        if !IsSet(controls) || !IsObject(controls) || controls.Length = 0
-            throw ValueError("Align.DistributeV: controls must be a non-empty array", -1)
-        local sumHeight := 0
-        for _, ctrl in controls {
-            ctrl.GetPos(,,, &h)
-            sumHeight += h
-        }
-        local totalHeight := 0
-        if (containerOrHeight is Gui.Control || containerOrHeight is Gui) {
-            containerOrHeight.GetPos(,,, &totalHeight)
-        } else {
-            totalHeight := containerOrHeight
-        }
-        local spacing := 0
-        if (controls.Length > 1)
-            spacing := Floor((totalHeight - sumHeight) / (controls.Length - 1))
-        else
-            spacing := 0
-        local y := 0
-        for _, ctrl in controls {
-            ctrl.GetPos(,, &w, &h)
-            if IsSet(x)
-                ctrl.Move(x, y, w, h)
-            else
-                ctrl.Move(, y, w, h)
-            y += h + spacing
-        }
-        return this
-    }
+	/**
+	 * Evenly distribute controls vertically within a given height or container.
+	 */
+	static DistributeV(controls, containerOrHeight, x := unset) {
+		if !IsSet(controls) || !IsObject(controls) || controls.Length = 0
+			throw ValueError("Align.DistributeV: controls must be a non-empty array", -1)
+		local sumHeight := 0
+		for _, ctrl in controls {
+			ctrl.GetPos(,,, &h)
+			sumHeight += h
+		}
+		local totalHeight := 0
+		if (containerOrHeight is Gui.Control || containerOrHeight is Gui) {
+			containerOrHeight.GetPos(,,, &totalHeight)
+		} else {
+			totalHeight := containerOrHeight
+		}
+		local spacing := 0
+		if (controls.Length > 1)
+			spacing := Floor((totalHeight - sumHeight) / (controls.Length - 1))
+		else
+			spacing := 0
+		local y := 0
+		for _, ctrl in controls {
+			ctrl.GetPos(,, &w, &h)
+			if IsSet(x)
+				ctrl.Move(x, y, w, h)
+			else
+				ctrl.Move(, y, w, h)
+			y += h + spacing
+		}
+		return this
+	}
 
-    ; --- Optionally: Add methods for grid/column/row layout ---
-    /**
-     * Arrange controls in a grid within a container.
-     * @param {Array} controls Array of controls
-     * @param {Integer} columns Number of columns
-     * @param {Gui.Control|Gui} container Container to arrange within
-     * @param {Integer} hSpacing Horizontal spacing
-     * @param {Integer} vSpacing Vertical spacing
-     */
-    static Grid(controls, columns, container := unset, hSpacing := 5, vSpacing := 5) {
-        if !IsSet(controls) || !IsObject(controls) || controls.Length = 0
-            throw ValueError("Align.Grid: controls must be a non-empty array", -1)
-        local x0 := 0, y0 := 0, cW := 0, cH := 0
-        if IsSet(container) && (container is Gui.Control || container is Gui) {
-            container.GetPos(&x0, &y0, &cW, &cH)
-        }
-        local rows := Ceil(controls.Length / columns)
-        local maxW := 0, maxH := 0
-        ; Find max width/height for uniform grid
-        for _, ctrl in controls {
-            ctrl.GetPos(,, &w, &h)
-            if (w > maxW)
-                maxW := w
-            if (h > maxH)
-                maxH := h
-        }
-        for i, ctrl in controls {
-            local col := Mod(i-1, columns)
-            local row := Floor((i-1)/columns)
-            local x := x0 + col * (maxW + hSpacing)
-            local y := y0 + row * (maxH + vSpacing)
-            ctrl.Move(x, y, maxW, maxH)
-        }
-        return this
-    }
+	; --- Optionally: Add methods for grid/column/row layout ---
+	/**
+	 * Arrange controls in a grid within a container.
+	 * @param {Array} controls Array of controls
+	 * @param {Integer} columns Number of columns
+	 * @param {Gui.Control|Gui} container Container to arrange within
+	 * @param {Integer} hSpacing Horizontal spacing
+	 * @param {Integer} vSpacing Vertical spacing
+	 */
+	static Grid(controls, columns, container := unset, hSpacing := 5, vSpacing := 5) {
+		if !IsSet(controls) || !IsObject(controls) || controls.Length = 0
+			throw ValueError("Align.Grid: controls must be a non-empty array", -1)
+		local x0 := 0, y0 := 0, cW := 0, cH := 0
+		if IsSet(container) && (container is Gui.Control || container is Gui) {
+			container.GetPos(&x0, &y0, &cW, &cH)
+		}
+		local rows := Ceil(controls.Length / columns)
+		local maxW := 0, maxH := 0
+		; Find max width/height for uniform grid
+		for _, ctrl in controls {
+			ctrl.GetPos(,, &w, &h)
+			if (w > maxW)
+				maxW := w
+			if (h > maxH)
+				maxH := h
+		}
+		for i, ctrl in controls {
+			local col := Mod(i-1, columns)
+			local row := Floor((i-1)/columns)
+			local x := x0 + col * (maxW + hSpacing)
+			local y := y0 + row * (maxH + vSpacing)
+			ctrl.Move(x, y, maxW, maxH)
+		}
+		return this
+	}
 
 	/**
 	 * Arrange controls in a horizontal toolbar row within a given area.
@@ -3178,16 +4012,16 @@ class Align {
 		}
 	}
 
-    ; --- Window proxy for non-AHK windows (from original) ---
-    __New(Hwnd) {
-        this.Hwnd := Hwnd
-    }
-    GetPos(&X?, &Y?, &W?, &H?) {
-        WinGetPos(&X, &Y, &W, &H, this.Hwnd)
-    }
-    Move(X?, Y?, W?, H?) {
-        WinMove(X ?? unset, Y ?? unset, W ?? unset, H ?? unset, this.Hwnd)
-    }
+	; --- Window proxy for non-AHK windows (from original) ---
+	__New(Hwnd) {
+		this.Hwnd := Hwnd
+	}
+	GetPos(&X?, &Y?, &W?, &H?) {
+		WinGetPos(&X, &Y, &W, &H, this.Hwnd)
+	}
+	Move(X?, Y?, W?, H?) {
+		WinMove(X ?? unset, Y ?? unset, W ?? unset, H ?? unset, this.Hwnd)
+	}
 }
 ; class Align {
 
@@ -3706,6 +4540,45 @@ MsgRTFBox(text, title := "", options := "YesNoCancel", owner := "") {
 */
 class GuiColors {
 
+	static __New(color*) {
+		if IsObject(color) {
+			; Infos(Type(color))
+			if IsArray(color) {
+				for value in color {
+					color := StrReplace(value, '#', '')
+				}
+			}
+			else if IsString(color) {
+				color := StrReplace(color, '#', '')
+			}
+			else if IsMap(color) {
+				; Convert map to string format
+				for key, value in color {
+					if !IsString(value) {
+						throw TypeError("Invalid color value for key: " key, -1)
+					}
+					color[key] := StrReplace(value, '#', '')
+				}
+			}
+			else {
+				for key, value in color {
+					if this.HasOwnProp(key) {
+						color.value := StrReplace(value, '#', '')
+					}
+					else {
+						throw ValueError("Invalid property: " key, -1)
+					}
+				}
+			}
+		}
+	}
+
+	static FM := {
+		Orange: '#C93102',
+		Gray : '#',
+		Blue : '#'
+	}
+
 	; Individual app theme colors as separate static properties
 	static VSCode := {
 		Background: "#1E1E1E",
@@ -3895,13 +4768,14 @@ class GuiColors {
 			hexColor := SubStr(hexColor, 2)
 			
 		; Ensure 6 characters
-		if (StrLen(hexColor) != 6)
+		if (StrLen(hexColor) != 6){
 			return {r: 0, g: 0, b: 0}
-			
+		}
+
 		; Convert to RGB
-		r := Integer("0x" SubStr(hexColor, 1, 2))
-		g := Integer("0x" SubStr(hexColor, 3, 2))
-		b := Integer("0x" SubStr(hexColor, 5, 2))
+		r := String("0x" SubStr(hexColor, 1, 2))
+		g := String("0x" SubStr(hexColor, 3, 2))
+		b := String("0x" SubStr(hexColor, 5, 2))
 		
 		return {r: r, g: g, b: b}
 	}
@@ -4132,6 +5006,7 @@ class GuiColors {
 	}
 
 	; Common named colors map
+	; Original Map version (keeping existing)
 	static mColors := Map(
 		"aliceblue", "F0F8FF",
 		"antiquewhite", "FAEBD7",
@@ -4276,6 +5151,296 @@ class GuiColors {
 		"yellowgreen", "9ACD32"
 	)
 
+	; Object version
+	static objColors := {
+		aliceblue: "F0F8FF",
+		antiquewhite: "FAEBD7",
+		aqua: "00FFFF",
+		aquamarine: "7FFFD4",
+		azure: "F0FFFF",
+		beige: "F5F5DC",
+		bisque: "FFE4C4",
+		black: "000000",
+		blanchedalmond: "FFEBCD",
+		blue: "0000FF",
+		blueviolet: "8A2BE2",
+		brown: "A52A2A",
+		burlywood: "DEB887",
+		cadetblue: "5F9EA0",
+		chartreuse: "7FFF00",
+		chocolate: "D2691E",
+		coral: "FF7F50",
+		cornflowerblue: "6495ED",
+		cornsilk: "FFF8DC",
+		crimson: "DC143C",
+		cyan: "00FFFF",
+		darkblue: "00008B",
+		darkcyan: "008B8B",
+		darkgoldenrod: "B8860B",
+		darkgray: "A9A9A9",
+		darkgreen: "006400",
+		darkkhaki: "BDB76B",
+		darkmagenta: "8B008B",
+		darkolivegreen: "556B2F",
+		darkorange: "FF8C00",
+		darkorchid: "9932CC",
+		darkred: "8B0000",
+		darksalmon: "E9967A",
+		darkseagreen: "8FBC8F",
+		darkslateblue: "483D8B",
+		darkslategray: "2F4F4F",
+		darkturquoise: "00CED1",
+		darkviolet: "9400D3",
+		deeppink: "FF1493",
+		deepskyblue: "00BFFF",
+		dimgray: "696969",
+		dodgerblue: "1E90FF",
+		firebrick: "B22222",
+		floralwhite: "FFFAF0",
+		forestgreen: "228B22",
+		fuchsia: "FF00FF",
+		gainsboro: "DCDCDC",
+		ghostwhite: "F8F8FF",
+		gold: "FFD700",
+		goldenrod: "DAA520",
+		gray: "808080",
+		green: "008000",
+		greenyellow: "ADFF2F",
+		honeydew: "F0FFF0",
+		hotpink: "FF69B4",
+		indianred: "CD5C5C",
+		indigo: "4B0082",
+		ivory: "FFFFF0",
+		khaki: "F0E68C",
+		lavender: "E6E6FA",
+		lavenderblush: "FFF0F5",
+		lawngreen: "7CFC00",
+		lemonchiffon: "FFFACD",
+		lightblue: "ADD8E6",
+		lightcoral: "F08080",
+		lightcyan: "E0FFFF",
+		lightgoldenrodyellow: "FAFAD2",
+		lightgray: "D3D3D3",
+		lightgreen: "90EE90",
+		lightpink: "FFB6C1",
+		lightsalmon: "FFA07A",
+		lightseagreen: "20B2AA",
+		lightskyblue: "87CEFA",
+		lightslategray: "778899",
+		lightsteelblue: "B0C4DE",
+		lightyellow: "FFFFE0",
+		lime: "00FF00",
+		limegreen: "32CD32",
+		linen: "FAF0E6",
+		magenta: "FF00FF",
+		maroon: "800000",
+		mediumaquamarine: "66CDAA",
+		mediumblue: "0000CD",
+		mediumorchid: "BA55D3",
+		mediumpurple: "9370DB",
+		mediumseagreen: "3CB371",
+		mediumslateblue: "7B68EE",
+		mediumspringgreen: "00FA9A",
+		mediumturquoise: "48D1CC",
+		mediumvioletred: "C71585",
+		midnightblue: "191970",
+		mintcream: "F5FFFA",
+		mistyrose: "FFE4E1",
+		moccasin: "FFE4B5",
+		navajowhite: "FFDEAD",
+		navy: "000080",
+		oldlace: "FDF5E6",
+		olive: "808000",
+		olivedrab: "6B8E23",
+		orange: "FFA500",
+		orangered: "FF4500",
+		orchid: "DA70D6",
+		palegoldenrod: "EEE8AA",
+		palegreen: "98FB98",
+		paleturquoise: "AFEEEE",
+		palevioletred: "DB7093",
+		papayawhip: "FFEFD5",
+		peachpuff: "FFDAB9",
+		peru: "CD853F",
+		pink: "FFC0CB",
+		plum: "DDA0DD",
+		powderblue: "B0E0E6",
+		purple: "800080",
+		rebeccapurple: "663399",
+		red: "FF0000",
+		rosybrown: "BC8F8F",
+		royalblue: "4169E1",
+		saddlebrown: "8B4513",
+		salmon: "FA8072",
+		sandybrown: "F4A460",
+		seagreen: "2E8B57",
+		seashell: "FFF5EE",
+		sienna: "A0522D",
+		silver: "C0C0C0",
+		skyblue: "87CEEB",
+		slateblue: "6A5ACD",
+		slategray: "708090",
+		snow: "FFFAFA",
+		springgreen: "00FF7F",
+		steelblue: "4682B4",
+		tan: "D2B48C",
+		teal: "008080",
+		thistle: "D8BFD8",
+		tomato: "FF6347",
+		turquoise: "40E0D0",
+		violet: "EE82EE",
+		wheat: "F5DEB3",
+		white: "FFFFFF",
+		whitesmoke: "F5F5F5",
+		yellow: "FFFF00",
+		yellowgreen: "9ACD32"
+	}
+
+	; Array version with assignment expressions
+	static arrColors := [
+		aliceblue := "F0F8FF",
+		antiquewhite := "FAEBD7",
+		aqua := "00FFFF",
+		aquamarine := "7FFFD4",
+		azure := "F0FFFF",
+		beige := "F5F5DC",
+		bisque := "FFE4C4",
+		black := "000000",
+		blanchedalmond := "FFEBCD",
+		blue := "0000FF",
+		blueviolet := "8A2BE2",
+		brown := "A52A2A",
+		burlywood := "DEB887",
+		cadetblue := "5F9EA0",
+		chartreuse := "7FFF00",
+		chocolate := "D2691E",
+		coral := "FF7F50",
+		cornflowerblue := "6495ED",
+		cornsilk := "FFF8DC",
+		crimson := "DC143C",
+		cyan := "00FFFF",
+		darkblue := "00008B",
+		darkcyan := "008B8B",
+		darkgoldenrod := "B8860B",
+		darkgray := "A9A9A9",
+		darkgreen := "006400",
+		darkkhaki := "BDB76B",
+		darkmagenta := "8B008B",
+		darkolivegreen := "556B2F",
+		darkorange := "FF8C00",
+		darkorchid := "9932CC",
+		darkred := "8B0000",
+		darksalmon := "E9967A",
+		darkseagreen := "8FBC8F",
+		darkslateblue := "483D8B",
+		darkslategray := "2F4F4F",
+		darkturquoise := "00CED1",
+		darkviolet := "9400D3",
+		deeppink := "FF1493",
+		deepskyblue := "00BFFF",
+		dimgray := "696969",
+		dodgerblue := "1E90FF",
+		firebrick := "B22222",
+		floralwhite := "FFFAF0",
+		forestgreen := "228B22",
+		fuchsia := "FF00FF",
+		gainsboro := "DCDCDC",
+		ghostwhite := "F8F8FF",
+		gold := "FFD700",
+		goldenrod := "DAA520",
+		gray := "808080",
+		green := "008000",
+		greenyellow := "ADFF2F",
+		honeydew := "F0FFF0",
+		hotpink := "FF69B4",
+		indianred := "CD5C5C",
+		indigo := "4B0082",
+		ivory := "FFFFF0",
+		khaki := "F0E68C",
+		lavender := "E6E6FA",
+		lavenderblush := "FFF0F5",
+		lawngreen := "7CFC00",
+		lemonchiffon := "FFFACD",
+		lightblue := "ADD8E6",
+		lightcoral := "F08080",
+		lightcyan := "E0FFFF",
+		lightgoldenrodyellow := "FAFAD2",
+		lightgray := "D3D3D3",
+		lightgreen := "90EE90",
+		lightpink := "FFB6C1",
+		lightsalmon := "FFA07A",
+		lightseagreen := "20B2AA",
+		lightskyblue := "87CEFA",
+		lightslategray := "778899",
+		lightsteelblue := "B0C4DE",
+		lightyellow := "FFFFE0",
+		lime := "00FF00",
+		limegreen := "32CD32",
+		linen := "FAF0E6",
+		magenta := "FF00FF",
+		maroon := "800000",
+		mediumaquamarine := "66CDAA",
+		mediumblue := "0000CD",
+		mediumorchid := "BA55D3",
+		mediumpurple := "9370DB",
+		mediumseagreen := "3CB371",
+		mediumslateblue := "7B68EE",
+		mediumspringgreen := "00FA9A",
+		mediumturquoise := "48D1CC",
+		mediumvioletred := "C71585",
+		midnightblue := "191970",
+		mintcream := "F5FFFA",
+		mistyrose := "FFE4E1",
+		moccasin := "FFE4B5",
+		navajowhite := "FFDEAD",
+		navy := "000080",
+		oldlace := "FDF5E6",
+		olive := "808000",
+		olivedrab := "6B8E23",
+		orange := "FFA500",
+		orangered := "FF4500",
+		orchid := "DA70D6",
+		palegoldenrod := "EEE8AA",
+		palegreen := "98FB98",
+		paleturquoise := "AFEEEE",
+		palevioletred := "DB7093",
+		papayawhip := "FFEFD5",
+		peachpuff := "FFDAB9",
+		peru := "CD853F",
+		pink := "FFC0CB",
+		plum := "DDA0DD",
+		powderblue := "B0E0E6",
+		purple := "800080",
+		rebeccapurple := "663399",
+		red := "FF0000",
+		rosybrown := "BC8F8F",
+		royalblue := "4169E1",
+		saddlebrown := "8B4513",
+		salmon := "FA8072",
+		sandybrown := "F4A460",
+		seagreen := "2E8B57",
+		seashell := "FFF5EE",
+		sienna := "A0522D",
+		silver := "C0C0C0",
+		skyblue := "87CEEB",
+		slateblue := "6A5ACD",
+		slategray := "708090",
+		snow := "FFFAFA",
+		springgreen := "00FF7F",
+		steelblue := "4682B4",
+		tan := "D2B48C",
+		teal := "008080",
+		thistle := "D8BFD8",
+		tomato := "FF6347",
+		turquoise := "40E0D0",
+		violet := "EE82EE",
+		wheat := "F5DEB3",
+		white := "FFFFFF",
+		whitesmoke := "F5F5F5",
+		yellow := "FFFF00",
+		yellowgreen := "9ACD32"
+	]
+
 	/**
 		* Get app theme color
 		* @param {String} app App name
@@ -4314,12 +5479,12 @@ class StackedDisplay {
 	topMargin := A_ScreenHeight/2
 	stackMargin := 30
 	
-	guis := []
+	guiSD := []
 	selected := false
 	result := 0
 
 	__New() {
-		this.guis := []
+		this.guiSD := []
 	}
 
 	/**
@@ -4330,38 +5495,38 @@ class StackedDisplay {
 		* @returns {Gui} The created GUI object
 		*/
 	AddOption(text, value, index) {
-		gui := Gui("+AlwaysOnTop -Caption +ToolWindow")
-		gui.SetFont("s10", "Segoe UI")
-		gui.AddText("x10 y5", text)
+		guiObj := Gui("+AlwaysOnTop -Caption +ToolWindow")
+		guiObj.SetFont("s10", "Segoe UI")
+		guiObj.AddText("x10 y5", text)
 		
 		; Store data
-		gui.value := value
+		guiObj.value := value
 		
 		; Calculate position
 		y := this.topMargin + (index-1)*this.stackMargin
-		gui.Show(Format("y{1} w{2}", y, this.width))
+		guiObj.Show(Format("y{1} w{2}", y, this.width))
 		
 		; Add to tracking
-		this.guis.Push(gui)
+		this.guiSD.Push(guiObj)
 		
 		; Setup hotkey
-		this.SetupHotkeys(gui, index)
+		this.SetupHotkeys(guiObj, index)
 		
-		return gui
+		return guiObj
 	}
 
-	SetupHotkeys(gui, index) {
+	SetupHotkeys(guiObj, index) {
 		; F-key hotkey
-		HotIfWinExist("ahk_id " gui.Hwnd)
-		Hotkey("F" index, this.HandleSelection.Bind(this, gui))
+		HotIfWinExist("ahk_id " guiObj.Hwnd)
+		Hotkey("F" index, this.HandleSelection.Bind(this, guiObj))
 
-		; Click handler
-		gui.OnEvent("Click", this.HandleSelection.Bind(this, gui))
+		; Click handler (using ContextMenu for general window clicks)
+		guiObj.OnEvent("ContextMenu", this.HandleSelection.Bind(this, guiObj))
 	}
 
-	HandleSelection(gui, *) {
+	HandleSelection(guiObj, *) {
 		this.selected := true
-		this.result := gui.value
+		this.result := guiObj.value
 		this.CleanupGuis()
 	}
 
@@ -4378,8 +5543,8 @@ class StackedDisplay {
 	}
 
 	CleanupGuis() {
-		for gui in this.guis
-			gui.Destroy()
+		for guiObj in this.guiSD
+			guiObj.Destroy()
 		this.guis := []
 	}
 
@@ -4510,6 +5675,9 @@ class CleanInputBox {
 ; ---------------------------------------------------------------------------
 ; ---------------------------------------------------------------------------
 ;@region Class Infos
+/**
+	* @abstract 
+	*/
 class Infos {
 	static fontSize := 8
 	static distance := 4
@@ -4526,7 +5694,7 @@ class Infos {
 		set => this.__text := value
 	}
 
-	__New(text, autoCloseTimeout := 0) {
+	__New(text, autoCloseTimeout := 100000) {
 		this.gui := Gui('AlwaysOnTop -Caption +ToolWindow')
 		this.autoCloseTimeout := autoCloseTimeout
 		this.text := text
@@ -4581,7 +5749,7 @@ class Infos {
 	static DestroyAll(*) {
 		for index, infoObj in Infos.spots {
 			if (infoObj is Infos) {
-				infoObj.Destroy()
+				try infoObj.Destroy()
 			}
 		}
 	}
@@ -4634,6 +5802,7 @@ class Infos {
 	}
 
 	_FormatText() {
+		; ftext := String(this.text)
 		ftext := String(this.text)
 		lines := ftext.Split('`n')
 		; lines := StrSplit(ftext, '`n')
@@ -4711,7 +5880,7 @@ class Infos {
 
 	_Show() => this.gui.Show('AutoSize NA x0 y' this._CalculateYCoord())
 }
-;@endregion
+;@endregion Class Infos
 ; ---------------------------------------------------------------------------
 ; ---------------------------------------------------------------------------
 ; ---------------------------------------------------------------------------
@@ -5106,7 +6275,7 @@ class Resizer {
 		this.moveAndSize := []
 
 		; DPI handling
-		this.currentDPI := this.dpi := DllCall("User32\GetDpiForWindow", "Ptr", GuiObj.Hwnd, "UInt")
+		this.currentDPI := this.dpi := DllCall("User32\GetDpiForWindow", 'Ptr', GuiObj.Hwnd, 'UInt')
 		this.setThreadDpiAwarenessContext := config.dpiAwareness
 
 		; Get initial dimensions
@@ -5369,7 +6538,7 @@ class Resizer {
 		}
 
 		; DPI handling
-		DPI := DllCall("User32\GetDpiForWindow", "Ptr", this.GuiObj.Hwnd, "UInt")
+		DPI := DllCall("User32\GetDpiForWindow", 'Ptr', this.GuiObj.Hwnd, 'UInt')
 		if this.DPI != DPI {
 			this.DPI := DPI
 			return
@@ -5387,7 +6556,7 @@ class Resizer {
 		*/
 	_TimeredResize(*) {
 		if this.SetThreadDpiAwarenessContext
-			DllCall("SetThreadDpiAwarenessContext", "ptr", this.SetThreadDpiAwarenessContext, "ptr")
+			DllCall("SetThreadDpiAwarenessContext", 'Ptr', this.SetThreadDpiAwarenessContext, 'Ptr')
 
 		this.GuiObj.GetClientPos(,, &gw, &gh)
 		
@@ -5624,9 +6793,9 @@ class GuiResizer {
 	static Last := ''
 	
 	/**
-	 * @description Initializes default properties for the resizer
-	 * This method sets up the default properties needed by the resizer
-	 */
+		* @description Initializes default properties for the resizer
+		* This method sets up the default properties needed by the resizer
+		*/
 	InitializeProperties() {
 		; Set default properties
 		this.Properties := {
@@ -5652,11 +6821,11 @@ class GuiResizer {
 		}
 		
 		; Initialize property values
-		for prop, type in this.Properties {
+		try for prop, type in this.Properties {
 			switch type {
-				case "number": this.%prop% := 0
-				case "boolean": this.%prop% := false
-				default: this.%prop% := ""
+				case "number": this.%prop%.type := 0
+				case "boolean": this.%prop%.type := false
+				default: this.%prop%.type := ""
 			}
 		}
 	}
@@ -5710,7 +6879,7 @@ class GuiResizer {
 		this.Size := []
 		this.Move := []
 		this.MoveAndSize := []
-		this.CurrentDPI := this.DPI := DllCall("User32\GetDpiForWindow", "Ptr", GuiObj.Hwnd, "UInt")
+		this.CurrentDPI := this.DPI := DllCall("User32\GetDpiForWindow", 'Ptr', GuiObj.Hwnd, 'UInt')
 		this.SetThreadDpiAwarenessContext := UsingSetThreadDpiAwarenessContext
 		this.GuiObj.GetClientPos(, , &gw, &gh)
 		this.Shown := DllCall('IsWindowVisible', 'Ptr', GuiObj.Hwnd)
@@ -5788,7 +6957,7 @@ class GuiResizer {
 			; GuiResizer.OutputDebug(this, A_ThisFunc, A_LineNumber, , 'Gui just shown')
 			return
 		}
-		DPI := DllCall("User32\GetDpiForWindow", "Ptr", this.GuiObj.Hwnd, "UInt")
+		DPI := DllCall("User32\GetDpiForWindow", 'Ptr', this.GuiObj.Hwnd, 'UInt')
 		if this.DPI != DPI {
 			; GuiResizer.OutputDebug(this, A_ThisFunc, A_LineNumber,
 			; , 'Dpi changed. Old: ' this.DPI '`tNew: ' DPI '.')
@@ -5816,7 +6985,7 @@ class GuiResizer {
 
 	Resize(*) {
 		if this.SetThreadDpiAwarenessContext
-			DllCall("SetThreadDpiAwarenessContext", "ptr", this.SetThreadDpiAwarenessContext, "ptr")
+			DllCall("SetThreadDpiAwarenessContext", 'Ptr', this.SetThreadDpiAwarenessContext, 'Ptr')
 		this.GuiObj.GetClientPos(,, &gw, &gh)
 		if !(gw - this.Active.LastW) && !(gh - this.Active.LastH) {
 			; GuiResizer.OutputDebug(this, A_ThisFunc, A_LineNumber,
@@ -6086,69 +7255,75 @@ class GuiResizer {
 
 ;@region IL_
 /**
- * Helper function to create image list
- * @param {Integer} initialCount Initial count of images
- * @param {Integer} growCount Growth count
- * @param {Integer} flags Image list flags
- * @returns {Object} Image list handle
- */
+	* Helper function to create image list
+	* @param {Integer} initialCount Initial count of images
+	* @param {Integer} growCount Growth count
+	* @param {Integer} flags Image list flags
+	* @returns {Object} Image list handle
+	*/
 IL_Create(initialCount := 10, growCount := 5, flags := 0) {
-    return DllCall("Comctl32.dll\ImageList_Create", "Int", 16, "Int", 16, "UInt", flags | 0x21, "Int", initialCount, "Int", growCount, "Ptr")
+	return DllCall("Comctl32.dll\ImageList_Create", 'Int', 16, 'Int', 16, 'UInt', flags | 0x21, 'Int', initialCount, 'Int', growCount, 'Ptr')
 }
 
 /**
- * Add icon to image list
- * @param {Object} imageListID Image list handle
- * @param {String} filename File path
- * @param {Integer} iconNumber Icon index
- * @param {Boolean} resizeNonIcon Resize non-icon
- * @returns {Integer} Index of added icon
- */
-IL_Add(imageListID, filename, iconNumber := 0, resizeNonIcon := false) {
-    if !(FileExist(filename))
-        return -1  ; File doesn't exist
+	* Add icon to image list
+	* @param {Object} imageListID Image list handle
+	* @param {String} filename File path
+	* @param {Integer} iconNumber Icon index
+	* @param {Boolean} resizeNonIcon Resize non-icon
+	* @returns {Integer} Index of added icon
+	*/
+; IL_Add(imageListID, filename, iconNumber := 0, resizeNonIcon := false) {
+; 	if !(FileExist(filename))
+; 		return -1  ; File doesn't exist
 
-    if (iconNumber > 0) {
-        ; It's an icon or cursor
-        handle := DllCall("LoadImage", "Ptr", 0, "Str", filename, "UInt", 1, "Int", 0, "Int", 0, "UInt", 0x10, "Ptr")
-        result := DllCall("Comctl32.dll\ImageList_AddIcon", "Ptr", imageListID, "Ptr", handle, "Int")
-        DllCall("DestroyIcon", "Ptr", handle)
-        return result
-    } else {
-        ; Try as a bitmap
-        handle := DllCall("LoadImage", "Ptr", 0, "Str", filename, "UInt", 0, "Int", 0, "Int", 0, "UInt", 0x10, "Ptr")
-        result := DllCall("Comctl32.dll\ImageList_Add", "Ptr", imageListID, "Ptr", handle, "Ptr", 0, "Int")
-        DllCall("DeleteObject", "Ptr", handle)
-        return result
-    }
-}
+; 	if (iconNumber > 0) {
+; 		; It's an icon or cursor
+; 		handle := DllCall("LoadImage", 'Ptr', 0, "Str", filename, 'UInt', 1, 'Int', 0, 'Int', 0, 'UInt', 0x10, 'Ptr')
+; 		result := DllCall("Comctl32.dll\ImageList_AddIcon", 'Ptr', imageListID, 'Ptr', handle, 'Int')
+; 		DllCall("DestroyIcon", 'Ptr', handle)
+; 		return result
+; 	} else {
+; 		; Try as a bitmap
+; 		handle := DllCall("LoadImage", 'Ptr', 0, "Str", filename, 'UInt', 0, 'Int', 0, 'Int', 0, 'UInt', 0x10, 'Ptr')
+; 		result := DllCall("Comctl32.dll\ImageList_Add", 'Ptr', imageListID, 'Ptr', handle, 'Ptr', 0, 'Int')
+; 		DllCall("DeleteObject", 'Ptr', handle)
+; 		return result
+; 	}
+; }
 
 /**
- * Get icon from image list
- * @param {Object} imageListID Image list handle
- * @param {Integer} index Icon index
- * @returns {Object} Icon handle
- */
+	* Get icon from image list
+	* @param {Object} imageListID Image list handle
+	* @param {Integer} index Icon index
+	* @returns {Object} Icon handle
+	*/
 IL_GetIcon(imageListID, index) {
-    return DllCall("Comctl32.dll\ImageList_GetIcon", "Ptr", imageListID, "Int", index - 1, "UInt", 0, "Ptr")
+	return DllCall(
+		'Comctl32.dll\ImageList_GetIcon', 'Ptr',
+		imageListID, 'Int',
+		; index - 1, 'UInt',
+		index, 'UInt',
+		0, 'Ptr'
+	)
 }
 
 /**
- * Get count of icons in image list
- * @param {Object} imageListID Image list handle
- * @returns {Integer} Count of icons
- */
+	* Get count of icons in image list
+	* @param {Object} imageListID Image list handle
+	* @returns {Integer} Count of icons
+	*/
 IL_Count(imageListID) {
-    return DllCall("Comctl32.dll\ImageList_GetImageCount", "Ptr", imageListID)
+	return DllCall("Comctl32.dll\ImageList_GetImageCount", 'Ptr', imageListID)
 }
 
 /**
- * Destroy image list
- * @param {Object} imageListID Image list handle
- * @returns {Boolean} Success state
- */
+	* Destroy image list
+	* @param {Object} imageListID Image list handle
+	* @returns {Boolean} Success state
+	*/
 IL_Destroy(imageListID) {
-    return DllCall("Comctl32.dll\ImageList_Destroy", "Ptr", imageListID)
+	return DllCall("Comctl32.dll\ImageList_Destroy", 'Ptr', imageListID)
 }
 ;@endregion IL_
 ; ---------------------------------------------------------------------------
@@ -6303,10 +7478,10 @@ class IconManager {
 	static ExtractIcon(source, index, size := 32) {
 		try {
 			if (FileExist(source)) {
-				return DllCall("Shell32\ExtractIconW", "Ptr", 0, "Str", source, "UInt", index, "Ptr")
+				return DllCall("Shell32\ExtractIconW", 'Ptr', 0, "Str", source, 'UInt', index, 'Ptr')
 			} else {
 				; Try to extract from standard resources
-				return DllCall("Shell32\ExtractIconW", "Ptr", 0, "Str", "shell32.dll", "UInt", index, "Ptr")
+				return DllCall("Shell32\ExtractIconW", 'Ptr', 0, "Str", "shell32.dll", 'UInt', index, 'Ptr')
 			}
 		} catch {
 			return 0
@@ -6326,3 +7501,8 @@ class IconManager {
 	}
 }
 ;@endregion
+
+trayNotify(title, message, options := 0) {
+    ; TrayTip(title, message, options)
+    TrayTip(message, title, options)
+}

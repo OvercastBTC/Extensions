@@ -3628,12 +3628,12 @@ class TextReplacer {
 ;     ; Store the current active window
 ;     originalActiveWindow := WinExist("A")
 
-;     ; Use key.SendVK for select all
-;     key.SendVK(key.selectall)
+;     ; Use keys.SendVK for select all
+;     keys.SendVK(keys.selectall)
 ;     Sleep(100)
 
-;     ; Use key.SendVK for copy
-;     key.SendVK(key.copy)
+;     ; Use keys.SendVK for copy
+;     keys.SendVK(keys.copy)
 ;     AE.cSleep(150)
     
 ;     originalText := A_Clipboard
@@ -3663,8 +3663,8 @@ class TextReplacer {
 ;         A_Clipboard := modifiedText
 ;         AE.cSleep(150)
 
-;         ; Use key.SendVK for paste
-;         key.SendVK(key.paste)
+;         ; Use keys.SendVK for paste
+;         keys.SendVK(keys.paste)
 ;     }
 ;     sleep(500)
 ;     AE.cRestore(cBak)
@@ -3680,12 +3680,12 @@ class TextReplacer {
 ;     ; Store the current active window
 ;     originalActiveWindow := WinExist("A")
 
-;     ; Use key.SendVK for select all
-;     key.SendVK(key.selectall)
+;     ; Use keys.SendVK for select all
+;     keys.SendVK(keys.selectall)
 ;     Sleep(100)
 
-;     ; Use key.SendVK for copy
-;     key.SendVK(key.copy)
+;     ; Use keys.SendVK for copy
+;     keys.SendVK(keys.copy)
 ;     AE.cSleep(150)
     
 ;     ; Get the RTF content from the clipboard
@@ -3723,8 +3723,8 @@ class TextReplacer {
 ;         AE.SetClipboardRichText(modifiedRtfContent)
 ;         AE.cSleep(150)
 
-;         ; Use key.SendVK for paste
-;         key.SendVK(key.paste)
+;         ; Use keys.SendVK for paste
+;         keys.SendVK(keys.paste)
 ;     }
 
 ;     Sleep(500)
@@ -3756,12 +3756,12 @@ ProcessAndPasteText(){
     vNeedle := '(\d+,)'
     bNeedle := '([\`'\`"]{2})'
 
-    ; Use key.SendVK for select all
-    ; key.SendVK(key.selectall)
+    ; Use keys.SendVK for select all
+    ; keys.SendVK(keys.selectall)
     ; Sleep(100)
 
-    ; Use key.SendVK for copy
-    ; key.SendVK(key.copy)
+    ; Use keys.SendVK for copy
+    ; keys.SendVK(keys.copy)
     ; AE.cSleep(150)
     
     ; Get the RTF content from the clipboard
@@ -3822,8 +3822,8 @@ ProcessAndPasteText(){
     ; MsgBox(rFile)
 
     ; return
-    ; Use key.SendVK for paste
-    key.SendVK(key.paste)
+    ; Use keys.SendVK for paste
+    keys.SendVK(keys.paste)
 
     Sleep(500)
     AE.cRestore(cBak)
@@ -4016,7 +4016,7 @@ findtheglobal(){
 
 	Clip.SM()
 	Clip.BakClr(&cBak)
-	Send(key.SelectAll key.copy)
+	Send(keys.SelectAll keys.copy)
 
 	Clip.Sleep()
 

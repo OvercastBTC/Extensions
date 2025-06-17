@@ -523,12 +523,21 @@ IsObjectEx(value) => IsObject(value)
  */
 ; IsObject(value) => IsObject(value) 
 
+; @section IsGui
 /**
  * @description Checks if the value is a Gui
  * @param {Any} value The value to check
  * @returns {Boolean} True if the value is a Gui
  */
 IsGui(value) => Any2.IsGui(value)
+
+; @section IsNotGui
+/**
+ * @description Checks if the value is a Gui
+ * @param {Any} value The value to check
+ * @returns {Boolean} false if the value is not a Gui
+ */
+IsNotGui(value) => !Any2.IsGui(value)
 
 /**
  * @description Checks if the value is a GUI control

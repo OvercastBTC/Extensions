@@ -1,5 +1,8 @@
 #Include <Includes/Basic>
 
+; @Description: A GUI for searching files and folders in the file system.
+#Include <Includes/Basic>
+
 /**
  * @class FileSystemSearch
  * @description Utility for searching files and folders in the file system

@@ -2,7 +2,8 @@
 #Include <Includes/Basic>
 #Include <System\RichEdit>
 
-;@class Gui2
+; @class Gui2
+; @region Gui2
 Gui.Prototype.Base := Gui2
 
 class Gui2 {
@@ -38,36 +39,43 @@ class Gui2 {
 		}
 	}
 
+	; @region Layered
 	static Layered() {
 		this.MakeLayered()
 		return this
 	}
 	
+	; @region ToolWindow
 	static ToolWindow() {
 		this.MakeToolWindow()
 		return this
 	}
 	
+	; @region AlwaysOnTop
 	static AlwaysOnTop() {
 		this.SetAlwaysOnTop()
 		return this
 	}
 	
+	; @region AppWindow
 	static AppWindow() {
 		this.ForceTaskbarButton()
 		return this
 	}
 	
+	; @region Transparent
 	static Transparent() {
 		this.MakeClickThrough()
 		return this
 	}
 	
+	; @region NoActivate
 	static NoActivate() {
 		this.PreventActivation()
 		return this
 	}
 	
+	; @region NeverFocusWindow
 	static NeverFocusWindow() {
 		this.NoActivate()
 		return this
@@ -101,14 +109,14 @@ class Gui2 {
 		}
 		
 		; Apply color if we have a valid Gui
-		if (guiObj is Gui) {
+		if IsGui(guiObj) {
 			try {
 				guiObj.BackColor := color
-				guiObj.SetFont(tColor)
+				guiObj.SetFont(,tColor)
 			} catch Error as e {
 				; Fallback to default color on error
 				guiObj.BackColor := DEFAULT_COLOR
-				guiObj.SetFont('cd4d4d4')
+				guiObj.SetFont(,'cd4d4d4')
 			}
 		}
 
@@ -144,6 +152,7 @@ class Gui2 {
 	 * gui.MakeFontNicer("s10", "Arial")   
 	 */
 
+	; @region MakeFontNicer(params*)
 	static MakeFontNicer(params*) {
 		; Initialize config with defaults
 		config := {
@@ -223,6 +232,7 @@ class Gui2 {
 	 * @example
 	 * gui.NoActivate()
 	*/
+
 	static PreventActivation() {
 		WinSetExStyle('+' this.WS_EX_NOACTIVATE, this)
 		return this
@@ -234,11 +244,13 @@ class Gui2 {
 	 * @example
 	 * gui.MakeClickThrough()
 	 */
+
 	static MakeClickThrough() {
 		WinSetExStyle('+' this.WS_EX_TRANSPARENT, this)
 		return this
 	}
 
+	; @region EnableComposited()
 	/**
 	 * @description Enables double-buffered composited window rendering
 	 * @returns {Gui} The Gui object for method chaining
@@ -250,6 +262,7 @@ class Gui2 {
 		return this
 	}
 
+	; @region AddClientEdge()
 	/**
 	 * @description Adds 3D sunken edge border to window
 	 * @returns {Gui} The Gui object for method chaining
@@ -261,6 +274,7 @@ class Gui2 {
 		return this
 	}
 
+	; @region ForceTaskbarButton()
 	/**
 	 * @description Forces window to have a taskbar button
 	 * @returns {Gui} The Gui object for method chaining
@@ -272,6 +286,7 @@ class Gui2 {
 		return this
 	}
 
+	; @region MakeLayered()
 	/**
 	 * @description Makes window layered for transparency effects
 	 * @returns {Gui} The Gui object for method chaining
@@ -282,7 +297,8 @@ class Gui2 {
 		WinSetExStyle('+' this.WS_EX_LAYERED, this)
 		return this
 	}
-
+	
+	; @region MakeToolWindow()
 	/**
 	 * @description Creates a tool window with no taskbar button
 	 * @returns {Gui} The Gui object for method chaining
@@ -294,6 +310,7 @@ class Gui2 {
 		return this
 	}
 
+	; @region SetAlwaysOnTop()
 	/**
 	 * @description Sets window to always stay on top
 	 * @returns {Gui} The Gui object for method chaining
@@ -305,6 +322,7 @@ class Gui2 {
 		return this
 	}
 
+	; @region EnableDragDrop()
 	/**
 	 * @description Enables drag and drop file acceptance
 	 * @returns {Gui} The Gui object for method chaining
@@ -316,6 +334,7 @@ class Gui2 {
 		return this
 	}
 
+	; @region AddHelpButton()
 	/**
 	 * @description Adds help button (?) to titlebar
 	 * @returns {Gui} The Gui object for method chaining
@@ -327,6 +346,7 @@ class Gui2 {
 		return this
 	}
 
+	; @region SetTransparency(level)
 	/**
 	 * @description Sets window transparency level
 	 * @param {Integer} level Transparency level (0-255, where 0 is invisible and 255 is opaque)
@@ -347,6 +367,7 @@ class Gui2 {
 	; 	return GuiButtonProperties.SetButtonWidth(input, bMargin)
 	; }
 
+	; @region CreateOverlay(options)
 	/**
 	 * @description Creates an overlay window combining multiple styles
 	 * @param {Object} options Window style options
@@ -378,6 +399,8 @@ class Gui2 {
 		return this
 	}
 
+	
+	; @region CreateToolbar(options)
 	/**
 	 * @description Creates a floating toolbar window
 	 * @param {Object} options Window style options
@@ -405,6 +428,7 @@ class Gui2 {
 		return this
 	}
 
+	; @region SetButtonWidth(params*)
 	static SetButtonWidth(params*) {
 		input := bMargin := ''
 		
@@ -428,6 +452,7 @@ class Gui2 {
 	; 	return GuiButtonProperties.SetButtonHeight(rows, vMargin)
 	; }
 
+	; @region SetButtonHeight(params*)
 	static SetButtonHeight(params*) {
 		rows := vMargin := ''
 		
@@ -446,14 +471,20 @@ class Gui2 {
 		return GuiButtonProperties.SetButtonHeight(rows, vMargin)
 	}
 
+	
+	; @region GetButtonDimensions(text, options)
 	static GetButtonDimensions(text, options := {}) {
 		return GuiButtonProperties.GetButtonDimensions(text, options)
 	}
 
+	
+	; @region GetOptimalButtonLayout(totalButtons, containerWidth, containerHeight)
 	static GetOptimalButtonLayout(totalButtons, containerWidth, containerHeight) {
 		return GuiButtonProperties.GetOptimalButtonLayout(totalButtons, containerWidth, containerHeight)
 	}
 
+	
+	; @region _AddButtonGroup(guiObj, buttonOptions, labelObj, groupOptions, columns)
 	static _AddButtonGroup(guiObj, buttonOptions, labelObj, groupOptions := '', columns := 1) {
 		buttons := Map()
 		
@@ -515,7 +546,8 @@ class Gui2 {
 		
 		return buttons
 	}
-
+	
+	; @region AddButtonGroup(params*)
 	static AddButtonGroup(params*) {
 		; Initialize default values
 		config := {
@@ -544,6 +576,7 @@ class Gui2 {
 		return this._AddButtonGroup(config.guiObj, config.buttonOptions, config.labelObj, config.groupOptions, config.columns)
 	}
 
+	; @region AddCustomizationOptions(GuiObj)
 	static OriginalPositions := Map()
 
 	static AddCustomizationOptions(GuiObj) {
@@ -582,6 +615,7 @@ class Gui2 {
 		GuiObj.DefineProp("LoadSettings", {Call: (self) => this.LoadSettings(self)})
 	}
 
+	; @region StoreOriginalPositions(GuiObj)
 	static StoreOriginalPositions(GuiObj) {
 		this.OriginalPositions[GuiObj.Hwnd] := Map()
 		for ctrl in GuiObj {
@@ -590,6 +624,7 @@ class Gui2 {
 		}
 	}
 
+	; @region ToggleCustomization(GuiObj)
 	static ToggleCustomization(GuiObj) {
 		isEnabled := GuiObj["EnableCustomization"].Value
 		GuiObj["AdjustPositions"].Enabled := isEnabled
@@ -597,12 +632,14 @@ class Gui2 {
 		GuiObj["CustomHotkey"].Enabled := isEnabled
 	}
 
+	; @region ToggleSaveSettings(GuiObj)
 	static ToggleSaveSettings(GuiObj) {
 		if (GuiObj["SaveSettings"].Value) {
 			this.SaveSettings(GuiObj)
 		}
 	}
 
+	; @region UpdateTextSize(GuiObj)
 	static UpdateTextSize(GuiObj) {
 		newSize := GuiObj["TextSize"].Value
 		if (IsInteger(newSize) && newSize > 0) {
@@ -615,6 +652,7 @@ class Gui2 {
 		}
 	}
 
+	; @region UpdateCustomHotkey(GuiObj)
 	static UpdateCustomHotkey(GuiObj) {
 		newHotkey := GuiObj["CustomHotkey"].Value
 		if (newHotkey) {
@@ -622,6 +660,7 @@ class Gui2 {
 		}
 	}
 
+	; @region ToggleVisibility(GuiObj)
 	static ToggleVisibility(GuiObj) {
 		if (GuiObj.Visible) {
 			GuiObj.Hide()
@@ -630,6 +669,7 @@ class Gui2 {
 		}
 	}
 
+	; @region ShowAdjustPositionsGUI(GuiObj)
 	static ShowAdjustPositionsGUI(GuiObj) {
 		adjustGui := Gui("+AlwaysOnTop", "Adjust Control Positions")
 		
@@ -648,11 +688,13 @@ class Gui2 {
 		adjustGui.Show()
 	}
 
+	; @region MoveControl(GuiObj, ctrl, dx, dy)
 	static MoveControl(GuiObj, ctrl, dx, dy) {
 		ctrl.GetPos(&x, &y)
 		ctrl.Move(x + dx, y + dy)
 	}
 
+	; @region ResetControlPosition(GuiObj, ctrl)
 	static ResetControlPosition(GuiObj, ctrl) {
 		if (this.OriginalPositions.Has(GuiObj.Hwnd) && this.OriginalPositions[GuiObj.Hwnd].Has(ctrl.Name)) {
 			originalPos := this.OriginalPositions[GuiObj.Hwnd][ctrl.Name]
@@ -660,6 +702,7 @@ class Gui2 {
 		}
 	}
 
+	; @region SaveSettings(GuiObj)
 	static SaveSettings(GuiObj) {
 		settings := Map(
 			"GuiSize", {w: GuiObj.Pos.W, h: GuiObj.Pos.H},
@@ -671,6 +714,7 @@ class Gui2 {
 		FileAppend(cJSON.Stringify(settings), A_ScriptDir "\GUISettings.json")
 	}
 
+	; @region LoadSettings(GuiObj)
 	static LoadSettings(GuiObj) {
 		if (FileExist(A_ScriptDir "\GUISettings.json")) {
 			settings := cJSON.Load(FileRead(A_ScriptDir "\GUISettings.json"))
@@ -678,6 +722,7 @@ class Gui2 {
 		}
 	}
 
+	; @region ApplySettings(GuiObj, settings)
 	static ApplySettings(GuiObj, settings) {
 		if (settings.Has("GuiSize")) {
 			GuiObj.Move(,, settings.GuiSize.w, settings.GuiSize.h)
@@ -695,6 +740,7 @@ class Gui2 {
 		}
 	}
 
+	; @region GetControlPositions(GuiObj)
 	static GetControlPositions(GuiObj) {
 		positions := Map()
 		for ctrl in GuiObj {
@@ -704,6 +750,7 @@ class Gui2 {
 		return positions
 	}
 
+	; @region SetControlPositions(GuiObj, positions)
 	static SetControlPositions(GuiObj, positions) {
 		for ctrlName, pos in positions {
 			if (GuiObj.HasProp(ctrlName)) {
@@ -712,7 +759,7 @@ class Gui2 {
 		}
 	}
 
-	; Static wrapper methods
+	; @region Static wrapper methods
 	static AddCustomizationOptionsToGui(GuiObj?) {
 		if !GuiObj {
 			guiObj := this
@@ -731,6 +778,7 @@ class Gui2 {
 		return this
 	}
 
+	; @region AddRichEdit(options, text, toolbar, showScrollBars)
 	/**
 	 * 
 	 * @param guiObj 
@@ -833,14 +881,14 @@ class Gui2 {
 			"CHANGE"                        ; Text change events
 		])
 	
-		; Add GuiReSizer properties for automatic sizing
+		; @region  Add GuiReSizer properties for automatic sizing
 		reObj.WidthP := 1.0      ; Take up full width
 		reObj.HeightP := 1.0     ; Take up full height
 		reObj.MinWidth := 200    ; Minimum dimensions
 		reObj.MinHeight := 100
 		reObj.AnchorIn := true   ; Stay within parent bounds
 	
-		; Add basic keyboard shortcuts
+		; @region Add basic keyboard shortcuts
 		HotIfWinactive("ahk_id " reObj.Hwnd)
 		Hotkey("^b", (*) => reObj.ToggleFontStyle("B"))
 		Hotkey("^i", (*) => reObj.ToggleFontStyle("I"))
@@ -855,7 +903,7 @@ class Gui2 {
 			reObj.SetText(text)
 		}
 		
-		; Define button callbacks
+		; @region  Define button callbacks
 		BoldText(*) {
 			reObj.ToggleFontStyle("B")
 			reObj.Focus()
@@ -879,6 +927,7 @@ class Gui2 {
 		return reObj
 	}
 	
+	; @region AddRTE(options, text)
 	/**
 	 * Extension method for Gui class
 	 * @param {String} options Control options
@@ -890,6 +939,7 @@ class Gui2 {
 		return this.AddRichEdit(options, text)
 	}
 	
+	; @region AddRichTextEdit(options, text)
 	/**
 	 * Extension method for Gui class - alternate name for AddRichEdit
 	 * @param {String} options Control options 
@@ -901,6 +951,7 @@ class Gui2 {
 		return this.AddRichEdit(options, text)
 	}
 
+	; @region AddRichText(options, text)
 	/**
 	 * @description Add a rich text control (simpler version of RichEdit)
 	 * @param {String} options Control options
@@ -933,6 +984,7 @@ class Gui2 {
 		return reObj
 	}
 
+	; @region SetDefaultFont(guiObj, fontObj)
 	static SetDefaultFont(guiObj := this, fontObj := '') {
 		if (guiObj is Gui) {
 
@@ -1430,6 +1482,7 @@ class UnifiedDisplayManager {
 		return basePos + stackOffset
 	}
 
+	; @section  WaitForInput
 	/**
 		* @method WaitForInput
 		* @description Blocks until input is received
@@ -1467,6 +1520,7 @@ class UnifiedDisplayManager {
 		this.Gui.Destroy()
 	}
 
+	; @section  EnableAutoComplete
 	/**
 		* @method EnableAutoComplete
 		* @description Enables autocomplete functionality for an input control
@@ -1738,15 +1792,16 @@ class ErrorLogGui {
 	; Static properties for instance tracking 
 	static Instances := Map()
 	static InstanceCount := 0
+	static initializing := false
 	
 	; Configuration properties
-	Title := "Error Log"
+	; Title := "Error Log"
 	MaxLogEntries := 1000
 	AutoSaveEnabled := true
 	LogFilePath := A_ScriptDir "\error_log.json"
 	
 	; UI elements
-	gui := {}
+	errGui := {}
 	lvEntries := {}
 	searchBox := {}
 	filterDropdown := {}
@@ -1757,43 +1812,56 @@ class ErrorLogGui {
 	
 	/**
 	 * @constructor
-	 * @param {String} title Optional title for the GUI
+	 * @param {String} title Optional title for the errGui
 	 * @param {String} logFilePath Optional path to log file
 	 */
 	__New(title := "", logFilePath := "") {
-		; Set instance properties
-		this.InstanceCount := ErrorLogGui.InstanceCount++
-		
-		; Apply custom settings if provided
-		if (title){
-			this.Title := title
-		}    
-		if (logFilePath)
-			this.LogFilePath := logFilePath
+		ErrorLogGui.initializing := true
+		try {
+			; Set instance properties
+			this.InstanceCount := ErrorLogGui.InstanceCount++
 			
-		; Initialize the GUI
-		this.CreateGui()
-		
-		; Load existing log data
-		this.LoadLogData()
-		
-		; Register this instance
-		ErrorLogGui.Instances[this.gui.Hwnd] := this
+			; Apply custom settings if provided
+			if (title){
+				this.Title := title
+			}    
+			if (logFilePath) {
+				this.LogFilePath := logFilePath
+			}
+
+			; Initialize default properties
+			this.Title := title ? title : "Error Log"
+			this.MaxLogEntries := 1000
+			this.AutoSaveEnabled := true
+			this.LogFilePath := logFilePath ? logFilePath : A_ScriptDir "\error_log.json"
+			
+			; Initialize the GUI
+			this.CreateGui()
+			
+			; Load existing log data
+			this.LoadLogData()
+			
+			; Register this instance
+			ErrorLogGui.Instances[this.errGui.Hwnd] := this
+		} finally {
+			ErrorLogGui.initializing := false
+		}
 		
 		return this
 	}
 	
+	; @section  CreateGui
 	/**
 	 * @method CreateGui
 	 * @description Creates the error log GUI with all controls
 	 */
 	CreateGui() {
 		; Create the main GUI window
-		this.gui := Gui("+Resize +MinSize400x300", this.Title)
+		this.errGui := Gui("+Resize +MinSize400x300", this.Title)
 		
 		; Apply styling using Gui2 extensions
-		this.gui.DarkMode()
-		this.gui.MakeFontNicer("s10", "cD4D4D4")
+		this.errGui.DarkMode()
+		this.errGui.MakeFontNicer("s10", "cD4D4D4")
 		
 		; Add control buttons
 		this.CreateControlPanel()
@@ -1808,71 +1876,74 @@ class ErrorLogGui {
 		this.SetupEvents()
 	}
 	
+	; @section  CreateControlPanel
 	/**
 	 * @method CreateControlPanel
 	 * @description Creates the control button panel
 	 */
 	CreateControlPanel() {
 		; Control panel group
-		panel := this.gui.AddGroupBox("xm ym w780 h60", "Controls")
+		panel := this.errGui.AddGroupBox("xm ym w780 h60", "Controls")
 		
 		; Add buttons with callback methods
-		copyBtn := this.gui.AddButton("x20 yp+25 w120", "Copy to Clipboard")
+		copyBtn := this.errGui.AddButton("x20 yp+25 w120", "Copy to Clipboard")
 		copyBtn.OnEvent("Click", this.CopyToClipboard.Bind(this))
 		
-		clearBtn := this.gui.AddButton("x+15 yp w120", "Clear Log")
+		clearBtn := this.errGui.AddButton("x+15 yp w120", "Clear Log")
 		clearBtn.OnEvent("Click", this.ClearLog.Bind(this))
 		
-		exportBtn := this.gui.AddButton("x+15 w120", "Export JSON")
+		exportBtn := this.errGui.AddButton("x+15 w120", "Export JSON")
 		exportBtn.OnEvent("Click", this.ExportLog.Bind(this))
 		
-		saveBtn := this.gui.AddButton("x+15 w120", "Save Settings")
+		saveBtn := this.errGui.AddButton("x+15 w120", "Save Settings")
 		saveBtn.OnEvent("Click", this.SaveSettings.Bind(this))
 		
 		; Add auto-save checkbox
-		this.autoSaveCheck := this.gui.AddCheckBox("x+15 yp+5", "Auto-Save")
+		this.autoSaveCheck := this.errGui.AddCheckBox("x+15 yp+5", "Auto-Save")
 		this.autoSaveCheck.Value := this.AutoSaveEnabled
 		this.autoSaveCheck.OnEvent("Click", this.ToggleAutoSave.Bind(this))
 	}
 	
+	; @section  CreateSearchPanel
 	/**
 	 * @method CreateSearchPanel
 	 * @description Creates the search and filter panel
 	 */
 	CreateSearchPanel() {
 		; Get position of the control panel
-		panel := this.gui["Controls"]
+		panel := this.errGui["Controls"]
 		panel.GetPos(&x, &y, &w, &h)
 		
 		; Create search panel
-		searchPanel := this.gui.AddGroupBox("xm y" (y + h + 5) " w780 h60", "Search and Filter")
+		searchPanel := this.errGui.AddGroupBox("xm y" (y + h + 5) " w780 h60", "Search and Filter")
 		
 		; Add search box
-		this.gui.AddText("x20 yp+25", "Search:")
-		this.searchBox := this.gui.AddEdit("x+5 yp-3 w250")
+		this.errGui.AddText("x20 yp+25", "Search:")
+		this.searchBox := this.errGui.AddEdit("x+5 yp-3 w250")
 		this.searchBox.OnEvent("Change", this.FilterEntries.Bind(this))
 		
 		; Add filter dropdown
-		this.gui.AddText("x+20 yp+3", "Filter by:")
-		this.filterDropdown := this.gui.AddDropDownList("x+5 yp-3 w150 Choose1", ["All Types", "Error", "Warning", "Info", "Debug"])
+		this.errGui.AddText("x+20 yp+3", "Filter by:")
+		this.filterDropdown := this.errGui.AddDropDownList("x+5 yp-3 w150 Choose1", ["All Types", "Error", "Warning", "Info", "Debug"])
 		this.filterDropdown.OnEvent("Change", this.FilterEntries.Bind(this))
 		
 		; Add refresh button
-		refreshBtn := this.gui.AddButton("x+15 w100", "Refresh")
+		refreshBtn := this.errGui.AddButton("x+15 w100", "Refresh")
 		refreshBtn.OnEvent("Click", this.RefreshView.Bind(this))
 	}
 	
+	; @section  CreateListView
 	/**
 	 * @method CreateListView
 	 * @description Creates the main ListView control
 	 */
 	CreateListView() {
 		; Get position of the search panel
-		searchPanel := this.gui["Search and Filter"]
+		searchPanel := this.errGui["Search and Filter"]
 		searchPanel.GetPos(&x, &y, &w, &h)
 		
 		; Create ListView with appropriate columns
-		this.lvEntries := this.gui.AddListView("xm y" (y + h + 5) " w780 r20 Grid", 
+		this.lvEntries := this.errGui.AddListView("xm y" (y + h + 5) " w780 r20 Grid", 
 			["Timestamp", "Type", "Message", "Source", "Details"])
 			
 		; Set column widths
@@ -1887,25 +1958,27 @@ class ErrorLogGui {
 		this.lvEntries.OnEvent("DoubleClick", this.ShowEntryDetails.Bind(this))
 	}
 	
+	; @section  SetupEvents
 	/**
 	 * @method SetupEvents
 	 * @description Sets up event handlers for the GUI
 	 */
 	SetupEvents() {
 		; Window sizing
-		this.gui.OnEvent("Size", this.OnResize.Bind(this))
+		this.errGui.OnEvent("Size", this.OnResize.Bind(this))
 		
 		; Window close
-		this.gui.OnEvent("Close", this.OnClose.Bind(this))
+		this.errGui.OnEvent("Close", this.OnClose.Bind(this))
 		
 		; Add to existing GuiResizer if appropriate
 		try {
-			this.gui.OnEvent("Size", GuiReSizer)
+			this.errGui.OnEvent("Size", GuiReSizer)
 		} catch {
 			; GuiReSizer not available - ignore
 		}
 	}
 	
+	; @section  OnResize
 	/**
 	 * @method OnResize
 	 * @description Handles GUI resize events
@@ -1915,16 +1988,20 @@ class ErrorLogGui {
 	 * @param {Integer} height New height
 	 */
 	OnResize(guiObj, minMax, width, height) {
+		; Handle case where guiObj might not be passed or is invalid
+		if (!IsObject(guiObj) || IsNotGui(guiObj)) {
+			guiObj := this.errGui
+		}	
 		if (minMax = -1)  ; Window is minimized
 			return
 			
 		; Update control panel width
-		panel := this.gui["Controls"]
+		panel := guiObj["Controls"]
 		if (panel)
 			panel.Move(,, width - 20)
 			
 		; Update search panel width
-		searchPanel := this.gui["Search and Filter"]
+		searchPanel := guiObj["Search and Filter"]
 		if (searchPanel)
 			searchPanel.Move(,, width - 20)
 			
@@ -1933,39 +2010,55 @@ class ErrorLogGui {
 			this.lvEntries.Move(,, width - 20, height - 165)
 	}
 	
+	; @section  OnClose
 	/**
 	 * @method OnClose
 	 * @description Handles GUI close event
 	 */
 	OnClose(guiObj) {
+		; Handle case where guiObj might not be passed or is invalid
+		if (!IsObject(guiObj) || IsNotGui(guiObj)) {
+			guiObj := this.errGui
+		}
 		; Save log data if auto-save is enabled
 		if (this.AutoSaveEnabled)
 			this.SaveLogData()
 			
 		; Remove this instance from the tracking map
-		ErrorLogGui.Instances.Delete(this.gui.Hwnd)
+		ErrorLogGui.Instances.Delete(guiObj.Hwnd)
 		
 		; Hide instead of destroy for potential reuse
-		this.gui.Hide()
+		guiObj.Hide()
 	}
 	
+	; @section  Show
 	/**
 	 * @method Show
 	 * @description Shows the GUI
 	 * @param {String} options Show options
 	 */
 	Show(options := "w800 h500") {
-		this.gui.Show(options)
+		; Handle case where guiObj might not be passed or is invalid
+		if (!IsObject(guiObj) || IsNotGui(guiObj)) {
+			guiObj := this.errGui
+		}
+		guiObj.Show(options)
 	}
 	
+	; @section  Hide
 	/**
 	 * @method Hide
 	 * @description Hides the GUI
 	 */
 	Hide() {
-		this.gui.Hide()
+		; Handle case where guiObj might not be passed or is invalid
+		if (!IsObject(guiObj) || IsNotGui(guiObj)) {
+			guiObj := this.errGui
+		}
+		guiObj.Hide()
 	}
 	
+	; @section  Log
 	/**
 	 * @method Log
 	 * @description Logs a new entry to the error log
@@ -1997,6 +2090,7 @@ class ErrorLogGui {
 		return this
 	}
 	
+	; @section  CreateLogEntry
 	/**
 	 * @method CreateLogEntry
 	 * @description Creates a structured log entry from input data
@@ -2039,6 +2133,7 @@ class ErrorLogGui {
 		}
 	}
 	
+	; @section  AddEntryToListView
 	/**
 	 * @method AddEntryToListView
 	 * @description Adds a log entry to the ListView
@@ -2066,6 +2161,7 @@ class ErrorLogGui {
 		this.lvEntries.Modify(rowNum, "Select Focus")
 	}
 	
+	; @section  CopyToClipboard
 	/**
 	 * @method CopyToClipboard
 	 * @description Copies log data to clipboard
@@ -2093,6 +2189,7 @@ class ErrorLogGui {
 		this.ShowTooltip("Log data copied to clipboard!")
 	}
 	
+	; @section  ClearLog
 	/**
 	 * @method ClearLog
 	 * @description Clears all log entries
@@ -2133,6 +2230,7 @@ class ErrorLogGui {
 		this.ShowTooltip("Log cleared!")
 	}
 	
+	; @section  ExportLog
 	/**
 	 * @method ExportLog
 	 * @description Exports log data to JSON file
@@ -2156,6 +2254,7 @@ class ErrorLogGui {
 		}
 	}
 	
+	; @section  SaveSettings
 	/**
 	 * @method SaveSettings
 	 * @description Saves current settings
@@ -2180,6 +2279,7 @@ class ErrorLogGui {
 		}
 	}
 	
+	; @section  ToggleAutoSave
 	/**
 	 * @method ToggleAutoSave
 	 * @description Toggles auto-save functionality
@@ -2193,6 +2293,7 @@ class ErrorLogGui {
 		this.ShowTooltip("Auto-save " . state)
 	}
 	
+	; @section  FilterEntries
 	/**
 	 * @method FilterEntries
 	 * @description Filters log entries based on search text and type filter
@@ -2224,6 +2325,7 @@ class ErrorLogGui {
 		this.RefreshView()
 	}
 	
+	; @section  EntryMatchesSearch
 	/**
 	 * @method EntryMatchesSearch
 	 * @description Checks if an entry matches the search text
@@ -2244,6 +2346,7 @@ class ErrorLogGui {
 		return false
 	}
 	
+	; @section  RefreshView
 	/**
 	 * @method RefreshView
 	 * @description Refreshes the ListView with current entries
@@ -2266,6 +2369,7 @@ class ErrorLogGui {
 		this.ShowTooltip("Showing " . entryCount . " entries")
 	}
 	
+	; @section  ShowContextMenu
 	/**
 	 * @method ShowContextMenu
 	 * @description Shows context menu for ListView items
@@ -2295,6 +2399,7 @@ class ErrorLogGui {
 		menu.Show()
 	}
 	
+	; @section  CopyEntry
 	/**
 	 * @method CopyEntry
 	 * @description Copies a single entry to clipboard
@@ -2319,6 +2424,7 @@ class ErrorLogGui {
 		this.ShowTooltip("Entry copied to clipboard!")
 	}
 	
+	; @section  CopyDetails
 	/**
 	 * @method CopyDetails
 	 * @description Copies entry details to clipboard
@@ -2334,6 +2440,7 @@ class ErrorLogGui {
 		this.ShowTooltip("Details copied to clipboard!")
 	}
 	
+	; @section  DeleteEntry
 	/**
 	 * @method DeleteEntry
 	 * @description Deletes an entry from the log
@@ -2354,6 +2461,7 @@ class ErrorLogGui {
 			this.SaveLogData()
 	}
 	
+	; @section  ShowEntryDetails
 	/**
 	 * @method ShowEntryDetails
 	 * @description Shows detailed view of an entry
@@ -2369,13 +2477,17 @@ class ErrorLogGui {
 			if (rowNum = 0)  ; No selection
 				return
 		}
+		; Handle case where guiObj might not be passed or is invalid
+		if (!IsObject(guiObj) || IsNotGui(guiObj)) {
+			guiObj := this.errGui
+		}
 		
 		; Get entries to display
 		entries := this.filteredEntries.Length ? this.filteredEntries : this.logEntries
 		entry := entries[rowNum]
 		
 		; Create details GUI
-		detailsGui := Gui("+AlwaysOnTop +Owner" . this.gui.Hwnd, "Log Entry Details")
+		detailsGui := Gui("+AlwaysOnTop +Owner" . guiObj.Hwnd, "Log Entry Details")
 		
 		; Apply styling
 		try {
@@ -2413,6 +2525,7 @@ class ErrorLogGui {
 		detailsGui.Show("w550 h350")
 	}
 	
+	; @section  LoadLogData
 	/**
 	 * @method LoadLogData
 	 * @description Loads log data from file
@@ -2441,6 +2554,7 @@ class ErrorLogGui {
 		this.RefreshView()
 	}
 	
+	; @section  CreateDefaultLogFile
 	/**
 	 * @method CreateDefaultLogFile
 	 * @description Creates a default log file
@@ -2464,6 +2578,7 @@ class ErrorLogGui {
 		}
 	}
 	
+	; @section  SaveLogData
 	/**
 	 * @method SaveLogData
 	 * @description Saves log data to file
@@ -2480,6 +2595,7 @@ class ErrorLogGui {
 		}
 	}
 	
+	; @section  ShowTooltip
 	/**
 	 * @method ShowTooltip
 	 * @description Shows a tooltip message
@@ -2491,6 +2607,7 @@ class ErrorLogGui {
 		SetTimer(() => ToolTip(), -duration)
 	}
 	
+	; @section  __Delete
 	/**
 	 * @method __Delete
 	 * @description Cleanup when object is destroyed
@@ -2501,9 +2618,10 @@ class ErrorLogGui {
 			this.SaveLogData()
 			
 		; Remove from instances map
-		ErrorLogGui.Instances.Delete(this.gui.Hwnd)
+		ErrorLogGui.Instances.Delete(this.errGui.Hwnd)
 	}
 	
+	; @section  SetColors
 	/**
 	 * @method SetColors
 	 * @description Helper method for ListView color coding
@@ -2523,6 +2641,7 @@ class ErrorLogGui {
 	 * Static helper methods
 	 */
 	
+	; @section  Show
 	/**
 	 * @method Show
 	 * @description Shows or creates an error log GUI
@@ -2543,6 +2662,7 @@ class ErrorLogGui {
 		return instance
 	}
 	
+	; @section  DestroyAll
 	/**
 	 * @method DestroyAll
 	 * @description Destroys all ErrorLogGui instances
@@ -2561,6 +2681,7 @@ class ErrorLogGui {
 		ErrorLogGui.Instances := Map()
 	}
 	
+	; @section  FromMap
 	/**
 	 * @method FromMap
 	 * @description Creates log entries from a Map object
@@ -2584,6 +2705,7 @@ class ErrorLogGui {
 		return instance
 	}
 	
+	; @section  FromObject
 	/**
 	 * @method FromObject
 	 * @description Creates log entries from an object
@@ -2607,6 +2729,7 @@ class ErrorLogGui {
 		return instance
 	}
 	
+	; @section  FromArray
 	/**
 	 * @method FromArray
 	 * @description Creates log entries from an array
@@ -2639,9 +2762,6 @@ class ErrorLogGui {
  * @date 2025-04-24
  * @requires AutoHotkey v2.0+
  */
-
-#Requires AutoHotkey v2.0+
-#Include <Includes\Basic>
 
 class ErrorLogger {
 	; Static properties
@@ -2700,6 +2820,7 @@ class ErrorLogger {
 		return this
 	}
 
+	; @section  Log
 	/**
 	 * @method Log
 	 * @description Generic logging method that accepts various input types
@@ -2757,6 +2878,7 @@ class ErrorLogger {
 	; 	return props  ; Ensure to return the props object
 	; }
 
+	; @section  LogErrorPropsStatic
 	/**
 	 * @method LogErrorPropsStatic
 	 * @description Static method to log detailed error properties
@@ -2823,6 +2945,7 @@ class ErrorLogger {
 		return ErrorLogger().LogErrorMap(e)
 	}
 
+	; @section  Debug
 	/**
 	 * @method Debug
 	 * @description Log a debug message
@@ -2834,6 +2957,7 @@ class ErrorLogger {
 		return this.Log(input, "Debug", showGui)
 	}
 	
+	; @section  Info
 	/**
 	 * @method Info
 	 * @description Log an info message
@@ -2845,6 +2969,7 @@ class ErrorLogger {
 		return this.Log(input, "Info", showGui)
 	}
 	
+	; @section  Warning
 	/**
 	 * @method Warning
 	 * @description Log a warning message
@@ -2856,6 +2981,7 @@ class ErrorLogger {
 		return this.Log(input, "Warning", showGui)
 	}
 	
+	; @section  Error
 	/**
 	 * @method Error
 	 * @description Log an error message
@@ -2867,6 +2993,7 @@ class ErrorLogger {
 		return this.Log(input, "Error", showGui)
 	}
 	
+	; @section  Critical
 	/**
 	 * @method Critical
 	 * @description Log a critical error message
@@ -2878,6 +3005,7 @@ class ErrorLogger {
 		return this.Log(input, "Critical", showGui)
 	}
 	
+	; @section  LogException
 	/**
 	 * @method LogException
 	 * @description Log an exception with detailed information
@@ -2898,6 +3026,7 @@ class ErrorLogger {
 		return this.Log(err, "Error", showGui)
 	}
 	
+	; @section  LogObject
 	/**
 	 * @method LogObject
 	 * @description Log all properties of an object
@@ -2962,6 +3091,7 @@ class ErrorLogger {
 		return this
 	}
 	
+	; @section  LogPerformance
 	/**
 	 * @method LogPerformance
 	 * @description Log performance metrics
@@ -3009,6 +3139,7 @@ class ErrorLogger {
 		return result
 	}
 	
+	; @section  LogSystemInfo
 	/**
 	 * @method LogSystemInfo
 	 * @description Log system information
@@ -3053,6 +3184,7 @@ class ErrorLogger {
 		return this
 	}
 	
+	; @section  ShowGui
 	/**
 	 * @method ShowGui
 	 * @description Shows the log GUI
@@ -3070,6 +3202,7 @@ class ErrorLogger {
 		return this
 	}
 	
+	; @section  HideGui
 	/**
 	 * @method HideGui
 	 * @description Hides the log GUI
@@ -3087,6 +3220,7 @@ class ErrorLogger {
 		return this
 	}
 	
+	; @section  SetLogLevel
 	/**
 	 * @method SetLogLevel
 	 * @description Sets the minimum log level
@@ -3103,6 +3237,7 @@ class ErrorLogger {
 		return this
 	}
 	
+	; @section  ClearLogs
 	/**
 	 * @method ClearLogs
 	 * @description Clears all logs
@@ -3122,6 +3257,7 @@ class ErrorLogger {
 		return this
 	}
 	
+	; @section  SaveLogs
 	/**
 	 * @method SaveLogs
 	 * @description Saves logs to file
@@ -3147,6 +3283,7 @@ class ErrorLogger {
 		}
 	}
 	
+	; @section  GetLogEntries
 	/**
 	 * @method GetLogEntries
 	 * @description Gets all log entries
@@ -3170,6 +3307,7 @@ class ErrorLogger {
 		return filteredEntries
 	}
 	
+	; @section  __Delete
 	/**
 	 * @method __Delete
 	 * @description Cleanup when object is destroyed
@@ -3188,6 +3326,7 @@ class ErrorLogger {
 	 * Private helper methods
 	 */
 	
+	; @section  _CreateLogEntry
 	/**
 	 * @method _CreateLogEntry
 	 * @description Creates a structured log entry from input data
@@ -3238,6 +3377,7 @@ class ErrorLogger {
 		}
 	}
 	
+	; @section  _FormatErrorDetails
 	/**
 	 * @method _FormatErrorDetails
 	 * @description Formats error details for logging
@@ -3273,6 +3413,7 @@ class ErrorLogger {
 		return details
 	}
 	
+	; @section  _FormatLogEntry
 	/**
 	 * @method _FormatLogEntry
 	 * @description Formats a log entry for console output
@@ -3288,6 +3429,7 @@ class ErrorLogger {
 			entry.details ? "`n" . entry.details : "")
 	}
 	
+	; @section  _GetIPAddresses
 	/**
 	 * @method _GetIPAddresses
 	 * @description Gets system IP addresses
@@ -3320,6 +3462,7 @@ class ErrorLogger {
 	 * Static utility methods
 	 */
 	
+	; @section  Log
 	/**
 	 * @method Log
 	 * @description Static log method for quick logging
@@ -3338,6 +3481,7 @@ class ErrorLogger {
 		return instance
 	}
 	
+	; @section  Debug
 	/**
 	 * @method Debug
 	 * @description Static debug logging method
@@ -3349,6 +3493,7 @@ class ErrorLogger {
 		return ErrorLogger.Log(input, "Debug", showGui)
 	}
 	
+	; @section  Info
 	/**
 	 * @method Info
 	 * @description Static info logging method
@@ -3360,6 +3505,7 @@ class ErrorLogger {
 		return ErrorLogger.Log(input, "Info", showGui)
 	}
 	
+	; @section  Warning
 	/**
 	 * @method Warning
 	 * @description Static warning logging method
@@ -3371,6 +3517,7 @@ class ErrorLogger {
 		return ErrorLogger.Log(input, "Warning", showGui)
 	}
 	
+	; @section  Error
 	/**
 	 * @method Error
 	 * @description Static error logging method
@@ -3382,6 +3529,7 @@ class ErrorLogger {
 		return ErrorLogger.Log(input, "Error", showGui)
 	}
 	
+	; @section  Critical
 	/**
 	 * @method Critical
 	 * @description Static critical error logging method
@@ -3393,6 +3541,7 @@ class ErrorLogger {
 		return ErrorLogger.Log(input, "Critical", showGui)
 	}
 	
+	; @section  LogException
 	/**
 	 * @method LogException
 	 * @description Static method to log exceptions
@@ -3411,6 +3560,7 @@ class ErrorLogger {
 		return instance
 	}
 	
+	; @section  LogObject
 	/**
 	 * @method LogObject
 	 * @description Static method to log object properties
@@ -3429,6 +3579,7 @@ class ErrorLogger {
 		return instance
 	}
 	
+	; @section  LogSystemInfo
 	/**
 	 * @method LogSystemInfo
 	 * @description Static method to log system information
@@ -3445,6 +3596,7 @@ class ErrorLogger {
 		return instance
 	}
 	
+	; @section  ShowAll
 	/**
 	 * @method ShowAll
 	 * @description Shows all logger GUIs
@@ -3455,6 +3607,7 @@ class ErrorLogger {
 		}
 	}
 	
+	; @section  HideAll
 	/**
 	 * @method HideAll
 	 * @description Hides all logger GUIs
@@ -3465,6 +3618,7 @@ class ErrorLogger {
 		}
 	}
 	
+	; @section  SaveAll
 	/**
 	 * @method SaveAll
 	 * @description Saves logs for all instances
@@ -3475,6 +3629,7 @@ class ErrorLogger {
 		}
 	}
 	
+	; @section  Get
 	/**
 	 * @method Get
 	 * @description Gets a logger instance by name
@@ -3485,6 +3640,7 @@ class ErrorLogger {
 		return ErrorLogger.instances.Has(name) ? ErrorLogger.instances[name] : ErrorLogger(name)
 	}
 
+	; @section  LogErrorMap
 	/**
 	 * @method LogErrorMap
 	 * @description Static method to log an error's properties as a map
@@ -5592,13 +5748,13 @@ class CleanInputBox {
 		this.settings := this.ParseParams(p1, p2, p3)
 		
 		; Create GUI
-		this.gui := Gui('+AlwaysOnTop -Caption +Border')
+		this.guiCIB := Gui('+AlwaysOnTop -Caption +Border')
 		
 		; Apply styling using Gui2 methods
-		this.gui.DarkMode(this.settings.Get('backgroundColor', CleanInputBox.Defaults.backgroundColor))
+		this.guiCIB.DarkMode(this.settings.Get('backgroundColor', CleanInputBox.Defaults.backgroundColor))
 		
 		; Set font
-		this.gui.SetFont(
+		this.guiCIB.SetFont(
 			's' this.settings.Get('fontSize', CleanInputBox.Defaults.fontSize) 
 			' q' this.settings.Get('quality', CleanInputBox.Defaults.quality) 
 			' c' this.settings.Get('color', CleanInputBox.Defaults.color),
@@ -5606,11 +5762,11 @@ class CleanInputBox {
 		)
 		
 		; Setup GUI properties
-		this.gui.MarginX := 0
+		this.guiCIB.MarginX := 0
 
 		; Add input field
-		this.InputField := this.gui.AddEdit(
-			'x0 Center -E0x200 Background' this.gui.BackColor 
+		this.InputField := this.guiCIB.AddEdit(
+			'x0 Center -E0x200 Background' this.guiCIB.BackColor 
 			' w' this.settings.Get('width', CleanInputBox.Defaults.width)
 		)
 
@@ -5647,7 +5803,7 @@ class CleanInputBox {
 	}
 
 	WaitForInput() {
-		this.gui.Show('y' this.settings.Get('topMargin', CleanInputBox.Defaults.topMargin) 
+		this.guiCIB.Show('y' this.settings.Get('topMargin', CleanInputBox.Defaults.topMargin) 
 			' w' this.settings.Get('width', CleanInputBox.Defaults.width))
 			
 		while this.isWaiting {
@@ -5657,17 +5813,17 @@ class CleanInputBox {
 	}
 
 	RegisterHotkeys() {
-		HotIfWinactive('ahk_id ' this.gui.Hwnd)
+		HotIfWinactive('ahk_id ' this.guiCIB.Hwnd)
 		Hotkey('Enter', (*) => (this.Input := this.InputField.Text, this.isWaiting := false, this.Finish()), 'On')
 		Hotkey('CapsLock', (*) => (this.isWaiting := false, this.Finish()))
-		this.gui.OnEvent('Escape', (*) => (this.isWaiting := false, this.Finish()))
+		this.guiCIB.OnEvent('Escape', (*) => (this.isWaiting := false, this.Finish()))
 	}
 
 	Finish() {
-		HotIfWinactive('ahk_id ' this.gui.Hwnd)
+		HotIfWinactive('ahk_id ' this.guiCIB.Hwnd)
 		Hotkey('Enter', 'Off')
-		this.gui.Minimize()
-		this.gui.Destroy()
+		this.guiCIB.Minimize()
+		this.guiCIB.Destroy()
 	}
 }
 ;@endregion
@@ -5695,7 +5851,7 @@ class Infos {
 	}
 
 	__New(text, autoCloseTimeout := 100000) {
-		this.gui := Gui('AlwaysOnTop -Caption +ToolWindow')
+		this.guiInfo := Gui('AlwaysOnTop -Caption +ToolWindow').AppWindow()
 		this.autoCloseTimeout := autoCloseTimeout
 		this.text := text
 		this.spaceIndex := 0
@@ -5711,15 +5867,15 @@ class Infos {
 
 	_CreateGui() {
 		textColor := StrReplace(GuiColors.VSCode.TextNormal, '#', '')
-		this.gui.DarkMode()
+		this.guiInfo.DarkMode()
 		this.MakeFontNicer(Infos.fontSize , ' ' textColor)
-		this.gui.NeverFocusWindow()
-		this.gcText := this.gui.AddText(, this._FormatText())
+		this.guiInfo.NeverFocusWindow()
+		this.gcText := this.guiInfo.AddText(, this._FormatText())
 		return this
 	}
 
 	DarkMode(BackgroundColor := '') {
-		this.gui.BackColor := BackgroundColor = '' ? '0xA2AAAD' : BackgroundColor
+		this.guiInfo.BackColor := BackgroundColor = '' ? '0xA2AAAD' : BackgroundColor
 		return this
 	}
 
@@ -5731,18 +5887,18 @@ class Infos {
 			if GuiColors.HasProp(param) {
 				if param ~= '#' {
 					StrReplace(param, '#', '0x')
-					this.gui.SetFont(' ' param)
+					this.guiInfo.SetFont(' ' param)
 				}
-				this.gui.SetFont('s' fontSize, 'Consolas')
+				this.guiInfo.SetFont('s' fontSize, 'Consolas')
 			}
 
 		}
-		this.gui.SetFont('s' fontSize, 'Consolas')
+		this.guiInfo.SetFont('s' fontSize, 'Consolas')
 		return this
 	}
 
 	NeverFocusWindow() {
-		WinSetExStyle('+0x08000000', this.gui)  ; WS_EX_NOACTIVATE
+		WinSetExStyle('+0x08000000', this.guiInfo)  ; WS_EX_NOACTIVATE
 		return this
 	}
 
@@ -5763,7 +5919,7 @@ class Infos {
 	}
 
 	ReplaceText(newText) {
-		if !this.gui.Hwnd {
+		if !this.guiInfo.Hwnd {
 			return Infos(newText, this.autoCloseTimeout)
 		}
 
@@ -5778,11 +5934,11 @@ class Infos {
 	}
 
 	Destroy(*) {
-		if (!this.gui.Hwnd) {
+		if (!this.guiInfo.Hwnd) {
 			return false
 		}
 		this.RemoveHotkeys()
-		this.gui.Destroy()
+		this.guiInfo.Destroy()
 		if (this.spaceIndex > 0) {
 			Infos.spots[this.spaceIndex] := false
 		}
@@ -5794,7 +5950,7 @@ class Infos {
 		if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
 			hotkeys.Push('F' this.spaceIndex)
 		}
-		HotIfWinExist('ahk_id ' this.gui.Hwnd)
+		HotIfWinExist('ahk_id ' this.guiInfo.Hwnd)
 		for hk in hotkeys {
 			try Hotkey(hk, 'Off')
 		}
@@ -5861,7 +6017,7 @@ class Infos {
 	_StopDueToNoSpace() => this.Destroy()
 
 	_SetupHotkeysAndEvents() {
-		HotIfWinExist('ahk_id ' this.gui.Hwnd)
+		HotIfWinExist('ahk_id ' this.guiInfo.Hwnd)
 		Hotkey('Escape', (*) => this.Destroy(), 'On')
 		Hotkey('^Escape', (*) => Infos.DestroyAll(), 'On')
 		if (this.spaceIndex > 0 && this.spaceIndex <= Infos.maxNumberedHotkeys) {
@@ -5869,7 +6025,7 @@ class Infos {
 		}
 		HotIf()
 		this.gcText.OnEvent('Click', (*) => this.Destroy())
-		this.gui.OnEvent('Close', (*) => this.Destroy())
+		this.guiInfo.OnEvent('Close', (*) => this.Destroy())
 	}
 
 	_SetupAutoclose() {
@@ -5878,7 +6034,7 @@ class Infos {
 		}
 	}
 
-	_Show() => this.gui.Show('AutoSize NA x0 y' this._CalculateYCoord())
+	_Show() => this.guiInfo.Show('AutoSize NA x0 y' this._CalculateYCoord())
 }
 ;@endregion Class Infos
 ; ---------------------------------------------------------------------------
@@ -6516,12 +6672,12 @@ class Resizer {
 	}
 
 	/**
-		* AdvancedResize - Enhanced resize method with DPI awareness and timer
-		* @param {Gui} GuiObj GUI being resized
-		* @param {Integer} MinMax Window state
-		* @param {Integer} Width New width
-		* @param {Integer} Height New height
-		*/
+	* AdvancedResize - Enhanced resize method with DPI awareness and timer
+	* @param {Gui} GuiObj GUI being resized
+	* @param {Integer} MinMax Window state
+	* @param {Integer} Width New width
+	* @param {Integer} Height New height
+	*/
 	AdvancedResize(GuiObj, MinMax, Width, Height) {
 		if !this.Shown {
 			this.GuiObj.GetClientPos(,, &gw, &gh)

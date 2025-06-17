@@ -15,5 +15,8 @@ RecLibs
 (moved to Gui.ahk)_GuiReSizer.ahk.bak
 .String.ahk.swp
 cSend.ahk.bak
-Info.ahk
+# Info.ahk
 Sort.ahk
+Clipboard.txt
+String.bak
+String.txt

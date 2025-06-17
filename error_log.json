@@ -1,0 +1,17 @@
+[
+	{
+		"log" : [
+			"Log file created",
+			"ErrorLogGui",
+			"2025-04-24 11:45:53",
+			"System"
+		]
+	},
+	{
+		"error": [
+			"Font setting failed: Invalid option.",
+			"",
+			"2025-04-24 11:45:53","Info"
+		]
+	}
+]

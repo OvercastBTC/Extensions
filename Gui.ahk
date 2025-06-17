@@ -116,8 +116,7 @@ class Gui2 {
 			} catch Error as e {
 				; Fallback to default color on error
 				guiObj.BackColor := DEFAULT_COLOR
-				guiObj.SetFont(,StrReplace(StrLower(GuiColors.VSCode.LineNumber), '#', 'c'))
-				; guiObj.SetFont(,'cd4d4d4')
+				guiObj.SetFont(,'cd4d4d4')
 			}
 		}
 
